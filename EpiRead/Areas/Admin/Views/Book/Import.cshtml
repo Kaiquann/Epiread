@@ -1,0 +1,187 @@
+@{
+    ViewBag.Title = "Import Books via ZIP";
+}
+
+<section>
+    <div class="container my-5">
+        <a asp-area="Admin" asp-controller="Book" asp-action="Index" class="btn btn-secondary mb-3" style="float: left;">
+            <i class="fas fa-arrow-left" aria-hidden="true"></i> Go Back
+        </a>
+        <h2 class="text-center mb-4">@ViewBag.Title</h2>
+
+        <!-- Step Container: All steps will be loaded here via AJAX -->
+        <div id="importStepContainer">
+            <partial name="_ImportUpload" model="new BookUploadZipVm()"/>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        // Helper function to execute scripts after innerHTML insertion
+        function executeScriptsInElement(element) {
+            const scripts = Array.from(element.querySelectorAll('script'));
+            scripts.forEach(oldScript => {
+                const newScript = document.createElement('script');
+                // Copy attributes
+                Array.from(oldScript.attributes).forEach(attr => {
+                    newScript.setAttribute(attr.name, attr.value);
+                });
+                // Copy inline content
+                newScript.textContent = oldScript.textContent;
+                // Remove old script and append new one to document to trigger execution
+                oldScript.remove();
+                document.body.appendChild(newScript);
+            });
+        }
+
+        // AJAX file upload and step transitions
+        document.addEventListener('DOMContentLoaded',
+            function() {
+
+                // Delegate click for confirm/cancel in conflict step
+                document.body.addEventListener('click',
+                    function(e) {
+                        if (e.target && e.target.id === 'btnConfirm') {
+                            // Small helpers to show/hide a loading overlay and disable controls
+                            const showImportLoading = function() {
+                                if (!document.getElementById('importLoadingOverlay')) {
+                                    const overlay = document.createElement('div');
+                                    overlay.id = 'importLoadingOverlay';
+                                    overlay.style.cssText = 'align-items:center;background:rgba(0,0,0,0.55);color:#fff; display:flex;flex-direction:column;inset:0;justify-content:center;position:fixed;z-index:10600;';
+                                    overlay.innerHTML = `<div class="text-center"><div class="spinner-border text-light" role="status" style="width:3rem;height:3rem"><span class="visually-hidden">Loading...</span></div><div class="mt-2">Importing…</div></div>`;
+                                    document.body.appendChild(overlay);
+                                }
+                                // disable relevant buttons/selectors to prevent double actions
+                                $('#btnConfirm, #btnConfirmTop, #applyAllOverwrite, #applyAllSkip, #applyAllMerge').prop('disabled', true).addClass('disabled');
+                                $('.action-btn, .conflict-action-select, select.conflict-action-select, .preview-btn').prop('disabled', true);
+                                $('#importLoadingOverlay').show();
+                            };
+
+                            const hideImportLoading = function() {
+                                $('#importLoadingOverlay').hide();
+                                $('#btnConfirm, #btnConfirmTop, #applyAllOverwrite, #applyAllSkip, #applyAllMerge').prop('disabled', false).removeClass('disabled');
+                                $('.action-btn, .conflict-action-select, select.conflict-action-select, .preview-btn').prop('disabled', false);
+                            };
+
+                            const doImport = function() {
+                                showImportLoading();
+
+                                // Collect data from ALL rows in the DataTable (including hidden pages)
+                                const table = $('#bookConflictTable').DataTable();
+                                const items = [];
+
+                                // Loop through ALL rows (not just visible ones)
+                                table.rows().every(function() {
+                                    const row = this.node();
+                                    const title = row.getAttribute('data-title');
+                                    const authorName = row.getAttribute('data-authorname');
+                                    const description = row.getAttribute('data-description');
+                                    const publicationYear = row.getAttribute('data-publicationyear');
+                                    const languageCode = row.getAttribute('data-languagecode');
+                                    const coverImagePath = row.getAttribute('data-coverimagepath');
+                                    const coverImageLink = row.getAttribute('data-coverimagelink');
+                                    const status = row.getAttribute('data-status');
+                                    const createdAt = row.getAttribute('data-createdat');
+                                    const updatedAt = row.getAttribute('data-updatedat');
+                                    let action = 'Add';
+                                    // New action UI: prefer data-action set by button group, fallback to select if present
+                                    const rowActionAttr = row.getAttribute('data-action');
+                                    if (rowActionAttr) {
+                                        action = rowActionAttr;
+                                    } else {
+                                        const select = row.querySelector('select.conflict-action-select');
+                                        if (select) {
+                                            action = select.value;
+                                        } else {
+                                            // also check for active action button
+                                            const activeBtn = row.querySelector('.action-btn.active');
+                                            if (activeBtn) action = activeBtn.getAttribute('data-action');
+                                        }
+                                    }
+                                    // Only push if title exists (skip empty rows)
+                                    if (title) {
+                                        const userIdAttr = row.getAttribute('data-userid');
+                                        const userEmailAttr = row.getAttribute('data-useremail');
+                                        const userId = userIdAttr ? (isNaN(parseInt(userIdAttr)) ? null : parseInt(userIdAttr)) : null;
+                                        const userEmail = userEmailAttr || null;
+
+                                        items.push({
+                                            title,
+                                            authorName,
+                                            description,
+                                            publicationYear: publicationYear ? parseInt(publicationYear) : null,
+                                            languageCode,
+                                            coverImagePath,
+                                            coverImageLink,
+                                            userId,
+                                            userEmail,
+                                            status,
+                                            createdAt,
+                                            updatedAt,
+                                            action
+                                        });
+                                    }
+                                });
+
+                                // Send to backend
+                                fetch('/Admin/Book/ImportConfirm',
+                                        {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                                'X-Requested-With': 'XMLHttpRequest'
+                                            },
+                                            body: JSON.stringify({ items })
+                                        })
+                                    .then(response => response.text())
+                                    .then(html => {
+                                        document.getElementById('importStepContainer').innerHTML = html;
+                                    })
+                                    .catch(err => {
+                                        alert(`Import failed: ${err}`);
+                                    })
+                                    .finally(() => {
+                                        // hide after request finishes; note: if replaced by HTML this may not be necessary
+                                        hideImportLoading();
+                                    });
+                            };
+
+                            // Use SweetAlert2 if available, otherwise fallback to native confirm
+                            if (typeof Swal !== 'undefined' && Swal.fire) {
+                                Swal.fire({
+                                    title: 'Confirm Import',
+                                    text: 'This will apply your selected actions for all items. This cannot be undone. Do you want to continue?',
+                                    icon: 'warning',
+                                    showCancelButton: true,
+                                    confirmButtonText: 'Yes, import',
+                                    cancelButtonText: 'Cancel'
+                                }).then(result => {
+                                    if (result.isConfirmed) {
+                                        doImport();
+                                    }
+                                });
+                            } else {
+                                if (confirm('Confirm import? This action cannot be undone.')) {
+                                    doImport();
+                                }
+                            }
+                        }
+                        if (e.target && e.target.id === 'btnCancel') {
+                            // Reload the upload step
+                            fetch('@Url.Action("Import", "Book", new { area = "Admin" })',
+                                    {
+                                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                                    })
+                                .then(response => response.text())
+                                .then(html => {
+                                    const container = document.getElementById('importStepContainer');
+                                    container.innerHTML = html;
+                                    // Execute scripts in the dynamically loaded content
+                                    executeScriptsInElement(container);
+                                });
+                        }
+                    });
+            });
+    </script>
+}

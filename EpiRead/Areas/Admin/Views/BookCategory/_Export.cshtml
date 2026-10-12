@@ -1,0 +1,48 @@
+@model IPagedList<BookCategory>
+@{
+    string[] fields =
+    [
+        "", "Name", "Slug", "Description", "Parent Category"
+    ];
+}
+
+<partial name="_SweetAlert"/>
+
+<partial name="Table/_FilterFormPartial"/>
+<partial name="Table/_SearchBarPartial"/>
+<partial name="Table/_CountRecordPartial" model="@Model"/>
+
+<div class="alert alert-info mb-2" role="alert">
+    <small>1. If you do not check any categories, all categories will be exported.</small>
+    <br/>
+    <small>2. The export will include an integrity verification manifest to prevent tampering.</small>
+</div>
+<table class="table table-bordered table-sm">
+    <partial name="Table/_HeaderPartial" model="@fields"/>
+    <tbody>
+    @if (!Model.Any())
+    {
+        <tr>
+            <td colspan="@fields.Length" class="text-center">
+                <em>No records found.</em>
+            </td>
+        </tr>
+    }
+    else
+    {
+        @foreach (var bookCategory in Model)
+        {
+            <tr data-checkable>
+                <td>
+                    <input type="checkbox" name="ids" value="@bookCategory.Id" form="select-form" class="select-box"/>
+                </td>
+                <td>@bookCategory.Name</td>
+                <td>@bookCategory.Slug</td>
+                <td style="max-width: 200px; white-space: normal; word-break: break-word;">@bookCategory.Description</td>
+                <td>@(bookCategory.Parent != null ? bookCategory.Parent.Name : "-")</td>
+            </tr>
+        }
+    }
+    </tbody>
+</table>
+<partial name="Table/_FooterPartial" model="@Model"/>

@@ -1,0 +1,338 @@
+﻿@model BookVm
+
+<style>
+    /* --- Containers --- */
+    .search-section {
+        display: flex;
+        gap: 1.5rem;
+        align-items: flex-start;
+        width: 100%;
+    }
+
+    .saved-container {
+        position: relative;
+        width: 30%;
+        min-width: 220px;
+        max-width: 320px;
+    }
+
+    .search-bar-container {
+        position: relative;
+        width: 70%;
+        min-width: 220px;
+        max-width: 600px;
+    }
+
+    /* --- Buttons --- */
+    #saved-list-btn, #book-search-btn, .saved-item button, .search-item button, .star-btn, .delete-btn {
+        cursor: pointer;
+        border: none;
+        outline: none;
+        background: none;
+        color: #e0e0e0;
+    }
+
+    #saved-list-btn {
+        background: #444a58;
+        border-radius: 20px;
+        padding: 0.75rem 1.2rem;
+        font-weight: 500;
+        width: 100%;
+        text-align: left;
+    }
+
+        #saved-list-btn:hover {
+            background: #5b6273;
+        }
+
+    #book-search-input {
+        padding: 0.8rem 1rem;
+        border-radius: 20px;
+        border: none;
+        background: #2F333B;
+        color: #fff; /* text white when typing */
+        font-size: 1rem;
+        outline: none;
+    }
+
+        #book-search-input::placeholder {
+            color: #aaa;
+        }
+
+    #book-search-btn {
+        background: #6c63ff;
+        color: #fff;
+        border-radius: 20px;
+        padding: 0.8rem 1.5rem;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+    }
+
+        #book-search-btn:hover {
+            background: #5a55e1;
+        }
+
+    .saved-delete-btn, .delete-btn {
+        color: #ff5c5c;
+        font-size: 1.1rem;
+    }
+
+        .saved-delete-btn:hover, .delete-btn:hover {
+            color: #ff8a8a;
+        }
+
+    .star-btn .fas.text-warning {
+        color: #FFD700;
+    }
+
+    /* --- Inputs --- */
+    #book-search-input {
+        background: #2F333B;
+        border-radius: 20px;
+        padding: 0.8rem 1.2rem;
+        width: 100%;
+        font-size: 1rem;
+        transition: box-shadow 0.2s;
+    }
+
+        #book-search-input:focus {
+            background: #363b46;
+            box-shadow: 0 0 0 2px #6c63ff;
+        }
+
+    /* --- Dropdowns --- */
+    .saved-dropdown, .search-dropdown {
+        position: absolute;
+        top: 110%;
+        left: 0;
+        width: 100%;
+        background: #2F333B;
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+        display: none;
+        overflow: hidden;
+        z-index: 10;
+    }
+
+        .saved-dropdown.active, .search-dropdown.active {
+            display: block;
+        }
+
+    .saved-item, .search-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.6rem 1rem;
+        transition: background 0.2s;
+    }
+
+        .saved-item:hover, .search-item:hover {
+            background: #3a3f4a;
+        }
+
+    .left {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        flex-grow: 1;
+        min-width: 0;
+    }
+
+    .actions {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        margin-left: 0.5rem;
+    }
+
+    .no-saved, .no-history {
+        color: #888;
+        text-align: center;
+        font-style: italic;
+        padding: 0.7rem 1rem;
+    }
+</style>
+
+<div id="search-section" class="search-section">
+    <!-- Saved List -->
+    <div class="saved-container">
+        <partial name="_SavedList" model="Model" />
+    </div>
+
+    <!-- Search Bar -->
+    <div class="search-bar-container">
+        <form asp-action="Search" asp-controller="Book" method="get" data-ajax="true" data-ajax-update="#book-section" data-ajax-mode="replace" class="d-flex" style="gap:0.5rem; align-items:center;">
+            <input type="text" id="book-search-input" name="search" class="flex-grow-1" placeholder="Search for books..." autocomplete="off" />
+            <button type="submit" id="book-search-btn">Search</button>
+        </form>
+        <div id="searchBar-section">
+            <partial name="_SearchHistoryList" model="Model" />
+        </div>
+    </div>
+</div>
+
+<script>
+    (function(){
+        // Keep debounceTimer per-instance
+        let debounceTimer = null;
+
+        function getDropdown(){ return $('#search-dropdown'); }
+        function getSaved(){ return $('#saved-dropdown'); }
+
+        function fetchSuggestions(term) {
+            const $dropdown = getDropdown();
+
+            // Filter existing history that starts with typed letters
+            $dropdown.children().each(function(){
+                const text = $(this).find('button').first().text().toLowerCase();
+                $(this).toggle(text.startsWith(term));
+            });
+
+            $.get('/Book/GetBookSuggestions', { term }, data => {
+                const $dropdown = getDropdown();
+                $dropdown.children('.dynamic-suggestion').remove();
+
+                if (!data || !data.length) {
+                    if ($dropdown.children(':visible').length === 0) {
+                        $dropdown.removeClass('active');
+                        return;
+                    }
+                    $dropdown.addClass('active');
+                    return;
+                }
+
+                data.forEach(title => {
+                    const $item = $(`
+                        <div class="search-item dynamic-suggestion">
+                            <div class="left"><i class="fas fa-book"></i><button type="button">${title}</button></div>
+                        </div>`);
+                    $item.find('button').click(()=>{
+                        $('#book-search-input').val(title);
+                        getDropdown().removeClass('active');
+                    });
+                    $dropdown.append($item);
+                });
+
+                if ($dropdown.children('.dynamic-suggestion').length > 0 || $dropdown.children(':visible').length > 0)
+                    $dropdown.addClass('active');
+                else
+                    $dropdown.removeClass('active');
+            });
+        }
+
+        // Initialization function: use delegated handlers so newly inserted DOM keeps working
+        function initSearchBar(){
+            // Toggle saved list (delegated)
+            $(document).off('click.epiSavedToggle', '#saved-list-btn')
+                       .on('click.epiSavedToggle', '#saved-list-btn', function(e){
+                e.stopPropagation();
+
+                // Load only the saved-list partial and replace the saved-container inner
+                // This avoids replacing the entire search-section which can cause layout shifts
+                $.get('/Book/GetSavedList', function(resp){
+                    // Replace the contents of the saved-container with the returned markup
+                    $('#search-section .saved-container').html(resp);
+                    // Open saved dropdown on the newly inserted DOM
+                    $('#saved-dropdown').addClass('active');
+                    // Close search history dropdown if any
+                    $('#search-dropdown').removeClass('active');
+                    // Re-init handlers for newly inserted elements
+                    initSearchBar();
+                }).fail(function(){
+                    // Fallback: just toggle the currently-rendered saved dropdown
+                    getSaved().toggleClass('active');
+                    getDropdown().removeClass('active');
+                });
+            });
+
+            // Focus or input on search box
+            $(document).off('input.epiSearch focusin.epiSearch', '#book-search-input')
+                       .on('input.epiSearch focusin.epiSearch', '#book-search-input', function(){
+                const term = $(this).val().trim().toLowerCase();
+                getSaved().removeClass('active');
+
+                if (!term) {
+                    if (debounceTimer) { clearTimeout(debounceTimer); debounceTimer = null; }
+                    getDropdown().children().show();
+                    getDropdown().addClass('active');
+                    return;
+                }
+
+                if (debounceTimer) clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    fetchSuggestions(term);
+                    debounceTimer = null;
+                }, 2000);
+            });
+
+            // Enter key handling (delegated)
+            $(document).off('keydown.epiSearch', '#book-search-input')
+                       .on('keydown.epiSearch', '#book-search-input', function(e){
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (debounceTimer) { clearTimeout(debounceTimer); debounceTimer = null; }
+
+                    const $form = $(this).closest('form');
+                    const url = $form.attr('action') || '/Book/Search';
+                    const data = $form.serialize();
+
+                    // show loader explicitly for this request
+                    $('#loader').addClass('show');
+
+                    $.get(url, data, function(resp){
+                        $('#book-section').html(resp);
+                        // ensure loader hidden after success
+                        $('#loader').removeClass('show');
+                    }).fail(function(){
+                        $form.off('submit');
+                        $form.submit();
+                        // hide loader on failure too
+                        $('#loader').removeClass('show');
+                    });
+
+                    getDropdown().removeClass('active');
+                }
+            });
+
+            // Click outside to close
+            $(document).off('click.epiSearchOutside').on('click.epiSearchOutside', function(e){
+                if (!$(e.target).closest('.search-section').length) {
+                    getDropdown().removeClass('active');
+                    getSaved().removeClass('active');
+                }
+            });
+        }
+
+        // Run once now
+        $(function(){ initSearchBar(); });
+
+        // Re-init after any AJAX completes (keeps behaviour consistent after partial replacements)
+        $(document).off('ajaxComplete.epiSearchInit').on('ajaxComplete.epiSearchInit', function(){
+            initSearchBar();
+        });
+
+        // Ensure loader is shown/hidden for unobtrusive-ajax forms (defensive, delegated)
+        $(document).off('ajax:begin.epiSearchLoader').on('ajax:begin.epiSearchLoader', 'form[data-ajax="true"]', function (ev) {
+            try { $('#loader').addClass('show'); } catch (e) { /* ignore */ }
+        });
+
+        // Hide loader when AJAX completes for those forms (success or failure)
+        $(document).off('ajax:complete.epiSearchLoader').on('ajax:complete.epiSearchLoader', 'form[data-ajax="true"]', function (ev, xhr, status) {
+            try { $('#loader').removeClass('show'); } catch (e) { /* ignore */ }
+        });
+
+        // Also handle jQuery global complete as a fallback (some plugins trigger global events)
+        $(document).off('ajaxComplete.epiSearchLoaderGlobal').on('ajaxComplete.epiSearchLoaderGlobal', function (event, xhr, settings) {
+            try {
+                // If this AJAX updated the #book-section or came from the book search/filter endpoints, hide loader
+                var url = (settings && settings.url) ? settings.url.toLowerCase() : '';
+                if (!url) { $('#loader').removeClass('show'); return; }
+                if (url.indexOf('/book/search') >= 0 || url.indexOf('/book/filterbooklist') >= 0 || url.indexOf('/book/index') >= 0) {
+                    $('#loader').removeClass('show');
+                }
+            } catch (e) { $('#loader').removeClass('show'); }
+        });
+    })();
+</script>
+

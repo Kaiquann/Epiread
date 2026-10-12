@@ -1,0 +1,122 @@
+﻿@model DiscussionVm
+
+<style>
+    /* Discussion Cards */
+    .discussion-card {
+        background: linear-gradient(145deg, #2B2E36, #23252B);
+        border: 1px solid rgba(108, 99, 255, 0.15);
+        transition: all 0.25s ease-in-out;
+    }
+
+        .discussion-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 14px rgba(108, 99, 255, 0.25);
+        }
+
+    /* Avatar Circle */
+    .avatar-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1rem;
+        box-shadow: 0 0 8px rgba(23, 162, 184, 0.4);
+    }
+
+    /* Post Text */
+    .post-content p {
+        line-height: 1.6;
+        font-size: 0.95rem;
+    }
+
+    /* Scrollbar inside posts section if needed */
+    .discussion-posts {
+        max-height: 600px;
+        overflow-y: auto;
+        padding-right: 8px;
+    }
+
+        .discussion-posts::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .discussion-posts::-webkit-scrollbar-thumb {
+            background: #6c63ff;
+            border-radius: 10px;
+        }
+
+            .discussion-posts::-webkit-scrollbar-thumb:hover {
+                background: #8f87ff;
+            }
+
+    /* Like Button Styling */
+    .btn-like {
+        background: transparent;
+        color: #bbb;
+        transition: all 0.2s ease;
+    }
+
+        .btn-like:hover {
+            color: #ff4b5c;
+        }
+
+        .btn-like.liked {
+            color: #ff4b5c;
+            transform: scale(1.2);
+        }
+</style>
+
+
+<partial name="_FilterDiscussionPost" model="Model" />
+
+<!-- Create Post Button -->
+<div class="text-end mt-3 mb-4">
+    <button type="button"
+            class="btn btn-info text-white fw-semibold px-4 py-2 rounded-pill shadow-sm border-0"
+            data-bs-toggle="modal" data-bs-target="#createPostModal"
+            style="background: linear-gradient(135deg, #17a2b8, #138496); transition: all 0.3s ease;">
+        <i class="fas fa-pen me-2"></i> Create Post
+    </button>
+</div>
+
+<!-- Create Post Modal -->
+<div class="modal fade" id="createPostModal" tabindex="-1" aria-labelledby="createPostModalLabel" aria-hidden="true">
+    <partial name="_CreatePost" model="new CreatePostVm { DiscussionId = Model.DiscussionId, BookId = Model.Book.Id }" />
+</div>
+
+<!-- Discussion Posts -->
+<div id="discussion-posts-container">
+    <partial name="_DiscussionPostList" model="Model" />
+</div>
+
+
+@section Scripts {
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+
+<script>    
+    $(document).on("click", ".btn-like", function () {
+        const btn = $(this);
+        const postId = btn.data("post-id");
+        const countElem = btn.find(".like-count");
+        let count = parseInt(countElem.text());
+
+        const isLiked = btn.hasClass("liked");
+
+        if (isLiked) {
+            btn.removeClass("liked");
+            count--;
+        } else {
+            btn.addClass("liked");
+            count++;
+        }
+
+        countElem.text(count);
+    });
+
+
+    
+</script>
+}

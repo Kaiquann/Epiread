@@ -1,0 +1,242 @@
+@model EditEbookVm
+
+<partial name="_SweetAlert"/>
+
+<form data-ajax="true"
+      data-ajax-update="#ajax-update-content"
+      asp-action="EditEbook"
+      asp-controller="Book"
+      asp-area="Admin"
+      asp-route-bookId="@Model.BookId"
+      method="post"
+      enctype="multipart/form-data">
+
+    <input type="hidden" name="BookId" value="@Model.BookId"/>
+
+    <!-- Existing Ebooks Section -->
+    @if (Model.ExistingEbooks != null && Model.ExistingEbooks.Count > 0)
+    {
+        <div class="mb-4">
+            <h4>Existing Ebook Files</h4>
+            <p class="text-muted">You can rename or delete existing files.</p>
+            <div class="row">
+                @for (int i = 0; i < Model.ExistingEbooks.Count; i++)
+                {
+                    BookDocument doc = Model.ExistingEbooks[i];
+                    string fileName = System.IO.Path.GetFileName(doc.DocumentPath);
+                    string customName = fileName.Contains("_")
+                        ? fileName.Substring(0, fileName.IndexOf("_", StringComparison.Ordinal))
+                        : fileName;
+                    string fileExt = System.IO.Path.GetExtension(fileName).ToLowerInvariant();
+
+                    <div class="col-md-6 mb-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <div class="d-flex align-items-center">
+                                        @if (fileExt == ".pdf")
+                                        {
+                                            <i class="fas fa-file-pdf fa-2x text-danger me-2"></i>
+                                        }
+                                        else if (fileExt == ".epub")
+                                        {
+                                            <i class="fas fa-book-open fa-2x text-primary me-2"></i>
+                                        }
+                                        <div class="flex-grow-1">
+                                            <strong>@customName</strong>
+                                            <small class="text-muted d-block">@fileExt.ToUpper()</small>
+                                            <small class="text-muted d-block">Created: @doc.CreatedAt.ToString("yyyy-MM-dd HH:mm")</small>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        @if (fileExt == ".pdf")
+                                        {
+                                            <a href="@Url.Action("PdfPreview", "Book", new { area = "Admin", id = doc.Id })" target="_blank" class="btn btn-sm btn-outline-primary" title="Preview PDF in new tab">
+                                                <i class="fas fa-external-link-alt"></i> Preview
+                                            </a>
+                                        }
+                                        else if (fileExt == ".epub")
+                                        {
+                                            // EPUB: use backend logic for download and display
+                                            <a href="@Url.Action("EpubPreview", "Book", new { area = "Admin", id = doc.Id })" target="_blank" class="btn btn-sm btn-outline-primary" title="Preview EPUB in new tab">
+                                                <i class="fas fa-external-link-alt"></i> Preview
+                                            </a>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="input-group mb-2">
+                                    <span class="input-group-text">New Name</span>
+                                    <input type="text"
+                                           name="UpdatedNames[@doc.Id]"
+                                           class="form-control"
+                                           placeholder="Enter new name (optional)"
+                                           value="@customName"/>
+                                </div>
+
+                                <div class="form-check">
+                                    <input type="checkbox"
+                                           name="EbooksToDelete"
+                                           value="@doc.Id"
+                                           class="form-check-input"
+                                           id="delete_@doc.Id"/>
+                                    <label class="form-check-label text-danger" for="delete_@doc.Id">
+                                        <i class="fas fa-trash"></i> Mark for deletion
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> No existing ebook files found for this book.
+        </div>
+    }
+
+    <hr class="my-4"/>
+
+    <!-- Add New Files Section -->
+    <div class="mb-4">
+        <h4>Add New Ebook Files</h4>
+        <p class="text-muted">You can upload additional EPUB or PDF files. After selecting files you may customize the display name for each file.</p>
+        <div class="form-group">
+            <label for="NewEbookFilesInput">Select EPUB or PDF files</label>
+            <input name="NewEbookFiles"
+                   type="file"
+                   multiple
+                   accept=".epub,.pdf"
+                   class="form-control"
+                   aria-describedby="newEbookHelp"
+                   id="NewEbookFilesInput"/>
+            <small id="newEbookHelp" class="form-text text-muted">You can upload multiple .epub or .pdf files.</small>
+        </div>
+        <div id="newFileNameList" class="mb-3"></div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="d-flex justify-content-between">
+        <!-- Back to Show page (use AJAX update when available so partial mode works) -->
+        <a asp-area="Admin"
+           asp-controller="Book"
+           asp-action="Show"
+           asp-route-id="@Model.BookId"
+           class="btn btn-secondary"
+           title="Back to book details">
+            <i class="fas fa-arrow-left"></i> Go Back
+        </a>
+        <button type="submit" class="btn btn-success" data-confirm="Are you sure you want to save the changes?">
+            <i class="fas fa-save"></i> Save Changes
+        </button>
+    </div>
+</form>
+
+<script>
+    // Initialize file input handler for new uploads and allow custom naming per file
+    function initializeEditEbookFileInput() {
+        const fileInput = document.getElementById('NewEbookFilesInput');
+        const fileNameList = document.getElementById('newFileNameList');
+        if (!fileInput || !fileNameList) return;
+
+        // Clear current list
+        fileNameList.innerHTML = '';
+
+        // Helper: get default custom name (filename without extension)
+        function defaultCustomName(filename) {
+            const dotIndex = filename.lastIndexOf('.');
+            return dotIndex > 0 ? filename.substring(0, dotIndex) : filename;
+        }
+
+        fileInput.addEventListener('change',
+            function(e) {
+                fileNameList.innerHTML = '';
+                const files = e.target.files;
+                if (!files || files.length === 0) return;
+
+                for (let i = 0; i < files.length; i++) {
+                    const f = files[i];
+                    const row = document.createElement('div');
+                    row.className = 'mb-2 p-2 border rounded bg-white';
+
+                    const fname = document.createElement('div');
+                    fname.className = 'd-flex justify-content-between align-items-center mb-1';
+                    const nameLabel = document.createElement('strong');
+                    nameLabel.textContent = f.name;
+                    const ext = document.createElement('span');
+                    ext.className = 'badge bg-light text-dark border';
+                    const dot = f.name.lastIndexOf('.');
+                    ext.textContent = dot > -1 ? f.name.substring(dot).toUpperCase() : '';
+                    fname.appendChild(nameLabel);
+                    fname.appendChild(ext);
+
+                    const inputGroup = document.createElement('div');
+                    inputGroup.className = 'input-group';
+                    const span = document.createElement('span');
+                    span.className = 'input-group-text';
+                    span.textContent = 'Display Name';
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    // Use the model binder friendly name: NewCustomNames (multiple inputs will become a list)
+                    input.name = 'NewCustomNames';
+                    input.className = 'form-control';
+                    input.value = defaultCustomName(f.name);
+
+                    inputGroup.appendChild(span);
+                    inputGroup.appendChild(input);
+
+                    row.appendChild(fname);
+                    row.appendChild(inputGroup);
+
+                    fileNameList.appendChild(row);
+                }
+            });
+    }
+
+    document.addEventListener('DOMContentLoaded', initializeEditEbookFileInput);
+
+// Re-initialize after AJAX updates. Support both jQuery ajaxComplete and unobtrusive 'ajax:complete'.
+    (function() {
+        function safeInit() {
+            try {
+                initializeEditEbookFileInput();
+            } catch (e) {
+                console.warn('initializeEditEbookFileInput failed', e);
+            }
+        }
+
+        // jQuery ajaxComplete
+        if (window.jQuery) {
+            window.jQuery(document).on('ajaxComplete', function() { setTimeout(safeInit, 30); });
+            // unobtrusive-ajax also triggers 'ajax:complete' on the element
+            window.jQuery(document).on('ajax:complete', function() { setTimeout(safeInit, 30); });
+        }
+
+        // Also listen for custom events that some partial wrappers dispatch
+        document.addEventListener('ajax:complete', function() { setTimeout(safeInit, 30); });
+
+        // MutationObserver as a fallback: watch parent container and re-init when file input appears
+        try {
+            const parent = document.getElementById('ajax-update-content') || document.body;
+            const mo = new MutationObserver(function(mutations) {
+                for (let i = 0; i < mutations.length; i++) {
+                    const m = mutations[i];
+                    if (m.addedNodes && m.addedNodes.length > 0) {
+                        for (let j = 0; j < m.addedNodes.length; j++) {
+                            const node = m.addedNodes[j];
+                            if (node.querySelector && node.querySelector('#NewEbookFilesInput')) {
+                                setTimeout(safeInit, 30);
+                                return;
+                            }
+                        }
+                    }
+                }
+            });
+            mo.observe(parent, { childList: true, subtree: true });
+        } catch (e) { /* ignore observer failures in older browsers */
+        }
+    })();
+</script>

@@ -1,0 +1,106 @@
+@model HomeVm
+
+@if (Model != null && Model.TrendingBooks.Any())
+{
+    <h2 class="mb-4 text-center my-3">Trending Book</h2>
+    <div class="book-carousel position-relative my-4">
+        <button class="mx-5 carousel-btn left-btn" aria-label="Scroll left" title="Previous"> <i class="fas fa-chevron-left"></i> </button>
+        <div class="carousel-wrapper">
+            <div class="carousel-track">
+                @foreach (var book in Model.TrendingBooks.Take(12))
+                {
+                    var imgSrc = string.IsNullOrWhiteSpace(book.CoverImageLink) ? "/images/book-cover-not-available.webp" : book.CoverImageLink;
+                    <div class="book-item" data-href="@Url.Action("BookDetails", "Book", new { id = book.Id })" tabindex="0" aria-label="@book.Title by @book.AuthorName">
+                        <div class="book-cover-wrap">
+                            <img src="@imgSrc" alt="@book.Title" loading="lazy" class="book-cover">
+                            <div class="book-overlay">
+                                <div class="overlay-meta">
+                                    <div class="book-title">@book.Title</div>
+                                    <div class="book-author">by @book.AuthorName</div>
+                                </div>
+                                <div class="overlay-actions">
+                                    <a class="btn btn-sm btn-outline-light view-btn" href="@Url.Action("BookDetails", "Book", new { id = book.Id })">View</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+        <button class="mx-5 carousel-btn right-btn" aria-label="Scroll right" title="Next"> <i class="fas fa-chevron-right"></i> </button>
+    </div>
+}
+
+<style>
+    .book-carousel { max-width: 100%; overflow: visible; }
+    .carousel-wrapper { overflow-x: auto; scroll-behavior: smooth; }
+    .carousel-track { display:flex; gap: 1rem; align-items:stretch; padding: 0.5rem; }
+    .book-item { display:flex; flex-direction:column; align-items:center; width:170px; text-decoration:none; color:inherit; flex: 0 0 auto; }
+    .book-cover-wrap { position:relative; width:170px; height:240px; display:block; }
+    .book-cover { width:100%; height:100%; object-fit:cover; border-radius:10px; box-shadow: 0 6px 18px rgba(0,0,0,0.45); transition: transform 220ms ease, box-shadow 220ms ease; }
+    .book-item:focus .book-cover, .book-item:hover .book-cover { transform: translateY(-6px) scale(1.02); box-shadow:0 14px 32px rgba(0,0,0,0.6); }
+
+    .book-overlay { position:absolute; inset:0; display:flex; flex-direction:column; justify-content:space-between; padding:10px; pointer-events:none; opacity:0; transition: opacity 180ms ease; background: linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.5) 100%); border-radius:10px; }
+    .book-item:focus .book-overlay, .book-item:hover .book-overlay { opacity:1; pointer-events:auto; }
+    .overlay-meta { color:#fff; font-size:0.85rem; text-align:left; }
+    .book-title { font-weight:600; margin-bottom:4px; }
+    .book-author { font-size:0.8rem; color:rgba(255,255,255,0.8); }
+    .overlay-actions { display:flex; justify-content:flex-end; }
+    .view-btn { pointer-events:auto; }
+    .carousel-btn { position:absolute; top:50%; transform:translateY(-50%); background:linear-gradient(135deg, rgba(0,0,0,0.55), rgba(0,0,0,0.75)); color:#fff; border:none; width:46px;height:46px;border-radius:50%; cursor:pointer; z-index:40; display:flex; align-items:center; justify-content:center; box-shadow: 0 8px 20px rgba(0,0,0,0.45); transition: transform 150ms ease, background 150ms ease; }
+    .carousel-btn i { font-size: 18px; }
+    .carousel-btn.left-btn { left: -12px; }
+    .carousel-btn.right-btn { right: -12px; }
+    .carousel-btn:hover { transform:translateY(-50%) scale(1.08); background:linear-gradient(135deg, rgba(46,46,46,0.9), rgba(26,26,26,0.95)); }
+
+</style>
+
+<script>
+    (function(){
+        // simple horizontal scroll carousel for trending books
+        const wrapper = document.querySelector('.book-carousel .carousel-wrapper');
+        if (!wrapper) return;
+
+        const track = wrapper.querySelector('.carousel-track');
+        const leftBtn = document.querySelector('.book-carousel .left-btn');
+        const rightBtn = document.querySelector('.book-carousel .right-btn');
+
+        function step(direction) {
+            if (!wrapper || !track) return;
+            // scroll by approximately one card width + gap
+            const item = track.querySelector('.book-item');
+            const gap = 16; // fallback gap
+            const itemWidth = item ? (item.getBoundingClientRect().width + gap) : Math.max(wrapper.clientWidth * 0.4, 180);
+            wrapper.scrollBy({ left: direction === 'left' ? -itemWidth : itemWidth, behavior: 'smooth' });
+        }
+
+        if (leftBtn) leftBtn.addEventListener('click', e => { e.preventDefault(); step('left'); });
+        if (rightBtn) rightBtn.addEventListener('click', e => { e.preventDefault(); step('right'); });
+
+        // allow keyboard arrows when hovered
+        wrapper.addEventListener('keydown', function(e){
+            if (e.key === 'ArrowLeft') step('left');
+            if (e.key === 'ArrowRight') step('right');
+        });
+
+        // make track focusable for keyboard navigation
+        track.setAttribute('tabindex', '-1');
+
+        // click-to-center: clicking a book centers it in the wrapper. clicking View navigates to details.
+        track.addEventListener('click', function (e) {
+            // ignore clicks on the view button (anchor) so it navigates normally
+            const viewBtn = e.target.closest('.view-btn');
+            if (viewBtn) return;
+
+            const item = e.target.closest('.book-item');
+            if (!item) return;
+            // center the chosen item
+            const itemRect = item.getBoundingClientRect();
+            const wrapperRect = wrapper.getBoundingClientRect();
+            const delta = (itemRect.left + itemRect.width / 2) - (wrapperRect.left + wrapperRect.width / 2);
+            wrapper.scrollBy({ left: delta, behavior: 'smooth' });
+            // move keyboard focus to the item so hover shows overlay
+            item.focus({ preventScroll: true });
+        });
+    })();
+</script>

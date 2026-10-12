@@ -1,0 +1,13 @@
+@model Book
+@{
+    ViewBag.Title = "Book Details : " + Model.Title;
+}
+
+<section>
+    <div class="container my-5">
+        <h2 class="text-center mb-4">@ViewBag.Title</h2>
+        <div class="card" id="ajax-update-content">
+            <partial name="_Show" model="Model"/>
+        </div>
+    </div>
+</section>

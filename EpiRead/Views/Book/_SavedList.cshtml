@@ -1,0 +1,28 @@
+﻿@model BookVm
+
+<button type="button" id="saved-list-btn">Saved List ▼</button>
+<div id="saved-dropdown" class="saved-dropdown">
+    @if (Model.SearchHistory?.Any() ?? false)
+    {
+        foreach (var saved in Model.SearchHistory.Where(s => s.IsSaved))
+        {
+            <div class="saved-item">
+                <form asp-action="Search" asp-controller="Book"
+                      data-ajax="true" data-ajax-update="#book-section" data-ajax-mode="replace" method="get" style="flex-grow:1;">
+                    <input type="hidden" name="search" value="@saved.Context" />
+                    <button type="submit">@saved.Context</button>
+                </form>
+                    <form asp-action="ToggleSavedSearch" asp-controller="Book" method="post"
+                        data-ajax="true" data-ajax-update="#search-section" data-ajax-mode="replace">
+                    <input type="hidden" name="id" value="@saved.SearchHistoryId" />
+                    <button type="submit" class="saved-delete-btn">×</button>
+                </form>
+            </div>
+        }
+    }
+    else
+    {
+
+        <div class="no-saved">No saved searches yet</div>
+    }
+</div>

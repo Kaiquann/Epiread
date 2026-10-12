@@ -1,0 +1,151 @@
+﻿@model EditUserVm
+
+<partial name="_SweetAlert"/>
+<partial name="_ActionEditForm"/>
+
+<form data-ajax="true"
+      data-ajax-update="#ajax-update-content"
+      asp-action="Update"
+      asp-route-id="@Model.Id"
+      method="post"
+      enctype="multipart/form-data">
+    <input type="hidden" asp-for="Id"/>
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <table class="table table-bordered">
+        <tbody>
+        <tr>
+            <td colspan="3">
+                <label class="upload">
+                    <input asp-for="ProfileImage" accept="image/jpeg,image/png" hidden>
+                    <partial name="User/_ProfileImagePartial" model="@Model.ProfileImageLink"/>
+                    <span></span>
+                </label>
+                <span asp-validation-for="ProfileImage" class="text-danger"></span>
+            </td>
+        </tr>
+        <tr>
+            <th>Id</th>
+            <td>:</td>
+            <td>@Model.Id</td>
+        </tr>
+        <tr>
+            <th>First name</th>
+            <td>:</td>
+            <td>
+                <input asp-for="FirstName" class="form-control" data-trim/>
+                <span asp-validation-for="FirstName" class="text-danger"></span>
+            </td>
+        </tr>
+        <tr>
+            <th>Last name</th>
+            <td>:</td>
+            <td>
+                <input asp-for="LastName" class="form-control" data-trim/>
+                <span asp-validation-for="LastName" class="text-danger"></span>
+            </td>
+        </tr>
+        <tr>
+            <th>Username</th>
+            <td>:</td>
+            <td>
+                <input asp-for="UserName" class="form-control" data-trim/>
+                <span asp-validation-for="UserName" class="text-danger"></span>
+            </td>
+        </tr>
+        <tr>
+            <th>Email</th>
+            <td>:</td>
+            <td>
+                <input asp-for="Email" class="form-control" data-trim/>
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </td>
+        </tr>
+        <tr>
+            <th>Date of Birth</th>
+            <td>:</td>
+            <td>@(Model.DateOfBirth == null || Model.DateOfBirth == DateOnly.MinValue ? "N/A" : Model.DateOfBirth?.ToString("yyyy-MM-dd"))</td>
+        </tr>
+        <tr>
+            <th>Language</th>
+            <td>:</td>
+            <td>
+                <select asp-for="Language" asp-items="ViewBag.Languages" class="form-control">
+                    <option value="">Select Language</option>
+                </select>
+                <span asp-validation-for="Language" class="text-danger"></span>
+            </td>
+        </tr>
+        <tr>
+            <th>Role</th>
+            <td>:</td>
+            <td>
+                <select asp-for="Role" asp-items="ViewBag.Roles" class="form-control">
+                    <option value="">Select Role</option>
+                </select>
+                <span asp-validation-for="Role" class="text-danger"></span>
+            </td>
+        </tr>
+        <tr>
+            <th>Status</th>
+            <td>:</td>
+            <td>@(Model.Status)</td>
+        </tr>
+        <tr>
+            <th>Created At</th>
+            <td>:</td>
+            <td>@Model.CreatedAt</td>
+        </tr>
+        <tr>
+            <th>Updated At</th>
+            <td>:</td>
+            <td>@Model.UpdatedAt</td>
+        </tr>
+        </tbody>
+        <tfoot>
+        <tr>
+            <td colspan="3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <!-- Left-aligned button -->
+                    <div>
+                        <a asp-action="Index" asp-controller="User" asp-area="Admin" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left" aria-hidden="true"></i> Go Back
+                        </a>
+                    </div>
+
+                    <!-- Center-aligned buttons -->
+                    <div class="d-flex justify-content-center align-items-center gap-1 text-center">
+                        <partial name="_ActionButtonEdit" model="@Model"/>
+
+                        @if (!string.IsNullOrEmpty(Model.ProfileImagePath))
+                        {
+                            <button class="btn btn-danger"
+                                    data-confirm="Are you sure to remove this user profile image?"
+                                    form="removeProfileImageForm">
+                                <i class="fas fa-image" aria-hidden="true"></i> Remove Profile Image
+                            </button>
+                        }
+
+                        <partial name="_SendResetPasswordPartial" model="@Model"/>
+                    </div>
+                    @* Include the block reason modal. Rendered outside the form to prevent nested form issues *@
+
+                    <!-- Right-aligned button -->
+                    <div>
+                        <button class="btn btn-success" data-confirm>
+                            <i class="fas fa-save" aria-hidden="true"></i> Save Changes
+                        </button>
+                    </div>
+                </div>
+            </td>
+        </tr>
+        </tfoot>
+    </table>
+</form>
+
+@* Render block modal outside the main edit form to avoid nested form interference *@
+@await Html.PartialAsync("_BlockReason", null, new ViewDataDictionary(ViewData)
+{
+    { "BlockModalId", $"blockModal-{Model.Id}" },
+    { "BlockUserId", Model.Id },
+    { "BlockAjaxUpdateSelector", "#ajax-update-content" }
+})

@@ -1,0 +1,32 @@
+﻿@model DiscussionVm
+
+<form asp-controller="Discussion" asp-action="Index"
+      method="get"
+      data-ajax="true"
+      data-ajax-mode="replace"
+      data-ajax-update="#discussion-posts-container"
+      class="mb-4 d-flex justify-content-between align-items-center">
+
+    <input type="hidden" name="bookId" value="@Model.Book.Id" />
+
+    <!-- Search -->
+    <div class="input-group w-50">
+        <input type="text" name="search" value="@Model.Search"
+               class="form-control bg-dark text-light border-secondary"
+               placeholder="Search posts or users...">
+        <button type="submit" class="btn btn-info text-white">
+            <i class="fas fa-search"></i>
+        </button>
+    </div>
+
+    <!-- Sort Dropdown -->
+    <div>
+        <select name="sortBy"
+                class="form-select bg-dark text-light border-secondary w-auto"
+                onchange="$(this.form).submit();">
+            <option value="">Sort by</option>
+            <option value="views" selected="@(Model.SortBy == "views" ? "selected" : null)">Most Viewed</option>
+            <option value="likes" selected="@(Model.SortBy == "likes" ? "selected" : null)">Most Liked</option>
+        </select>
+    </div>
+</form>

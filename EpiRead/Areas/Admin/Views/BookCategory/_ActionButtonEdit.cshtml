@@ -1,0 +1,13 @@
+﻿@model EditBookCategoryVm
+@{
+    bool isGeneral = IsGeneral(Model.Name, Model.Slug);
+}
+
+@if (!isGeneral)
+{
+    <button data-confirm="Are you certain you want to delete this book category? This action cannot be undone."
+            class="btn btn-danger"
+            form="Delete_@Model.Id">
+        <i class="fas fa-trash" aria-hidden="true"></i> Delete
+    </button>
+}

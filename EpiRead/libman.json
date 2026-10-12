@@ -1,0 +1,120 @@
+{
+  "version": "1.0",
+  "defaultProvider": "cdnjs",
+  "defaultDestination": "wwwroot/js/",
+  "libraries": [
+    {
+      "library": "jquery@3.7.1",
+      "files": [ "jquery.min.js" ],
+      "destination": "wwwroot/lib/jquery/"
+    },
+    {
+      "library": "jquery-ajax-unobtrusive@3.2.6",
+      "files": [ "jquery.unobtrusive-ajax.min.js" ],
+      "destination": "wwwroot/lib/jquery-ajax-unobtrusive/"
+    },
+    {
+      "library": "jquery-validate@1.21.0",
+      "files": [ "jquery.validate.min.js" ],
+      "destination": "wwwroot/lib/jquery-validate/"
+    },
+    {
+      "library": "jquery-validation-unobtrusive@4.0.0",
+      "files": [ "jquery.validate.unobtrusive.min.js" ],
+      "destination": "wwwroot/lib/jquery-validation-unobtrusive/"
+    },
+    {
+      "library": "bootstrap@5.3.8",
+      "files": [ "css/bootstrap.min.css", "js/bootstrap.min.js" ],
+      "destination": "wwwroot/lib/bootstrap/"
+    },
+    {
+      "library": "animate.css@4.1.1",
+      "files": [ "animate.min.css" ],
+      "destination": "wwwroot/lib/animatecss/"
+    },
+    {
+      "library": "font-awesome@7.0.1",
+      "files": [ "css/all.min.css", "js/all.min.js" ],
+      "destination": "wwwroot/lib/fontawesome/"
+    },
+    {
+      "library": "sweetalert2@11.23.0",
+      "files": [ "sweetalert2.all.min.js", "sweetalert2.min.css" ],
+      "destination": "wwwroot/lib/sweetalert2/"
+    },
+    {
+      "library": "bootstrap-icons@1.13.1",
+      "files": [ "font/bootstrap-icons.min.css", "font/fonts/bootstrap-icons.woff2", "font/fonts/bootstrap-icons.woff" ],
+      "destination": "wwwroot/lib/bootstrap-icons/"
+    },
+    {
+      "library": "datatables.net@2.3.4",
+      "files": [ "dataTables.min.js" ],
+      "destination": "wwwroot/lib/datatables/"
+    },
+    {
+      "library": "datatables.net-bs5@2.3.4",
+      "files": [ "dataTables.bootstrap5.min.css", "dataTables.bootstrap5.min.js" ],
+      "destination": "wwwroot/lib/datatables/"
+    },
+    {
+      "library": "jszip@3.10.1",
+      "files": [ "jszip.min.js" ],
+      "destination": "wwwroot/lib/jszip/"
+    },
+    {
+      "provider": "jsdelivr",
+      "library": "epubjs@0.3.93",
+      "files": [ "dist/epub.min.js" ],
+      "destination": "wwwroot/lib/epubjs/"
+    },
+    {
+      "library": "typed.js@2.1.0",
+      "files": [ "typed.umd.js" ],
+      "destination": "wwwroot/lib/typedjs/"
+    },
+    {
+      "library": "marked@16.3.0",
+      "files": [ "lib/marked.umd.js" ],
+      "destination": "wwwroot/lib/markedjs/"
+    },
+    {
+      "library": "dompurify@3.2.7",
+      "files": [ "purify.min.js" ],
+      "destination": "wwwroot/lib/dompurify/"
+    },
+    {
+      "library": "pdf.js@5.4.149",
+      "files": [ "pdf.min.mjs", "pdf_viewer.css" ],
+      "destination": "wwwroot/lib/pdfjs/"
+    },
+    {
+      "provider": "jsdelivr",
+      "library": "pdfjs-dist@5.4.394",
+      "files": [ "build/pdf.mjs", "build/pdf.worker.mjs" ],
+      "destination": "wwwroot/lib/pdfjs-dist/"
+    },
+    {
+      "library": "canvasjs@1.7.0",
+      "files": [ "canvasjs.min.js" ],
+      "destination": "wwwroot/lib/canvasjs/"
+    },
+    {
+      "library": "html5-qrcode@2.3.8",
+      "files": [ "html5-qrcode.min.js" ],
+      "destination": "wwwroot/lib/html5-qrcode/"
+    },
+    {
+      "provider": "jsdelivr",
+      "library": "quill@2.0.3",
+      "files": [ "dist/quill.min.js", "dist/quill.snow.min.css" ],
+      "destination": "wwwroot/lib/quilljs/"
+    },
+    {
+      "library": "tesseract.js@6.0.1",
+      "files": [ "tesseract.min.js", "worker.min.js" ],
+      "destination": "wwwroot/lib/tesseract-js"
+    }
+  ]
+}

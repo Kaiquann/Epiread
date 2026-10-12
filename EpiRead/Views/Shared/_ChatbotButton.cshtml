@@ -1,0 +1,180 @@
+﻿<!-- Floating Chatbot Button and Message -->
+@{
+    string? currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    bool isChatbotPage = string.Equals(currentController, "Chatbot", StringComparison.OrdinalIgnoreCase);
+}
+@if (!isChatbotPage)
+{
+    <!-- Floating Chatbot Button -->
+    <a asp-action="Index" asp-controller="Chatbot" asp-area=""
+       class="chatbot-float-btn" title="Chatbot" aria-label="Chatbot">
+        <i class="bi bi-chat-dots-fill"></i>
+    </a>
+
+    <div id="chatbot-float-message" class="chatbot-float-message" style="bottom: 100px; display: none; position: fixed; right: 30px; z-index: 9999;">
+        <span id="chatbot-close-btn" style="cursor: pointer; float: right; font-size: 18px; margin-left: 10px;" title="Close" aria-label="Close">&times;</span>
+        <span id="chatbot-message-text">Hey there! Need help? Try our EpiRead chatbot below.</span>
+    </div>
+
+    <script type="text/javascript">
+        // Floating chatbot message logic: show every 5 minutes, starting immediately, with personalized message and close button/cookie
+        (function() {
+            var message = document.getElementById('chatbot-float-message');
+            const closeBtn = document.getElementById('chatbot-close-btn');
+            var messageText = document.getElementById('chatbot-message-text');
+
+            function setCookie(name, value, days) {
+                var expires = "";
+                if (days) {
+                    const date = new Date();
+                    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                    expires = `; expires=${date.toUTCString()}`;
+                }
+                document.cookie = name + "=" + (value || "") + expires + "; path=/";
+            }
+
+            function getCookie(name) {
+                const nameEq = name + "=";
+                const ca = document.cookie.split(';');
+                for (let i = 0; i < ca.length; i++) {
+                    let c = ca[i];
+                    while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+                    if (c.indexOf(nameEq) == 0) return c.substring(nameEq.length, c.length);
+                }
+                return null;
+            }
+
+            function showMessage() {
+                if (!message) return;
+                if (getCookie('hideChatbotMessage') === 'true') {
+                    message.style.display = 'none';
+                    return;
+                }
+                messageText.textContent = "Hey there! Need help? Try our EpiRead chatbot below.";
+                message.style.display = 'block';
+                message.classList.add('show');
+                setTimeout(function() {
+                        message.classList.remove('show');
+                        message.style.display = 'none';
+                    },
+                    7000);
+            }
+
+            if (closeBtn) {
+                closeBtn.onclick = function() {
+                    message.style.display = 'none';
+                    setCookie('hideChatbotMessage', 'true', 1);
+                };
+            }
+
+            document.addEventListener('DOMContentLoaded',
+                function() {
+                    if (getCookie('hideChatbotMessage') !== 'true') {
+                        showMessage();
+                    }
+                });
+
+            // Improved ping logic: modern fetch with timeout, exponential backoff on failures,
+            // rate-limited showMessage to avoid repeated UI flashes, and offline short-circuit.
+            (function() {
+                const pingUrl = '/Chatbot/Ping';
+                const pingTimeoutMs = 5_000; // 5 seconds timeout for ping
+                const baseIntervalMs = 5 * 60 * 1000; // default: 5 minutes
+                const maxIntervalMs = 30 * 60 * 1000; // max backoff 30 minutes
+                const maxShowsPerSession = 2; // don't show message more than twice per session
+
+                let backoffAttempts = 0;
+                let showsThisSession = 0;
+
+                function getIntervalMs() {
+                    // exponential backoff: base * 2^backoffAttempts (capped)
+                    const interval = baseIntervalMs * Math.pow(2, backoffAttempts);
+                    return Math.min(interval, maxIntervalMs);
+                }
+
+                function shouldShowMessageOnPing() {
+                    // If user closed the message via cookie, don't show
+                    if (getCookie('hideChatbotMessage') === 'true') return false;
+                    // If we have recently shown the message too many times, skip to avoid annoyance
+                    if (showsThisSession >= maxShowsPerSession) return false;
+                    // If the message is already visible, don't show again
+                    if (message && message.style.display === 'block') return false;
+                    return true;
+                }
+
+                function pingChatbot() {
+                    // If offline, count as failure and backoff
+                    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+                        backoffAttempts++;
+                        return Promise.resolve();
+                    }
+
+                    // Use fetch with AbortController and timeout
+                    if (window.fetch && window.AbortController) {
+                        const controller = new AbortController();
+                        const timer = setTimeout(() => controller.abort(), pingTimeoutMs);
+
+                        return fetch(pingUrl + '?_=' + Date.now(), { method: 'GET', signal: controller.signal })
+                            .then(resp => {
+                                clearTimeout(timer);
+                                if (resp.ok) {
+                                    backoffAttempts = 0;
+                                    if (shouldShowMessageOnPing()) {
+                                        showMessage();
+                                        showsThisSession++;
+                                    }
+                                } else {
+                                    backoffAttempts++;
+                                    if (window.console) console.warn('Chatbot ping returned non-OK status:', resp.status);
+                                }
+                            })
+                            .catch(err => {
+                                clearTimeout(timer);
+                                backoffAttempts++;
+                                if (err.name === 'AbortError') {
+                                    if (window.console) console.warn('Chatbot ping timed out');
+                                } else {
+                                    if (window.console) console.warn('Chatbot ping failed:', err);
+                                }
+                            });
+                    }
+
+                    // Fallback to jQuery if fetch isn't available
+                    return new Promise((resolve) => {
+                        $.ajax({
+                            url: pingUrl + '?_=' + Date.now(),
+                            method: 'GET',
+                            timeout: pingTimeoutMs,
+                            success: function() {
+                                backoffAttempts = 0;
+                                if (shouldShowMessageOnPing()) {
+                                    showMessage();
+                                    showsThisSession++;
+                                }
+                                resolve();
+                            },
+                            error: function(jqXhr, textStatus) {
+                                backoffAttempts++;
+                                if (window.console) console.warn('Chatbot ping failed:', textStatus);
+                                resolve();
+                            }
+                        });
+                    });
+                }
+
+                // Start pinging with recursive schedule so we can control interval dynamically
+                function startPinging() {
+                    // Ping now
+                    pingChatbot().finally(() => {
+                        // Schedule next ping based on current backoff state
+                        const next = getIntervalMs();
+                        setTimeout(startPinging, next);
+                    });
+                }
+
+                // Kick off the ping loop. This shows message immediately if appropriate, then pings with backoff.
+                startPinging();
+            })();
+        })();
+    </script>
+}

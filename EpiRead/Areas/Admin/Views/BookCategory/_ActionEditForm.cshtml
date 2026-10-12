@@ -1,0 +1,8 @@
+﻿@model EditBookCategoryVm
+
+<form data-ajax="true"
+      data-ajax-update="#ajax-update-content"
+      action="/Admin/BookCategory/Delete?ids=@Model.Id"
+      method="post"
+      id="Delete_@Model.Id">
+</form>

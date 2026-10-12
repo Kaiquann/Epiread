@@ -1,0 +1,54 @@
+﻿@model IPagedList<Discussion>
+@{
+    string[] fields =
+    [
+        "Title", "Description",
+        "Total Posts", "Total Comments",
+        "Actions"
+    ];
+}
+
+<partial name="_SweetAlert"/>
+
+<partial name="Table/_FilterFormPartial"/>
+<partial name="Table/_SearchBarPartial"/>
+<partial name="Table/_CountRecordPartial" model="@Model"/>
+
+<table class="table table-bordered table-sm">
+    <partial name="Table/_HeaderPartial" model="@fields"/>
+    <tbody>
+    @if (!Model.Any())
+    {
+        <tr>
+            <td colspan="@fields.Length" class="text-center">
+                <em>No discussions found.</em>
+            </td>
+        </tr>
+    }
+    else
+    {
+        @foreach (Discussion discussion in Model)
+        {
+            <tr>
+                <td>@discussion.Title</td>
+                <td>@(string.IsNullOrEmpty(discussion.Description) ? "No description" : discussion.Description)</td>
+                <td>@(discussion.DiscussionPosts?.Count ?? 0)</td>
+                <td>@(discussion.DiscussionPosts?.Sum(p => p.DiscussionComments?.Count ?? 0) ?? 0)</td>
+                <td class="d-flex justify-content-center align-items-center gap-1">
+                    <a asp-area="Admin" asp-controller="Discussion" asp-action="Post" asp-route-id="@discussion.Id" class="btn btn-secondary btn-sm" aria-label="View discussion">
+                        <i class="fas fa-eye" aria-hidden="true"></i> View
+                    </a>
+                    <div class="popup">
+                        @if (discussion.Book != null)
+                        {
+                            <partial name="Book/_PreviewImagePartial" model="discussion.Book.CoverImageLink"/>
+                        }
+                    </div>
+                </td>
+            </tr>
+        }
+    }
+    </tbody>
+</table>
+
+<partial name="Table/_FooterPartial" model="@Model"/>

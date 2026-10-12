@@ -1,0 +1,35 @@
+@model List<ChatMessage>
+
+@if (Model == null || !Model.Any())
+{
+    <div class="chatbot-empty-state">
+        <div class="chatbot-empty-icon">
+            <i class="fas fa-comments"></i>
+        </div>
+        <h2 class="chatbot-empty-title">No messages yet</h2>
+        <p class="chatbot-empty-text">Start the conversation by sending a message below</p>
+    </div>
+}
+else
+{
+    @foreach (ChatMessage msg in Model.OrderBy(m => m.CreatedAt))
+    {
+        bool isUser = msg.Sender == "user";
+        string formattedTime = msg.CreatedAt.ToString("h:mm tt");
+
+        <div class="chatbot-message @(isUser ? "user" : "bot")" data-message-id="@msg.Id" data-sender="@msg.Sender">
+            <div class="chatbot-message-inner">
+                <div class="chatbot-avatar @(isUser ? "user" : "bot")">
+                    <i class="fas fa-@(isUser ? "user" : "robot")"></i>
+                </div>
+                <div class="chatbot-message-content">
+                    <div class="chatbot-message-header">
+                        <span class="chatbot-message-sender">@(isUser ? "You" : "EpiRead")</span>
+                        <span class="chatbot-message-time">@formattedTime</span>
+                    </div>
+                    <div class="chatbot-message-text">@msg.Content</div>
+                </div>
+            </div>
+        </div>
+    }
+}

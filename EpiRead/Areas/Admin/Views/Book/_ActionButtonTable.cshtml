@@ -1,0 +1,41 @@
+﻿@model Book
+
+<!-- Available -->
+@if (Model.Status == nameof(BookStatusType.Available))
+{
+    <form data-ajax="true"
+          data-ajax-update="#table-ajax"
+          action="/Admin/Book/Trash?ids=@Model.Id"
+          method="post">
+        <button data-confirm="Are you sure to move this book to trash?"
+                class="btn btn-danger btn-sm"
+                aria-label="Move to trash">
+            <i class="fas fa-trash" aria-hidden="true"></i> Trash
+        </button>
+    </form>
+}
+
+<!-- Trashed -->
+@if (Model.Status == nameof(BookStatusType.Trashed))
+{
+    <form data-ajax="true"
+          data-ajax-update="#table-ajax"
+          action="/Admin/Book/Recover?ids=@Model.Id"
+          method="post">
+        <button data-confirm="Are you sure to recover this book?"
+                class="btn btn-warning btn-sm"
+                aria-label="Recover book">
+            <i class="fas fa-undo" aria-hidden="true"></i> Recover
+        </button>
+    </form>
+
+    <form data-ajax="true"
+          data-ajax-update="#table-ajax"
+          action="/Admin/Book/Delete?ids=@Model.Id"
+          method="post">
+        <button data-confirm="Are you sure to delete this book?"
+                class="btn btn-danger btn-sm">
+            <i class="fas fa-times" aria-hidden="true"></i> Delete
+        </button>
+    </form>
+}

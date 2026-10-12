@@ -1,0 +1,146 @@
+@model IPagedList<Book>
+
+<partial name="_SweetAlert"/>
+
+<style>
+    /* Card grid styles for author area */
+    .author-book-card {
+        cursor: pointer;
+        transition: transform .18s ease, box-shadow .18s ease;
+    }
+
+    .author-book-card:hover {
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+        transform: translateY(-6px);
+    }
+
+    .author-book-cover {
+        align-items: center;
+        background: #f8f9fa;
+        display: flex;
+        height: 220px;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    .author-book-cover img {
+        max-height: 100%;
+        width: auto;
+    }
+
+    .text-truncate-2 {
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        display: -webkit-box;
+        overflow: hidden;
+    }
+</style>
+
+<div class="row g-3">
+    @if (Model.Any())
+    {
+        foreach (var book in Model)
+        {
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card h-100 author-book-card animate__animated animate__fadeInUp">
+                    <div class="author-book-cover card-img-top">
+                        @if (!string.IsNullOrWhiteSpace(book.CoverImageLink))
+                        {
+                            <img src="@book.CoverImageLink" alt="@book.Title cover" class="img-fluid"/>
+                        }
+                        else
+                        {
+                            <div class="text-muted">No cover image</div>
+                        }
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title mb-1 text-truncate-2">@book.Title</h5>
+                        <p class="card-subtitle text-muted mb-2">@book.AuthorName</p>
+                        <p class="mb-2">
+                            <small class="text-muted">@book.PublicationYear?.Year • @LanguageHelper.GetLanguageName(book.LanguageCode)</small>
+                        </p>
+
+                        <div class="mt-auto d-flex justify-content-between align-items-center">
+                            <div>
+                                <!-- Navigate to full Show page so URL updates and author sees full details -->
+                                <a class="btn btn-sm btn-outline-primary" asp-area="Author" asp-controller="Book" asp-action="Show" asp-route-id="@book.Id" title="View details" role="button" aria-label="View book details">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                                @* If this listing is rendered for available books, allow moving to trash; if rendered for trashed books, allow quick recover action *@
+                                @if ((book.Status ?? string.Empty) == nameof(BookStatusType.Available))
+                                {
+                                    <form data-ajax="true"
+                                          data-ajax-update="#table-ajax"
+                                          asp-area="Author"
+                                          asp-controller="Book"
+                                          asp-action="Trash"
+                                          method="post"
+                                          style="display: inline-block; margin-left: 6px;">
+                                        <input type="hidden" name="ids" value="@book.Id"/>
+                                        <button data-confirm="Are you sure to move this book to trash?" class="btn btn-sm btn-danger" aria-label="Move to trash">
+                                            <i class="fas fa-trash" aria-hidden="true"></i> Trash
+                                        </button>
+                                    </form>
+                                }
+
+                                @if ((book.Status ?? string.Empty) == nameof(BookStatusType.Trashed))
+                                {
+                                    <form data-ajax="true"
+                                          data-ajax-update="#table-ajax"
+                                          asp-area="Author"
+                                          asp-controller="Book"
+                                          asp-action="Recover"
+                                          method="post"
+                                          style="display: inline-block; margin-left: 6px;">
+                                        <input type="hidden" name="ids" value="@book.Id"/>
+                                        <button data-confirm="Are you sure to recover this book?" class="btn btn-sm btn-warning" aria-label="Recover book">
+                                            <i class="fas fa-undo"></i> Recover
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+                            <div class="text-end">
+                                @{
+                                    // Map book status to more descriptive badge colors for better UX
+                                    var status = book.Status ?? string.Empty;
+                                    string badgeClass = status switch
+                                    {
+                                        "Available" => "bg-success",
+                                        "Trashed" => "bg-warning text-dark",
+                                        "Deleted" => "bg-danger",
+                                        _ => "bg-secondary"
+                                    };
+                                }
+                                <span class="badge @badgeClass">@status</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="col-12">
+            <div class="alert alert-info">You have not created any books yet. Click <a asp-area="Author" asp-controller="Book" asp-action="Create">Create</a> to add your first book.</div>
+        </div>
+    }
+</div>
+
+<!-- Pager -->
+@if (Model.PageCount > 1)
+{
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                <a class="page-link" data-ajax="true" data-ajax-update="#table-ajax" asp-action="Index" asp-route-page="@(Model.PageNumber - 1)" asp-route-q="@(ViewBag.Q)" asp-route-filter="@(ViewBag.Filter)">Previous</a>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link">Page @Model.PageNumber of @Model.PageCount</span>
+            </li>
+            <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                <a class="page-link" data-ajax="true" data-ajax-update="#table-ajax" asp-action="Index" asp-route-page="@(Model.PageNumber + 1)" asp-route-q="@(ViewBag.Q)" asp-route-filter="@(ViewBag.Filter)">Next</a>
+            </li>
+        </ul>
+    </nav>
+}

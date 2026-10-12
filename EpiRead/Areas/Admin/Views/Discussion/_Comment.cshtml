@@ -1,0 +1,177 @@
+@model DiscussionComment
+
+@{
+    // Compute derived values
+    var avatar = Model?.User?.ProfileImageLink;
+    if (string.IsNullOrEmpty(avatar))
+    {
+        avatar = !string.IsNullOrEmpty(Model?.User?.ProfileImagePath) ? "/uploads/" + Model.User.ProfileImagePath : "/images/profile-icon.webp";
+    }
+
+    var attachmentLink = Model?.DiscussionAttachment?.FilePath ?? Model?.DiscussionAttachment?.FileLink;
+    var attachmentFileName = string.IsNullOrEmpty(attachmentLink) ? string.Empty : System.IO.Path.GetFileName(attachmentLink ?? string.Empty);
+    var contentHtml = (Model?.Content ?? string.Empty).ToLowerInvariant();
+    var hasAttachment = !string.IsNullOrEmpty(attachmentLink) &&
+                        !contentHtml.Contains((attachmentLink ?? string.Empty).ToLowerInvariant()) &&
+                        !(!string.IsNullOrWhiteSpace(attachmentFileName) && contentHtml.Contains(attachmentFileName.ToLowerInvariant()));
+    var createdAt = Model?.CreatedAt.ToString("yyyy-MM-dd HH:mm") ?? string.Empty;
+    var isReply = Model?.ReplyCommentId != null;
+
+    // Thread color palette (light accent variants)
+    var colorPalette = new[] { "border-info", "border-warning", "border-success", "border-danger", "border-primary", "border-secondary" };
+    var idForColor = Model?.Id ?? 0;
+    var threadColor = colorPalette.Length > 0 ? colorPalette[idForColor % colorPalette.Length] : "border-primary";
+}
+
+<div class="card mb-3 comment-card @(isReply ? "comment-reply" : "") border-start border-4 @threadColor">
+    <div class="card-body position-relative d-flex gap-3">
+        <div class="flex-shrink-0">
+            <img src="@avatar" alt="@Model?.User?.UserName" class="comment-avatar"/>
+        </div>
+        <div class="flex-grow-1">
+            <div class="d-flex align-items-start justify-content-between">
+                <div>
+                    <div class="comment-author fw-semibold">@(Model?.User?.UserName ?? "Unknown")</div>
+                    <div class="comment-date small text-secondary">@createdAt</div>
+                </div>
+                <div class="ms-2">
+                    <div class="comment-actions">
+                        <partial name="_CommentActions" model="@Model"/>
+                    </div>
+                </div>
+            </div>
+
+            <div class="comment-content mt-2">@Html.Raw(HtmlSanitizerHelper.SanitizeAndFormat(Model?.Content ?? string.Empty))</div>
+
+            @if (hasAttachment)
+            {
+                <div class="mt-2 d-flex align-items-center">
+                    <img src="@Model?.DiscussionAttachment?.FileLink" alt="Attachment Image" class="img-fluid rounded mt-2 shadow-sm"
+                         style="max-height: 300px; object-fit: contain;" loading="lazy"/>
+                </div>
+            }
+
+            @* Replies - Only show for parent comments (Layer 1), not for replies (Layer 2) *@
+            @if (!isReply && Model?.Replies != null && Model.Replies.Any())
+            {
+                @* Collect all nested replies (flatten the tree) *@
+                var allReplies = new List<DiscussionComment>();
+
+                void CollectReplies(DiscussionComment comment, int depth = 0)
+                {
+                    // Safety limit: prevent excessive recursion (max 100 levels)
+                    if (depth > 100 || comment.Replies == null || !comment.Replies.Any())
+                    {
+                        return;
+                    }
+
+                    foreach (var reply in comment.Replies)
+                    {
+                        allReplies.Add(reply);
+                        CollectReplies(reply, depth + 1); // Recursively collect all nested replies
+                    }
+                }
+
+                CollectReplies(Model);
+                var repliesText = $"👇 See {allReplies.Count} repl{(allReplies.Count > 1 ? "ies" : "y")}";
+                <div class="mt-3">
+                    <a href="javascript:void(0);" class="toggle-replies text-info text-decoration-none fw-semibold" data-target="#replies-@Model.Id" data-original-text="@repliesText">
+                        @repliesText
+                    </a>
+
+                    <div id="replies-@Model.Id" class="comment-replies mt-3 d-none">
+                        @foreach (var reply in allReplies.OrderBy(r => r.CreatedAt))
+                        {
+                            @await Html.PartialAsync("_Comment", reply)
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .comment-card {
+        background: #fff;
+        border: 1px solid #e6e6e6;
+        border-radius: 12px;
+        box-shadow: 0 6px 18px rgba(16, 24, 40, 0.04);
+        color: #212529;
+        padding: .75rem;
+    }
+
+    .comment-card:hover {
+        box-shadow: 0 10px 24px rgba(16, 24, 40, 0.06);
+        transform: translateY(-2px);
+    }
+
+    .comment-reply { margin-left: 1.5rem; }
+
+    .comment-avatar {
+        border: 2px solid #f1f3f5;
+        border-radius: 50%;
+        height: 56px;
+        object-fit: cover;
+        width: 56px;
+    }
+
+    .comment-author { color: #212529; }
+
+    .comment-date { color: #6c757d; }
+
+    .comment-content {
+        color: #495057;
+        white-space: pre-wrap;
+    }
+
+    .comment-replies { margin-top: .75rem; }
+
+    .comment-attachment-thumb {
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        height: 72px;
+        object-fit: cover;
+        width: 72px;
+    }
+
+    .comment-actions {
+        align-items: center;
+        display: flex;
+        gap: .5rem;
+    }
+</style>
+
+<script>
+    // Delegate toggle for replies - ensure only one listener is added
+    (function() {
+        if (window._adminCommentToggleRepliesInitialized) return;
+        window._adminCommentToggleRepliesInitialized = true;
+
+        document.addEventListener('click',
+            function(e) {
+                var el = e.target;
+                // climb to anchor if icon/text clicked inside
+                while (el && el !== document.body && !el.classList.contains('toggle-replies')) {
+                    el = el.parentElement;
+                }
+                if (!el || !el.classList || !el.classList.contains('toggle-replies')) return;
+
+                const targetSelector = el.getAttribute('data-target');
+                if (!targetSelector) return;
+
+                const container = document.querySelector(targetSelector);
+                if (!container) return;
+
+                container.classList.toggle('d-none');
+
+                // update link text
+                const originalText = el.getAttribute('data-original-text') || el.textContent;
+                if (container.classList.contains('d-none')) {
+                    el.textContent = originalText;
+                } else {
+                    el.textContent = originalText.replace(/^👇 See/, '👆 Hide');
+                }
+            });
+    })();
+</script>

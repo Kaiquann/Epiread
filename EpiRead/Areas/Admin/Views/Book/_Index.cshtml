@@ -1,0 +1,57 @@
+@model IPagedList<Book>
+@{
+    string[] fields =
+    [
+        "", "Title", "Author Name",
+        "Year", "Language", "Actions"
+    ];
+}
+
+<partial name="_SweetAlert"/>
+
+<partial name="Table/_FilterFormPartial"/>
+<partial name="Table/_SearchBarPartial"/>
+<partial name="Table/_CountRecordPartial" model="@Model"/>
+
+<table class="table table-bordered table-sm">
+    <partial name="Table/_HeaderPartial" model="@fields"/>
+    <tbody>
+    @if (!Model.Any())
+    {
+        <tr>
+            <td colspan="@fields.Length" class="text-center">
+                <em>No records found.</em>
+            </td>
+        </tr>
+    }
+    else
+    {
+        @foreach (var book in Model)
+        {
+            <tr data-checkable>
+                <td>
+                    <input type="checkbox" name="ids" value="@book.Id" form="select-form" class="select-box"/>
+                </td>
+                <td>@book.Title</td>
+                <td>@book.AuthorName</td>
+                <td>@book.PublicationYear?.Year</td>
+                <td>@LanguageHelper.GetLanguageName(book.LanguageCode)</td>
+                <td class="d-flex justify-content-center align-items-center gap-1">
+                    <a asp-area="Admin" asp-controller="Book" asp-action="Show" asp-route-id="@book.Id" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-eye" aria-hidden="true"></i> View
+                    </a>
+                    <a asp-area="Admin" asp-controller="Book" asp-action="Edit" asp-route-id="@book.Id" class="btn btn-primary btn-sm">
+                        <i class="fas fa-edit" aria-hidden="true"></i> Edit
+                    </a>
+                    <partial name="_ActionButtonTable" model="@book"/>
+                    <div class="popup">
+                        <partial name="Book/_PreviewImagePartial" model="book.CoverImageLink"/>
+                    </div>
+                </td>
+            </tr>
+        }
+    }
+    </tbody>
+</table>
+
+<partial name="Table/_FooterPartial" model="@Model"/>

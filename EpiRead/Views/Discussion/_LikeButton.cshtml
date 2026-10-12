@@ -1,0 +1,24 @@
+﻿@model DiscussionPostVm
+
+@{
+    var currentUserId = Model.User?.Id; // ensure your VM includes CurrentUser
+    bool isLiked = Model.Post.DiscussionLikeCounts.Any(l => l.UserId == currentUserId);
+    int likeCount = Model.Post.DiscussionLikeCounts.Count(l => l.DiscussionPostId == Model.Post.Id);
+}
+<form asp-controller="Discussion" asp-action="ToggleLike"
+      data-ajax="true"
+      data-ajax-update="#updatePost-ajax" data-ajax-mode="replace"
+      method="post"
+      class="d-inline">
+    <input type="hidden" name="discussionPostId" value="@Model.Post.Id" />
+    <input type="hidden" name="bookId" value="@Model.Post.Discussion.Book.Id" />
+    <input type="hidden" name="source" value="post-comment" />
+    <div id="like-section-@Model.Post.Id">
+        <button type="submit"
+                class="btn btn-sm rounded-pill px-3 py-1 @(isLiked ? "btn-primary text-white" : "btn-outline-light")">
+            <i class="fas fa-thumbs-up me-1 @(isLiked ? "text-white" : "")"></i>
+            <span class="like-count">@likeCount</span>
+        </button>
+    </div>
+
+</form>

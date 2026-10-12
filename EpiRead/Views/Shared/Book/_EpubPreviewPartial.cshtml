@@ -1,0 +1,59 @@
+﻿<!DOCTYPE html>
+<html id="bibi">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+
+    <title>This E-Book is Published with Bibi | EPUB Reader on your website.</title>
+
+    <!-- # Bibi | EPUB Reader on your website. : © Satoru Matsushima - https://bibi.epub.link or https://github.com/satorumurmur/bibi / Licensed under the MIT License - https://github.com/satorumurmur/bibi/blob/master/LICENSE -->
+
+    <!-- 「わたしのことは『ビビ』と呼んでください。『ビビ』はわたしの名前なんです」 —— エレクトラ・パブリケーヌ『ビビのみぎくるぶし』 -->
+    <!-- 「まあ！　それじゃあやっぱり、『ビビ』はわたしの“名前”だったのですね？」 —— ソフィア・パインアイランド『ビビさんたちのこと』 -->
+    <!-- 「このあたりにビビさんという人がいると聞いて来たのですが、あなたですか？」 —— ビビ・ララルー『ポケットに眼鏡』 -->
+
+    <!-- Updated by : Chong Jun Xiang -->
+    <!-- Description: Allow to pass in the book path url to direct preview without select the book -->
+
+    <link id="bibi-style" rel="stylesheet" href="/lib/bibi/resources/styles/bibi.css" asp-append-version="true"/>
+    <link id="bibi-dress" rel="stylesheet" href="/lib/bibi/wardrobe/everyday/bibi.dress.css" asp-append-version="true"/>
+    <script id="bibi-script" src="/lib/bibi/resources/scripts/bibi.js" asp-append-version="true"></script>
+    <script id="bibi-preset" src="/lib/bibi/presets/default.js" data-bibi-bookshelf="" asp-append-version="true"></script>
+</head>
+
+@{
+    string? epubFileUrl = Model as string;
+    // Extract just the filename from the full path for Bibi bookshelf
+    string? bookPath = "";
+    if (!string.IsNullOrEmpty(epubFileUrl))
+    {
+        // Remove leading ~ if present
+        if (epubFileUrl.StartsWith("~/"))
+        {
+            epubFileUrl = epubFileUrl.Substring(1);
+        }
+
+        // Remove leading slash if present
+        if (epubFileUrl.StartsWith("/"))
+        {
+            epubFileUrl = epubFileUrl.Substring(1);
+        }
+
+        // Remove "uploads/ebooks/" prefix if present to get relative path from bookshelf
+        if (epubFileUrl.StartsWith("uploads/ebooks/"))
+        {
+            bookPath = epubFileUrl.Substring("uploads/ebooks/".Length);
+        }
+        else
+        {
+            bookPath = epubFileUrl;
+        }
+    }
+}
+
+<body data-bibi-book="@bookPath">
+
+</body>
+
+</html>

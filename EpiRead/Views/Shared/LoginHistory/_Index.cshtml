@@ -1,0 +1,182 @@
+﻿@model IPagedList<LoginHistory>
+@{
+    // Redefined columns for compact, grouped display
+    string[] fields =
+    [
+        "User", "Location", "IP / Org", "Login Time", "Actions"
+    ];
+}
+
+<partial name="Table/_FilterFormPartial"/>
+<partial name="Table/_SearchBarPartial"/>
+<partial name="Table/_CountRecordPartial" model="@Model"/>
+
+<div class="card shadow-sm mb-4">
+    @* <div class="card-header bg-light fw-bold">
+        Login History
+    </div> *@
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-bordered table-sm table-striped table-hover align-middle mb-0">
+                <partial name="Table/_HeaderPartial" model="@fields"/>
+                <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="@fields.Length" class="text-center">No records found.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var loginHistory in Model)
+                    {
+                        var userInitial = !string.IsNullOrEmpty(loginHistory.Email) ? loginHistory.Email.Substring(0, 1).ToUpper() : "?";
+                        var avatarColor = "bg-primary"; // Optionally randomize or hash for color variety
+                        // Try to infer country code from country name (e.g., "Singapore" => "sg"), fallback to flag placeholder
+                        string? countryCode = null;
+                        if (!string.IsNullOrEmpty(loginHistory.Country) && loginHistory.Country.Length >= 2)
+                        {
+                            // Use first two letters as ISO code fallback (not perfect, but better than nothing)
+                            countryCode = loginHistory.Country.Substring(0, 2).ToLower();
+                        }
+
+                        var countryFlag = !string.IsNullOrEmpty(countryCode)
+                            ? $"<span class='me-1'><img src='https://flagcdn.com/16x12/{countryCode}.png' alt='{loginHistory.Country}' style='width:20px;height:14px;object-fit:cover;vertical-align:middle;border-radius:2px;'/></span>"
+                            : "<span class='me-1'><svg width='20' height='14' style='vertical-align:middle'><rect width='20' height='14' fill='#e0e0e0'/><text x='10' y='10' text-anchor='middle' font-size='10' fill='#888'>🏳️</text></svg></span>";
+                        string? loginTimeIso = loginHistory.LoginTime != default ? loginHistory.LoginTime.ToString("o") : null;
+                        // Build a concise location string and show N/A if nothing is available
+                        var locationParts = new List<string>();
+                        if (!string.IsNullOrWhiteSpace(loginHistory.City)) locationParts.Add(loginHistory.City);
+                        if (!string.IsNullOrWhiteSpace(loginHistory.Region)) locationParts.Add(loginHistory.Region);
+                        if (!string.IsNullOrWhiteSpace(loginHistory.Country)) locationParts.Add(loginHistory.Country);
+                        var locationText = locationParts.Any() ? string.Join(", ", locationParts) : "N/A";
+                        <tr>
+                            <!-- User (avatar + email) -->
+                            <td class="d-flex align-items-center gap-2" style="min-width: 180px;">
+                                @if (!string.IsNullOrEmpty(loginHistory.User?.ProfileImagePath))
+                                {
+                                    <img src="/uploads/@loginHistory.User.ProfileImagePath"
+                                         alt="Profile"
+                                         loading="lazy"
+                                         class="avatar-circle d-inline-flex justify-content-center align-items-center me-2"
+                                         style="border-radius: 50%; height: 32px; object-fit: cover; width: 32px;"/>
+                                }
+                                else
+                                {
+                                    <span class="avatar-circle @avatarColor text-white fw-bold d-inline-flex justify-content-center align-items-center me-2"
+                                          style="border-radius: 50%; font-size: 1.1rem; height: 32px; width: 32px;">
+                                        @userInitial
+                                    </span>
+                                }
+                                <span class="fw-semibold">@(string.IsNullOrWhiteSpace(loginHistory.Email) ? "N/A" : loginHistory.Email)</span>
+                            </td>
+                            <!-- Location (City, Region, Country, flag, timezone badge) -->
+                            <td style="min-width: 170px;">
+                                <div>
+                                    @Html.Raw(countryFlag)
+                                    <span>@Html.Raw(locationText)</span>
+                                </div>
+                                @if (!string.IsNullOrWhiteSpace(loginHistory.Timezone))
+                                {
+                                    <span class="badge bg-light text-secondary border mt-1" style="font-size: 0.75em;">
+                                        <i class="bi bi-clock me-1"></i>@loginHistory.Timezone
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-light text-muted border mt-1" style="font-size: 0.75em;">N/A</span>
+                                }
+                            </td>
+                            <!-- IP / Org -->
+                            <td style="min-width: 140px;">
+                                <div>
+                                    <span data-bs-toggle="tooltip" title="IP: @(string.IsNullOrWhiteSpace(loginHistory.Ip) ? "N/A" : loginHistory.Ip)">@(string.IsNullOrWhiteSpace(loginHistory.Ip) ? "N/A" : loginHistory.Ip)</span>
+                                    @if (!string.IsNullOrWhiteSpace(loginHistory.Org))
+                                    {
+                                        <span class="text-muted small d-block" style="font-size: 0.85em;">@loginHistory.Org</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small d-block" style="font-size: 0.85em;">N/A</span>
+                                    }
+                                </div>
+                            </td>
+                            <!-- Login Time -->
+                            <td style="min-width: 120px;">
+                                @if (!string.IsNullOrEmpty(loginTimeIso))
+                                {
+                                    <span title="@loginTimeIso">@loginHistory.LoginTime.ToString("yyyy-MM-dd HH:mm")</span>
+                                }
+                                else
+                                {
+                                    <span>N/A</span>
+                                }
+                            </td>
+                            <!-- Actions -->
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(loginHistory.Ip))
+                                {
+                                    <a href="https://ipinfo.io/@(loginHistory.Ip)"
+                                       class="btn btn-secondary btn-sm"
+                                       target="_blank"
+                                       rel="noopener"
+                                       aria-label="Go to IP info for @(loginHistory.Ip)"
+                                       title="Go to IP info">
+                                        <i class="fas fa-eye" aria-hidden="true"></i> View IP Info
+                                    </a>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-secondary btn-sm disabled" aria-disabled="true" title="No IP available">
+                                        <i class="fas fa-eye" aria-hidden="true"></i> N/A
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<partial name="Table/_FooterPartial" model="@Model"/>
+
+<style>
+    .avatar-circle {
+        align-items: center;
+        background: #0d6efd;
+        border-radius: 50%;
+        display: inline-flex;
+        font-size: 1.1rem;
+        justify-content: center;
+        min-height: 32px;
+        min-width: 32px;
+    }
+
+    .table th {
+        background-color: #f8f9fa !important;
+        font-weight: bold;
+        vertical-align: middle;
+    }
+
+    .table td, .table th {
+        padding-bottom: .65rem;
+        padding-left: .75rem;
+        padding-right: .75rem;
+        padding-top: .65rem;
+        vertical-align: middle;
+    }
+</style>
+
+<script>
+    // Initialize Bootstrap tooltips for dynamic content.
+    document.addEventListener('DOMContentLoaded',
+        function() {
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.forEach(function(tooltipTriggerEl) {
+                new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+</script>

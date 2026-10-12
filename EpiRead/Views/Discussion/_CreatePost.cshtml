@@ -1,0 +1,99 @@
+﻿@model CreatePostVm
+
+<div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content bg-dark text-light rounded-4 border-0 shadow-lg">
+        <div class="modal-header border-secondary">
+            <h5 class="modal-title text-info fw-bold" id="createPostModalLabel">
+                <i class="fas fa-reply me-2"></i> Write a Post
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form id="createPostForm" asp-controller="Discussion" asp-action="CreatePost" method="post" enctype="multipart/form-data">
+                <input type="hidden" asp-for="DiscussionId" />
+                <input type="hidden" asp-for="BookId" />
+
+                <div class="modal-body">
+                    <!-- Title -->
+                    <div class="mb-3">
+                        <label asp-for="Title" class="form-label text-info fw-semibold"></label>
+                        <input asp-for="Title" class="form-control bg-secondary text-light border-0"
+                               placeholder="Enter your post title..." />
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
+
+                    <!-- Content -->
+                    <div class="mb-3">
+                        <label class="form-label text-info fw-semibold">Content</label>
+                    <div id="postEditor" class="bg-secondary text-light rounded-3 p-2" style="min-height:150px;"></div>
+                        <input type="hidden" id="contentInput" name="content" />
+                    </div>
+                </div>
+
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-outline-light rounded-pill px-4"
+                            data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-info text-white fw-semibold rounded-pill px-4">
+                        <i class="fas fa-paper-plane me-2"></i> Post
+                    </button>
+                </div>
+            </form>
+    </div>
+</div>
+
+<script>
+        document.addEventListener("DOMContentLoaded", function () {
+        var quill = new Quill('#postEditor', {
+            theme: 'snow',
+            placeholder: 'Write something...',
+            modules: {
+                toolbar: [
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'header': [1, 2, 3, false] }],
+                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                    ['link', 'image'],
+                    ['clean']
+                ]
+            }
+        });
+
+        var modal = document.getElementById('createPostModal'); // make sure your modal has this ID
+        if(modal) {
+            // Clear Quill content when modal is hidden
+            modal.addEventListener('hidden.bs.modal', function () {
+                quill.setContents([]); // Clear the editor
+                document.getElementById('contentInput').value = ''; // Clear hidden input
+            });
+        }
+
+        // On submit, copy HTML to hidden input
+              document.addEventListener('submit', function (e) {
+        if (e.target && e.target.id === 'createPostForm') {
+            const html = quill.root.innerHTML.trim();
+            document.getElementById("contentInput").value = html;
+        }
+    });
+
+    });
+
+        document.addEventListener('submit', function (e) {
+        if (e.target && e.target.id === 'createPostForm') {
+
+            const html = quill.root.innerHTML.trim();
+            const text = quill.getText().trim(); // plain text version
+
+            if (text.length === 0) {
+                e.preventDefault(); // stop submit
+                alert("Content is required.");
+                return;
+            }
+
+            document.getElementById("contentInput").value = html;
+        }
+    });
+
+
+</script>
+
+

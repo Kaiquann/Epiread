@@ -1,0 +1,106 @@
+﻿@model ChangeEmailVm;
+@{
+    ViewBag.Title = "Change your email";
+}
+
+<section>
+    <div class="container my-5 profile-bg" style="max-width: 540px; min-height: 70vh;">
+        <form asp-controller="Account" asp-action="ChangeEmail" method="post" class="change-email-form">
+            <h1 class="mb-4 fw-bold" style="font-size: 2.1rem; letter-spacing: -1px;">@ViewBag.Title</h1>
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+            <div class="mb-4">
+                <label asp-for="OldEmail" class="form-label field-label"></label>
+                <input asp-for="OldEmail" class="form-control field-input" readonly/>
+                <span asp-validation-for="OldEmail" class="text-danger"></span>
+            </div>
+            <div class="mb-4">
+                <label asp-for="Email" class="form-label field-label"></label>
+                <input asp-for="Email" class="form-control field-input"/>
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class="mb-5">
+                <label asp-for="Password" class="form-label field-label"></label>
+                <input asp-for="Password" class="form-control field-input"/>
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-4 gap-2">
+                <a asp-controller="Account" asp-action="Profile" class="btn btn-link cancel-link px-0 fw-semibold">CANCEL</a>
+                <button type="submit" class="btn btn-success set-email-btn px-4 py-2 fw-semibold">SET NEW EMAIL</button>
+            </div>
+        </form>
+    </div>
+</section>
+
+<style>
+    body, .profile-bg { background: #23262F !important; }
+
+    .change-email-form {
+        background: transparent;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 0;
+    }
+
+    .change-email-form h1 {
+        color: #fff;
+        font-weight: 700;
+        text-align: left;
+    }
+
+    .field-label {
+        color: #b0b0b0;
+        font-size: 1rem;
+        font-weight: 500;
+        letter-spacing: 0.01em;
+        margin-bottom: 0.3rem;
+    }
+
+    .field-input {
+        background: transparent;
+        border: none;
+        border-bottom: 2px solid #444a57;
+        border-radius: 0;
+        box-shadow: none;
+        color: #fff;
+        font-size: 1.1rem;
+        outline: none;
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .field-input:focus {
+        background: transparent;
+        border-bottom: 2px solid #4be37a;
+        box-shadow: none;
+        color: #fff;
+    }
+
+    .set-email-btn {
+        background: #1ed760;
+        border: none;
+        border-radius: 24px;
+        color: #23262F;
+        font-size: 1.08rem;
+        letter-spacing: 0.04em;
+        min-width: 210px;
+        transition: background 0.2s, color 0.2s;
+    }
+
+    .set-email-btn:hover, .set-email-btn:focus {
+        background: #1db954;
+        color: #fff;
+    }
+
+    .cancel-link {
+        border-radius: 24px;
+        color: #b0b0b0;
+        font-size: 1.08rem;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .cancel-link:hover, .cancel-link:focus {
+        color: #fff;
+        text-decoration: underline;
+    }
+</style>

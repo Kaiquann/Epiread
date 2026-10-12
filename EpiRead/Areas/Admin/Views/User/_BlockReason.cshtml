@@ -1,0 +1,92 @@
+@{
+    // Get the unique modal id and user identifier from ViewData (required)
+    var modalId = ViewData["BlockModalId"] as string ?? "blockReasonModal";
+    var userId = ViewData["BlockUserId"]?.ToString() ?? string.Empty;
+    // Select update target for ajax; default to #ajax-update-content if not provided
+    var ajaxUpdateSelector = ViewData["BlockAjaxUpdateSelector"] as string ?? "#ajax-update-content";
+}
+
+<!-- Bootstrap Modal for Block Reason -->
+<div class="modal fade" id="@modalId" tabindex="-1" aria-labelledby="@modalId-Label" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="@modalId-Label">Block Reason</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-area="Admin" asp-controller="User" asp-action="Block" method="post" data-ajax="true"
+                  data-ajax-method="POST" data-ajax-mode="replace" data-ajax-update="@ajaxUpdateSelector"
+                  data-ajax-success="onBlockReasonSuccess" class="block-reason-form" data-modal-id="@modalId">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@userId"/>
+                <div class="modal-body">
+                    <!-- Textarea for entering the block reason -->
+                    <div class="mb-3">
+                        <label for="@modalId-Textarea" class="form-label">
+                            Please provide a reason for blocking this user
+                            (optional):
+                        </label>
+                        <textarea class="form-control" id="@modalId-Textarea" name="reason" rows="4" maxlength="255"
+                            placeholder="Enter block reason here..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <!-- Cancel and Submit buttons -->
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary"
+                            data-confirm="Are you sure you want to block this user?">
+                        Submit
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Handle block reason form submission with modal dismissal
+    (function() {
+        // Provide a success callback that hides the modal and cleans up the backdrop
+        window.onBlockReasonSuccess = function(data, status, xhr) {
+            // 'this' should be the form element in unobtrusive-ajax context; fallback to last submitted form
+            // Use vanilla JS so this works even when jQuery is not loaded
+            let formElement = null;
+            if (this.tagName && this.tagName.toLowerCase() === 'form') {
+                // when invoked by unobtrusive-ajax, `this` is the form element
+                formElement = this;
+            } else {
+                const forms = document.querySelectorAll('form.block-reason-form');
+                formElement = forms.length ? forms[forms.length - 1] : null;
+            }
+            const modalId = formElement ? formElement.getAttribute('data-modal-id') : null;
+            if (modalId) {
+                const modalElement = document.getElementById(modalId);
+                if (modalElement) {
+                    const modal = window.bootstrap.Modal.getOrCreateInstance(modalElement);
+                    if (modal) {
+                        modal.hide();
+                    }
+                }
+            }
+
+            // Fallback cleanup to remove leftover backdrops
+            (document.querySelectorAll('.modal-backdrop') || []).forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+        };
+
+        // Ensure forms have success handler wired when they are rendered
+        // Use vanilla event delegation to wire up forms rendered dynamically
+        document.addEventListener('submit',
+            function(event) {
+                const target = event.target;
+                if (!(target instanceof HTMLFormElement)) return;
+                if (!target.classList.contains('block-reason-form')) return;
+
+                // Attach the unobtrusive ajax success callback if the form opts in
+                if (target.getAttribute('data-ajax') === 'true') {
+                    target.setAttribute('data-ajax-success', 'onBlockReasonSuccess');
+                }
+            },
+            false);
+    })();
+</script>

@@ -1,0 +1,20 @@
+﻿@model BookVm
+
+<button id="readNowBtn" class="btn btn-primary btn-sm px-3 py-2 fw-semibold">
+    Read Now
+</button>
+
+<form asp-action="preferenceBookAction" asp-controller="Book" method="post">
+    <input type="hidden" name="bookId" value="@Model.Id" />
+    <button type="submit" class="btn btn-sm px-3 py-2 fw-semibold @(Model.IsPreferred ? "btn-danger" : "btn-outline-light")">
+        @(Model.IsPreferred ? "Remove from Preference" : "Add to Preference")
+    </button>
+</form>
+
+<a asp-controller="Discussion"
+   asp-action="Index"
+   asp-route-bookId="@Model.Id"
+   class="btn btn-info btn-sm text-white fw-semibold px-4 py-2 rounded-pill shadow-sm border-0"
+   style="background: linear-gradient(135deg, #17a2b8, #138496); transition: all 0.3s ease;">
+    <i class="fas fa-comments me-2"></i> Go to Discussion
+</a>

@@ -1,0 +1,47 @@
+﻿<!-- Author: Chong Jun Xiang -->
+<!-- Description: Epub Translate controls & scripts -->
+@{
+    var userLang = ViewBag.UserLanguage as string ?? nameof(LanguageCodeType.EN);
+}
+
+<div id="translateToolbar" class="translate-toolbar shadow-sm" data-user-language="@userLang">
+    <div class="d-flex align-items-center p-2">
+        <select id="fromLang" class="form-select form-select-sm me-1" style="min-width: 120px;">
+            <option value="auto">Auto</option>
+            @{
+                SelectList fromLangs = LanguageHelper.ToLanguageSelectList();
+                foreach (SelectListItem? item in fromLangs)
+                {
+                    <option value="@item.Value">@item.Text (@item.Value)</option>
+                }
+            }
+        </select>
+
+        <select id="toLang" class="form-select form-select-sm me-1" style="min-width: 120px;">
+            @{
+                SelectList toLangs = LanguageHelper.ToLanguageSelectList();
+                foreach (SelectListItem? item in toLangs)
+                {
+                    if (string.Equals(item.Value, userLang, StringComparison.OrdinalIgnoreCase))
+                    {
+                        <option value="@item.Value" selected="selected">@item.Text (@item.Value)</option>
+                    }
+                    else
+                    {
+                        <option value="@item.Value">@item.Text (@item.Value)</option>
+                    }
+                }
+            }
+        </select>
+
+        <button id="translateBtn" class="btn btn-sm btn-primary me-1">Translate</button>
+        <button id="closeTranslateBtn" class="btn btn-sm btn-outline-secondary">×</button>
+    </div>
+</div>
+
+<link rel="stylesheet" href="@(Url.Content("~/css/epub-translate.css"))" asp-append-version="true"/>
+<script src="@(Url.Content("~/js/epub-translate.js"))" asp-append-version="true"></script>
+<script>
+    // expose user preferred language globally for epub-translate.js
+    window._userPreferredLang = "@userLang";
+</script>

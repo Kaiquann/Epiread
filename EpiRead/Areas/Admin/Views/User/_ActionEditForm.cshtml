@@ -1,0 +1,73 @@
+﻿@model EditUserVm
+
+<form data-ajax="true"
+      data-ajax-update="#ajax-update-content"
+      asp-area="Admin"
+      asp-controller="User"
+      asp-action="RemoveProfileImage"
+      asp-route-id="@Model.Id"
+      method="post"
+      id="removeProfileImageForm">
+</form>
+
+<form data-ajax="true"
+      data-ajax-update="#ajax-update-content"
+      asp-area="Admin"
+      asp-controller="User"
+      asp-action="SendResetPasswordLink"
+      asp-route-id="@Model.Id"
+      method="post"
+      id="sendResetPasswordForm">
+</form>
+
+@if (Model.Status == nameof(UserStatusType.Active))
+{
+    <form data-ajax="true"
+          data-ajax-update="#ajax-update-content"
+          action="/Admin/User/Block?id=@Model.Id"
+          method="post"
+          id="Block_@Model.Id">
+    </form>
+
+    <form data-ajax="true"
+          data-ajax-update="#ajax-update-content"
+          action="/Admin/User/Deactivate?ids=@Model.Id"
+          method="post"
+          id="Deactivate_@Model.Id">
+    </form>
+}
+
+
+@if (Model.Status == nameof(UserStatusType.Blocked))
+{
+    <form data-ajax="true"
+          data-ajax-update="#ajax-update-content"
+          action="/Admin/User/Unblock?ids=@Model.Id"
+          method="post"
+          id="Unblock_@Model.Id">
+    </form>
+
+    <form data-ajax="true"
+          data-ajax-update="#ajax-update-content"
+          action="/Admin/User/Deactivate?ids=@Model.Id"
+          method="post"
+          id="Deactivate_@Model.Id">
+    </form>
+}
+
+@if (Model.Status == nameof(UserStatusType.Deactivated))
+{
+    <form data-ajax="true"
+          data-ajax-update="#ajax-update-content"
+          action="/Admin/User/Reactivate?ids=@Model.Id"
+          method="post"
+          id="Reactivate_@Model.Id">
+    </form>
+
+    <form data-ajax="true"
+          data-ajax-update="#ajax-update-content"
+          action="/Admin/User/PermanentlyDelete?ids=@Model.Id"
+          method="post"
+          id="PermanentlyDelete_@Model.Id">
+    </form>
+}

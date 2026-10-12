@@ -1,0 +1,70 @@
+﻿@{
+    string readerType = ViewBag.ReaderType as string ?? "";
+    string fileUrl = "";
+    int currentPage = ViewBag.CurrentPage as int? ?? 0;
+    int bookId = ViewBag.bookId as int? ?? 0;
+
+    if (readerType == "epub")
+    {
+        fileUrl = ViewBag.EpubFileUrl as string ?? "";
+    }
+    else if (readerType == "pdf")
+    {
+        fileUrl = ViewBag.PdfFileUrl as string ?? "";
+    }
+
+    int documentId = ViewBag.documentId as int? ?? 0;
+}
+
+<div class="readbook-bg d-flex align-items-center justify-content-center" style="background: #383D48; min-height: 100vh;">
+    <div class="readbook-container position-relative shadow-lg">
+        <!-- Toolbar -->
+        <div class="readbook-toolbar d-flex justify-content-between align-items-center px-4 py-2">
+           
+            <button class="btn btn-outline-light btn-sm px-3 py-1 rounded-pill" onclick="window.history.back()">
+                <i class="fas fa-arrow-left me-2"></i> Back
+            </button>
+            <button class="btn btn-outline-light btn-sm px-3 py-1 rounded-pill" onclick="window.location.href='/Book/BookDetails/@bookId'">
+                <i class="fas fa-arrow-left me-2"></i> Back to Book Details
+            </button>
+            <h5 class="text-light m-0">Now Reading</h5>
+        </div>
+
+        <!-- Reader Content -->
+        <div class="readbook-content flex-grow-1 p-3 bg-dark rounded-bottom">
+            @if (readerType == "epub")
+            {
+                <partial name="_EpubReaderPartial" model="new { FileUrl = fileUrl, CurrentPage = currentPage, documentId = documentId }" />
+            }
+
+            else if (readerType == "pdf")
+            {
+                <partial name="_PdfReaderPartial" model="new { FileUrl = fileUrl, CurrentPage = currentPage, documentId = documentId }" />
+            }
+            else
+            {
+                <p class="text-light text-center my-5">Invalid format or no reader available.</p>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .readbook-container {
+        background: #23262F;
+        border-radius: 18px;
+        box-shadow: 0 2px 32px #23262F55;
+        display: flex;
+        flex-direction: column;
+        margin: 40px auto;
+        max-width: 900px;
+        width: 100%;
+        min-height: 600px;
+        overflow: hidden;
+    }
+
+    .readbook-toolbar {
+        background: #2F333B;
+        border-bottom: 1.5px solid #353945;
+    }
+</style>

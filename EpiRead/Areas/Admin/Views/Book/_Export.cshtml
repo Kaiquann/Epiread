@@ -1,0 +1,58 @@
+@model IPagedList<Book>
+@{
+    string[] fields =
+    [
+        "", "Title", "Author Name",
+        "Year", "Language"
+    ];
+}
+
+<partial name="_SweetAlert"/>
+
+<partial name="Table/_FilterFormPartial"/>
+<partial name="Table/_SearchBarPartial"/>
+<partial name="Table/_CountRecordPartial" model="@Model"/>
+
+<div class="alert alert-info mb-2" role="alert">
+    <small>1. If you choose 'Full Backup', the server will fetch cover images and ebook files and include them in the ZIP using the same paths found in CSV.</small>
+    <br/>
+    <small>2. If you choose 'Metadata only', only the book metadata will be exported.</small>
+    <br/>
+    <small>3. If you do not check any books, all books will be exported.</small>
+</div>
+
+<table class="table table-bordered table-sm">
+    <partial name="Table/_HeaderPartial" model="@fields"/>
+    <tbody>
+    @if (!Model.Any())
+    {
+        <tr>
+            <td colspan="@fields.Length" class="text-center">
+                <em>No records found.</em>
+            </td>
+        </tr>
+    }
+    else
+    {
+        @foreach (var book in Model)
+        {
+            <tr data-checkable>
+                <td>
+                    <input type="checkbox" name="ids" value="@book.Id" form="select-form" class="select-box"/>
+                </td>
+                <td>@book.Title</td>
+                <td>@book.AuthorName</td>
+                <td>@book.PublicationYear?.Year</td>
+                <td>
+                    @LanguageHelper.GetLanguageName(book.LanguageCode)
+                    <div class="popup">
+                        <partial name="Book/_PreviewImagePartial" model="book.CoverImageLink"/>
+                    </div>
+                </td>
+            </tr>
+        }
+    }
+    </tbody>
+</table>
+
+<partial name="Table/_FooterPartial" model="@Model"/>

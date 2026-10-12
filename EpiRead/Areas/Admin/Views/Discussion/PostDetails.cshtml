@@ -1,0 +1,14 @@
+@model DiscussionPost
+@{
+    ViewBag.Title = Model?.Title ?? "Discussion Post";
+}
+
+<section>
+    <div class="container my-5">
+        <div class="card">
+            <div class="card-body" id="table-ajax">
+                <partial name="_PostDetails" model="@Model"/>
+            </div>
+        </div>
+    </div>
+</section>

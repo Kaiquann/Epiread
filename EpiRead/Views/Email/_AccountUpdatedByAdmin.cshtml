@@ -1,0 +1,270 @@
+@model AccountUpdatedByAdminVm
+
+@* Author: Chong Jun Xiang *@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Account Updated By Admin</title>
+    <style>
+        body {
+            background-color: #f4f4f4;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            margin: 0 auto;
+            max-width: 650px;
+            padding: 20px;
+            width: 100%;
+        }
+
+        .card {
+            background: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-top: 30px;
+            padding: 30px;
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px 8px 0 0;
+            color: #fff;
+            margin: -30px -30px 20px -30px;
+            padding: 25px 30px;
+            text-align: center;
+        }
+
+        .card-header h5 {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .card-header p {
+            font-size: 14px;
+            margin: 8px 0 0 0;
+            opacity: 0.9;
+        }
+
+        .alert-box {
+            background-color: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 5px;
+            color: #856404;
+            margin-bottom: 25px;
+            padding: 15px;
+        }
+
+        .alert-box strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .info-section { margin-bottom: 25px; }
+
+        .info-section h6 {
+            border-bottom: 2px solid #667eea;
+            color: #333;
+            font-size: 16px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+        }
+
+        .info-row {
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+        }
+
+        .info-row:last-child { border-bottom: none; }
+
+        .info-label {
+            color: #555;
+            flex: 0 0 150px;
+            font-weight: 600;
+        }
+
+        .info-value {
+            color: #333;
+            flex: 1;
+            text-align: right;
+        }
+
+        .changes-table {
+            border-collapse: collapse;
+            margin: 20px 0;
+            width: 100%;
+        }
+
+        .changes-table th {
+            background-color: #667eea;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .changes-table td {
+            border-bottom: 1px solid #ddd;
+            font-size: 14px;
+            padding: 12px;
+        }
+
+        .changes-table tr:last-child td { border-bottom: none; }
+
+        .changes-table tr:nth-child(even) { background-color: #f9f9f9; }
+
+        .old-value {
+            color: #dc3545;
+            font-style: italic;
+            text-decoration: line-through;
+        }
+
+        .new-value {
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        .field-name {
+            color: #333;
+            font-weight: 600;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 5px;
+            color: #fff;
+            display: inline-block;
+            font-size: 16px;
+            font-weight: 600;
+            line-height: 1.5;
+            margin-top: 20px;
+            padding: 12px 30px;
+            text-align: center;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+        .footer {
+            border-top: 1px solid #ddd;
+            color: #666;
+            font-size: 13px;
+            margin-top: 25px;
+            padding-top: 20px;
+            text-align: center;
+        }
+
+        .timestamp {
+            color: #888;
+            font-size: 12px;
+            font-style: italic;
+        }
+
+        .no-changes {
+            color: #666;
+            font-style: italic;
+            padding: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h5>🔔 Account Updated By Administrator</h5>
+            <p>Your account information has been modified</p>
+        </div>
+
+        @if (Model.IsEmailChanged && !string.IsNullOrEmpty(Model.OldEmail))
+        {
+            <div class="alert-box">
+                <strong>⚠️ Email Address Changed</strong>
+                <p style="margin: 5px 0 0 0;">
+                    Your email address has been changed from <strong>@Model.OldEmail</strong> to <strong>@Model.NewEmail</strong>.
+                    This notification has been sent to both email addresses for security purposes.
+                </p>
+            </div>
+        }
+
+        <div class="info-section">
+            <h6>📋 Update Details</h6>
+            <div class="info-row">
+                <span class="info-label">User Account:</span>
+                <span class="info-value">@Model.UserName</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Updated By:</span>
+                <span class="info-value">@Model.AdminName</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Updated At:</span>
+                <span class="info-value">@Model.UpdatedAt.ToString("MMMM dd, yyyy hh:mm:ss tt")</span>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h6>📝 Changes Made</h6>
+            @if (Model.Changes.Any())
+            {
+                <table class="changes-table">
+                    <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Previous Value</th>
+                        <th>New Value</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var change in Model.Changes)
+                    {
+                        <tr>
+                            <td class="field-name">@change.FieldName</td>
+                            <td class="old-value">@(string.IsNullOrEmpty(change.OldValue) ? "(Not set)" : change.OldValue)</td>
+                            <td class="new-value">@(string.IsNullOrEmpty(change.NewValue) ? "(Not set)" : change.NewValue)</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="no-changes">
+                    No specific field changes were recorded.
+                </div>
+            }
+        </div>
+
+        <div style="text-align: center;">
+            <a href="@Model.Url" class="btn">View Your Account</a>
+        </div>
+
+        <div class="footer">
+            <p>
+                <strong>Important:</strong> If you did not authorize these changes or have concerns about your account security,
+                please contact the administrator immediately.
+            </p>
+            <p class="timestamp">
+                Notification sent on @DateTime.Now.ToString("MMMM dd, yyyy hh:mm:ss tt")
+            </p>
+        </div>
+    </div>
+</div>
+</body>
+</html>

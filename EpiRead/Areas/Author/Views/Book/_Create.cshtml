@@ -1,0 +1,185 @@
+@model EpiRead.Areas.Author.ViewModels.CreateBookVm
+
+<partial name="_SweetAlert"/>
+
+<form data-ajax="true"
+      data-ajax-update="#ajax-update-content"
+      asp-area="Author"
+      asp-controller="Book"
+      asp-action="Store"
+      method="post"
+      enctype="multipart/form-data"
+      class="animate__animated animate__fadeInUp">
+
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <div class="row g-4">
+        <!-- Left: main inputs -->
+        <div class="col-12 col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Book details</h5>
+
+                    <div class="mb-3">
+                        <label class="form-label">Title</label>
+                        <input asp-for="Title" class="form-control form-control-lg" placeholder="Enter book title"/>
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Author</label>
+                        <input asp-for="AuthorName" class="form-control" placeholder="Author full name"/>
+                        <span asp-validation-for="AuthorName" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea asp-for="Description" class="form-control" rows="6" placeholder="Short summary to attract readers..."></textarea>
+                        <small class="text-muted">Tip: keep it under 500 words for better readability.</small>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Publication Year</label>
+                            <select asp-for="PublicationYear" asp-items="@GetYearList(Common.MinPublicationYear, Common.MaxPublicationYear, true)" class="form-control" id="PublicationYear" aria-label="Publication Year" required>
+                                <option value="">Select year</option>
+                            </select>
+                            <span asp-validation-for="PublicationYear" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Language</label>
+                            <select asp-for="Language" class="form-select" aria-label="Select language">
+                                @if (ViewBag.Languages is SelectList languages)
+                                {
+                                    foreach (SelectListItem item in languages)
+                                    {
+                                        <option value="@item.Value" selected="@(item.Value == Model.Language)">@item.Text</option>
+                                    }
+                                }
+                            </select>
+                            <span asp-validation-for="Language" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Categories</label>
+                        <div class="border rounded p-2" style="background: #fafafa; max-height: 260px; overflow: auto;">
+                            <div class="row g-2">
+                                @if (ViewBag.BookCategories is List<BookCategory> categories)
+                                {
+                                    foreach (var cat in categories)
+                                    {
+                                        var isChecked = Model.CategoryIds != null && Model.CategoryIds.Contains(cat.Id);
+                                        <div class="col-6 col-md-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="CategoryIds" value="@cat.Id" @(isChecked ? "checked" : null) id="cat_@cat.Id"/>
+                                                <label class="form-check-label" for="cat_@cat.Id">@cat.Name</label>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+                        <small id="selectedCategoriesCount" class="text-muted">@(Model.CategoryIds?.Count ?? 0) selected</small>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: cover preview + actions -->
+        <div class="col-12 col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-body d-flex flex-column align-items-center">
+                    <h5 class="card-title">Cover & actions</h5>
+
+                    <div class="w-100 mb-3 text-center">
+                        <div id="coverPreviewWrapper" class="border rounded p-2" style="background: #fff;">
+                            <img id="coverPreview" src="/images/book-cover-not-available.webp" alt="Cover preview" class="img-fluid" style="display: block; margin: auto; max-height: 320px;"/>
+                        </div>
+                        <small class="d-block text-muted mt-2">Recommended: 600x900px, JPG/PNG</small>
+                    </div>
+
+                    <div class="w-100 mb-3">
+                        <label class="form-label">Upload Cover</label>
+                        <input id="CoverImageInput" type="file" name="CoverImage" class="form-control" accept="image/*" aria-describedby="coverHelp"/>
+                        <div id="coverHelp" class="form-text">You can drag & drop an image or click to browse.</div>
+                        <span asp-validation-for="CoverImage" class="text-danger"></span>
+                    </div>
+
+                    <div class="w-100 mb-3">
+                        <button type="submit" class="btn btn-primary w-100" data-confirm="Are you sure to create this book?">Create Book</button>
+                    </div>
+
+                    <a asp-area="Author" asp-controller="Book" asp-action="Index" class="btn btn-outline-secondary w-100">Back to my books</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</form>
+
+<script>
+    (function() {
+        // Cover image preview
+        const input = document.getElementById('CoverImageInput');
+        const preview = document.getElementById('coverPreview');
+
+        function readImage(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        if (input) {
+            input.addEventListener('change',
+                function(e) {
+                    if (e.target.files && e.target.files[0]) {
+                        readImage(e.target.files[0]);
+                    }
+                });
+
+            // Basic drag & drop support
+            const wrapper = document.getElementById('coverPreviewWrapper');
+            if (wrapper) {
+                wrapper.addEventListener('dragover',
+                    function(ev) {
+                        ev.preventDefault();
+                        wrapper.classList.add('border-primary');
+                    });
+                wrapper.addEventListener('dragleave',
+                    function(ev) {
+                        ev.preventDefault();
+                        wrapper.classList.remove('border-primary');
+                    });
+                wrapper.addEventListener('drop',
+                    function(ev) {
+                        ev.preventDefault();
+                        wrapper.classList.remove('border-primary');
+                        if (ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files[0]) {
+                            input.files = ev.dataTransfer.files;
+                            readImage(ev.dataTransfer.files[0]);
+                        }
+                    });
+            }
+        }
+
+        // Update selected categories count
+        function updateCategoryCount() {
+            const checks = document.querySelectorAll('input[name="CategoryIds"]:checked');
+            const el = document.getElementById('selectedCategoriesCount');
+            if (el) el.textContent = checks.length + ' selected';
+        }
+
+        document.addEventListener('change',
+            function(e) {
+                if (e.target && e.target.name === 'CategoryIds') updateCategoryCount();
+            });
+
+        // Initialize count on load
+        updateCategoryCount();
+    })();
+</script>

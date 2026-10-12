@@ -1,0 +1,27 @@
+@model HomeVm
+
+@if (Model != null && Model.SimilarBooks.Any())
+{
+    <section class="recommended-books py-5 text-center">
+        <h2 class="mb-4">Similar to your preference</h2>
+        <div class="container">
+            <div class="row g-4">
+                @foreach (var book in Model.SimilarBooks.Take(4))
+                {
+                    var imgSrc = string.IsNullOrWhiteSpace(book.CoverImageLink) ? "/images/book-cover-not-available.webp" : book.CoverImageLink;
+                    <div class="col-md-3">
+                        <div class="card bg-dark text-white">
+                            <div class="card-image">
+                                <img src="@imgSrc" class="card-img-top" alt="Book" loading="lazy">
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title">@book.Title</h5>
+                                <a asp-area="" asp-controller="Book" asp-action="BookDetails" asp-route-id="@book.Id" class="btn btn-primary">Read Now</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+}

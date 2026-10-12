@@ -1,0 +1,112 @@
+﻿@model EditBookCategoryVm
+@{
+    bool isGeneral = IsGeneral(Model.Name, Model.Slug);
+}
+
+<partial name="_SweetAlert"/>
+<partial name="_ActionEditForm"/>
+
+<form data-ajax="true"
+      data-ajax-update="#ajax-update-content"
+      asp-action="Update"
+      asp-route-id="@Model.Id"
+      method="post"
+      enctype="multipart/form-data">
+    <input type="hidden" asp-for="Id"/>
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <table class="table table-bordered">
+        <tbody>
+        <tr>
+            <th>Name</th>
+            <td>:</td>
+            <td>
+                @if (isGeneral)
+                {
+                    <input asp-for="Name" class="form-control" data-trim readonly="readonly" disabled="disabled"/>
+                }
+                else
+                {
+                    <input asp-for="Name" class="form-control" data-trim/>
+                }
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </td>
+        </tr>
+        <tr>
+            <th>Slug</th>
+            <td>:</td>
+            <td>
+                @if (isGeneral)
+                {
+                    <input asp-for="Slug" class="form-control" data-trim readonly="readonly" disabled="disabled"/>
+                }
+                else
+                {
+                    <input asp-for="Slug" class="form-control" data-trim/>
+                }
+                <span asp-validation-for="Slug" class="text-danger"></span>
+            </td>
+        </tr>
+        <tr>
+            <th>Description</th>
+            <td>:</td>
+            <td>
+                @if (isGeneral)
+                {
+                    <textarea asp-for="Description" class="form-control" data-trim readonly="readonly" disabled="disabled"></textarea>
+                }
+                else
+                {
+                    <textarea asp-for="Description" class="form-control" data-trim></textarea>
+                }
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </td>
+        </tr>
+        <tr>
+            <th>Parent Category</th>
+            <td>:</td>
+            <td>
+                @if (isGeneral)
+                {
+                    <select asp-for="ParentId" asp-items="Model.ParentBookCategories" class="form-control" disabled="disabled">
+                    </select>
+                }
+                else
+                {
+                    <select asp-for="ParentId" asp-items="Model.ParentBookCategories" class="form-control">
+                    </select>
+                }
+                <span asp-validation-for="ParentId" class="text-danger"></span>
+            </td>
+        </tr>
+        </tbody>
+        <tfoot>
+        <tr>
+            <td colspan="3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <!-- Left-aligned button -->
+                    <div>
+                        <a asp-area="Admin" asp-controller="BookCategory" asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left" aria-hidden="true"></i> Go Back
+                        </a>
+                    </div>
+
+                    <!-- Center-aligned buttons -->
+                    <div class="d-flex justify-content-center align-items-center gap-1 text-center">
+                        <partial name="_ActionButtonEdit" model="@Model"/>
+                    </div>
+
+                    <!-- Right-aligned button -->
+                    <div>
+                        @if (!isGeneral)
+                        {
+                            <button class="btn btn-success" data-confirm>
+                                <i class="fas fa-save" aria-hidden="true"></i> Save Changes
+                            </button>
+                        }
+                    </div>
+                </div>
+            </td>
+        </tr>
+        </tfoot>
+    </table>
+</form>

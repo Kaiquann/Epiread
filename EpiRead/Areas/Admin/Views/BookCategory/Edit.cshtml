@@ -1,0 +1,25 @@
+﻿@model EditBookCategoryVm
+@{
+    ViewBag.Title = "Editing Book Category : " + Model.Name;
+    bool isGeneral = IsGeneral(Model.Name, Model.Slug);
+}
+
+<section>
+    <div class="container my-5">
+        <h2 class="text-center mb-4">@ViewBag.Title</h2>
+        <div class="card">
+            <div class="card-body" id="ajax-update-content">
+                @if (isGeneral)
+                {
+                    <div class="alert alert-warning text-center">
+                        <strong>Warning:</strong> The default General category cannot be edited.
+                    </div>
+                }
+                else
+                {
+                    <partial name="_Edit" model="@Model"/>
+                }
+            </div>
+        </div>
+    </div>
+</section>

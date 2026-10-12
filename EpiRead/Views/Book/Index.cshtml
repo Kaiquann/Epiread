@@ -1,0 +1,172 @@
+﻿@model BookVm
+
+<style>
+    body {
+        background-color: #383D48;
+        color: #E0E0E0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+    }
+
+    <!--top category-->
+    .top-categories-section {
+        background: #23262F;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        margin-top: 0.5rem;
+        padding: 1.5rem 1rem 1rem 1rem;
+    }
+
+    .top-categories-title {
+        color: #E0E0E0;
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        margin-left: 0.5rem;
+    }
+
+    .top-categories-list {
+        display: flex;
+        gap: 1.5rem;
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+        scrollbar-color: #6c63ff #23262F;
+        scrollbar-width: thin;
+    }
+
+    .top-categories-list::-webkit-scrollbar {
+        background: #23262F;
+        border-radius: 8px;
+        height: 10px;
+    }
+
+    .top-categories-list::-webkit-scrollbar-thumb {
+        background: #6c63ff;
+        border-radius: 8px;
+    }
+
+    .top-categories-list::-webkit-scrollbar-track {
+        background: #23262F;
+        border-radius: 8px;
+    }
+
+
+    .all-books-title {
+        align-items: center;
+        color: #E0E0E0;
+        display: flex;
+        font-size: 1.3rem;
+        font-weight: bold;
+        gap: 0.5rem;
+        margin: 2rem 0 1rem 0.5rem;
+    }
+
+    .all-books-title .see-all-link {
+        color: #6c63ff;
+        font-size: 1rem;
+        font-weight: 500;
+        margin-left: 0.5rem;
+        text-decoration: none;
+        transition: text-decoration 0.2s;
+    }
+
+    .all-books-title .see-all-link:hover { text-decoration: underline; }
+
+    .search-section {
+        width: 100%;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        gap: 1rem;
+        position: relative;
+    }
+
+    /* --- Top Category Buttons --- */
+    .top-category-card form {
+        width: 100%;
+        height: 100%;
+    }
+
+    .top-category-label {
+        background: #2F333B; /* match with card background */
+        color: #E0E0E0;
+        border: none;
+        width: 100%;
+        height: 100%;
+        border-radius: 16px;
+        font-size: 0.95rem;
+        font-weight: 500;
+        cursor: pointer;
+        padding: 1rem 0.5rem;
+        transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease;
+    }
+
+        /* Hover effect: subtle purple glow + brighter text */
+        .top-category-label:hover {
+            background: #383D48; /* slightly lighter than card */
+            color: #ffffff;
+            transform: scale(1.03);
+        }
+
+        /* Optional: focus/active feedback */
+        .top-category-label:active {
+            background: #444A55;
+            transform: scale(0.98);
+        }
+</style>
+
+<div class="row gx-5">
+
+    <!--side bar-->
+    <aside class="col-md-2">
+            <partial name="_FilterSidebar" />
+    </aside>
+
+    <!--search bar-->
+<div class="col-md-9 py-3" style="margin-bottom: 10px;" id="Index-container">
+        <div class="search-section row m-4" id="search-section">
+            <partial name="_SearchBar" model="@Model"/>
+        </div>
+
+    <!--top category-->
+    <section class="top-categories-section">
+            <partial name="_TopBookCategory" model="@Model" />
+    </section>
+
+        <!--Book part and ajax part-->
+         
+        <section id="book-section" class="book-grid">
+            <partial name="_Index" model="@Model" />
+        </section>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // Handle search form submit
+        $(document).on('submit', '#searchForm', function (e) {
+            e.preventDefault();
+
+            $.ajax({
+                url: '/Book/Index',
+                type: 'GET',
+                data: { search: $('#searchInput').val() },
+                success: function (html) {
+                    // Update book results
+                    $('#book-section').html(html);
+
+                    // Then refresh search bar too
+                    $.ajax({
+                        url: '/Book/GetSearchBar',
+                        type: 'GET',
+                        success: function (searchBarHtml) {
+                            $('#search-section').html(searchBarHtml);
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+    }

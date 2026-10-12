@@ -1,0 +1,102 @@
+@using EpiRead.ViewComponents
+@model CreateBookVm
+
+<partial name="_SweetAlert"/>
+
+<form data-ajax="true"
+      data-ajax-update="#ajax-update-content"
+      asp-area="Admin"
+      asp-controller="Book"
+      asp-action="Store"
+      method="post"
+      enctype="multipart/form-data">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <table class="table table-bordered">
+        <tbody>
+        <tr>
+            <td colspan="3">
+                <label class="upload">
+                    <input asp-for="CoverImage" accept="image/jpeg,image/png" hidden>
+                    <partial name="Book/_CoverImagePartial" model="@string.Empty"/>
+                    <span></span>
+                </label>
+                <span asp-validation-for="CoverImage" class="text-danger"></span>
+            </td>
+        </tr>
+        <tr>
+            <th>Title</th>
+            <td>:</td>
+            <td>
+                <input asp-for="Title" class="form-control" id="Title" placeholder="Enter book title" aria-label="Book Title" required/>
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </td>
+        </tr>
+        <tr>
+            <th>Author</th>
+            <td>:</td>
+            <td>
+                <input asp-for="AuthorName" class="form-control" id="AuthorName" placeholder="Enter author name" aria-label="Author Name" required/>
+                <span asp-validation-for="AuthorName" class="text-danger"></span>
+            </td>
+        </tr>
+        <tr>
+            <th>Description</th>
+            <td>:</td>
+            <td>
+                <textarea asp-for="Description" class="form-control" id="Description" placeholder="Enter description" aria-label="Description"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </td>
+        </tr>
+        <tr>
+            <th>Publication Year</th>
+            <td>:</td>
+            <td>
+                <select asp-for="PublicationYear" asp-items="@GetYearList(Common.MinPublicationYear, Common.MaxPublicationYear, true)" class="form-control" id="PublicationYear" aria-label="Publication Year" required>
+                    <option value="">Select year</option>
+                </select>
+                <span asp-validation-for="PublicationYear" class="text-danger"></span>
+            </td>
+        </tr>
+        <tr>
+            <th>Language</th>
+            <td>:</td>
+            <td>
+                <select asp-for="Language" asp-items="ViewBag.Languages" class="form-control" id="Language" aria-label="LanguageCodes" required>
+                </select>
+                <span asp-validation-for="Language" class="text-danger"></span>
+            </td>
+        </tr>
+        <tr>
+            <th>Categories</th>
+            <td>:</td>
+            <td>
+                @{
+                    List<int> selectedIds = Model != null && Model.CategoryIds != null ? Model.CategoryIds : new List<int>();
+                    CheckboxListVm<BookCategory, int> checkboxModel = new()
+                    {
+                        Items = ViewBag.BookCategories,
+                        SelectedValues = selectedIds,
+                        Name = "CategoryIds",
+                        ValueProperty = "Id",
+                        TextProperty = "Name"
+                    };
+                }
+                <partial name="_CheckboxList" model="checkboxModel"/>
+                <span asp-validation-for="CategoryIds" class="text-danger"></span>
+            </td>
+        </tr>
+        </tbody>
+        <tfoot>
+        <tr>
+            <td colspan="3">
+                <a asp-area="Admin" asp-controller="Book" asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-times" aria-hidden="true"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-success" data-confirm>
+                    <i class="fas fa-check" aria-hidden="true"></i> Create
+                </button>
+            </td>
+        </tr>
+        </tfoot>
+    </table>
+</form>

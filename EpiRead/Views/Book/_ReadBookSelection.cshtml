@@ -1,0 +1,136 @@
+﻿@model BookVm
+
+@if (Model.DocumentList?.Any() == true)
+{
+    <div class="modal fade" id="formatModal" tabindex="-1" aria-labelledby="formatModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark text-light rounded-4">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title" id="formatModalLabel">Select Episode & Format</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+
+                <form asp-action="ReadBook" asp-controller="Book" method="post">
+                    <div class="modal-body">
+                        <h6 class="fw-bold mb-3">Choose an Episode</h6>
+                        @{
+                            var groupedDocs = Model.DocumentList
+                            .GroupBy(doc =>
+                            {
+                                string fileName = System.IO.Path.GetFileName(doc.DocumentPath);
+                                return fileName.Contains("_")
+                                            ? fileName.Substring(0, fileName.IndexOf("_", StringComparison.Ordinal))
+                                            : System.IO.Path.GetFileNameWithoutExtension(fileName);
+                            })
+                            .ToList();
+                        }
+
+                        @foreach (var group in groupedDocs)
+                        {
+                            string episodeName = group.Key;
+                            // If there are multiple documents with the same episode name, split them by unique identifier
+                            // (the remainder of the filename after the first underscore, before extension).
+                            var subGroups = group
+                            .GroupBy(d =>
+                            {
+                                var fileName = System.IO.Path.GetFileName(d.DocumentPath);
+                                if (fileName.Contains("_"))
+                                {
+                                    var start = fileName.IndexOf("_", StringComparison.Ordinal) + 1;
+                                    var lastDot = fileName.LastIndexOf('.');
+                                    if (lastDot > start)
+                                        return fileName.Substring(start, lastDot - start);
+                                }
+
+                                return System.IO.Path.GetFileNameWithoutExtension(fileName);
+                            })
+                            .ToList();
+
+                            if (subGroups.Count == 1)
+                            {
+                                var pdfDoc = subGroups.First().FirstOrDefault(d => d.FormatType.Equals("PDF", StringComparison.OrdinalIgnoreCase));
+                                var epubDoc = subGroups.First().FirstOrDefault(d => d.FormatType.Equals("EPUB", StringComparison.OrdinalIgnoreCase));
+
+                                bool hasPdf = pdfDoc != null;
+                                bool hasEpub = epubDoc != null;
+
+                                string combinedFormat = hasPdf && hasEpub ? "both" : (hasPdf ? "pdf" : "epub");
+
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input doc-radio"
+                                           type="radio"
+                                           name="FileName"
+                                           id="episode_@episodeName"
+                                           value="@episodeName"
+                                           data-pdf-id="@(pdfDoc?.Id ?? 0)"
+                                           data-epub-id="@(epubDoc?.Id ?? 0)"
+                                           data-type="@combinedFormat"
+                                           required>
+                                    <label class="form-check-label" for="episode_@episodeName">@episodeName</label>
+                                </div>
+                            }
+                            else
+                            {
+                                // Multiple versions for same episode name — show each as separate item numbered (1), (2), ...
+                                int subIndex = 0;
+                                foreach (var sg in subGroups)
+                                {
+                                    subIndex++;
+                                    var pdfDoc = sg.FirstOrDefault(d => d.FormatType.Equals("PDF", StringComparison.OrdinalIgnoreCase));
+                                    var epubDoc = sg.FirstOrDefault(d => d.FormatType.Equals("EPUB", StringComparison.OrdinalIgnoreCase));
+
+                                    bool hasPdf = pdfDoc != null;
+                                    bool hasEpub = epubDoc != null;
+
+                                    string combinedFormat = hasPdf && hasEpub ? "both" : (hasPdf ? "pdf" : "epub");
+
+                                    var labelName = $"{episodeName}({subIndex})";
+                                    var safeId = $"episode_{episodeName}_{subIndex}".Replace(' ', '_');
+
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input doc-radio"
+                                               type="radio"
+                                               name="FileName"
+                                               id="@safeId"
+                                               value="@labelName"
+                                               data-pdf-id="@(pdfDoc?.Id ?? 0)"
+                                               data-epub-id="@(epubDoc?.Id ?? 0)"
+                                               data-type="@combinedFormat"
+                                               required>
+                                        <label class="form-check-label" for="@safeId">@labelName</label>
+                                    </div>
+                                }
+                            }
+                        }
+
+                        <hr class="border-light my-3" />
+                        <h6 class="fw-bold mb-3">Select Format</h6>
+
+                        <div id="formatOptions">
+                            <div class="form-check mb-2" id="format-epub">
+                                <input class="form-check-input" type="radio" name="documentFormat" id="formatEpub" value="epub">
+                                <label class="form-check-label" for="formatEpub">EPUB</label>
+                            </div>
+
+                            <div class="form-check mb-2" id="format-pdf">
+                                <input class="form-check-input" type="radio" name="documentFormat" id="formatPdf" value="pdf">
+                                <label class="form-check-label" for="formatPdf">PDF</label>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Continue</button>
+                        <input type="hidden" id="documentId" name="documentId" />
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="text-light text-center mt-3">No episodes available to read.</div>
+}

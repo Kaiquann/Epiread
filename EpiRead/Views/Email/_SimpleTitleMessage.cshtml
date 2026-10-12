@@ -1,0 +1,85 @@
+﻿@model SimpleTitleMessageVm
+
+@* Author: Chong Jun Xiang *@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>@Model.Title</title>
+    <style>
+        body {
+            background-color: #f4f4f4;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            margin: 0 auto;
+            max-width: 650px;
+            padding: 20px;
+            width: 100%;
+        }
+
+        .card {
+            background: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-top: 30px;
+            padding: 30px;
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px 8px 0 0;
+            color: #fff;
+            margin: -30px -30px 20px -30px;
+            padding: 25px 30px;
+            text-align: center;
+        }
+
+        .card-header h5 {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .content-text {
+            color: #666;
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .footer {
+            border-top: 1px solid #eee;
+            color: #999;
+            font-size: 12px;
+            margin-top: 25px;
+            padding-top: 15px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h5>@Model.Title</h5>
+        </div>
+
+        <p class="content-text">
+            @Model.Message
+        </p>
+
+        <div class="footer">
+            <p>This is an automated message. Please do not reply to this email.</p>
+        </div>
+    </div>
+</div>
+</body>
+</html>

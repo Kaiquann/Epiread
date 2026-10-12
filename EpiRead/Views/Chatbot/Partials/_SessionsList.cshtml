@@ -1,0 +1,34 @@
+@model List<ChatSession>
+
+@if (Model == null || !Model.Any())
+{
+    <li class="text-white-50 px-2 py-2" style="font-size: 0.9rem;">No chat sessions yet</li>
+}
+else
+{
+    @foreach (ChatSession session in Model)
+    {
+        DateTime createdDate = session.CreatedAt;
+        string formattedDate = createdDate.ToString("MMM dd");
+
+        <li class="list-group-item list-group-item-action rounded-pill bg-transparent px-2 py-1 d-flex align-items-center chat-item @(ViewBag.CurrentSessionId != null && ViewBag.CurrentSessionId.ToString() == session.Id.ToString() ? "active" : "")"
+            data-session-id="@session.Id"
+            data-title="@session.Title"
+            style="border: none; cursor: pointer;">
+
+            <div class="flex-grow-1" style="min-width: 0;">
+                <div class="text-white" style="font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">@session.Title</div>
+                <div class="small text-white-50" style="font-size: 0.8rem;">@formattedDate</div>
+            </div>
+
+            <button type="button"
+                    class="btn btn-sm btn-link text-white options-btn"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                    style="margin-left: 6px; padding: 0 4px;"
+                    title="Options">
+                <i class="fas fa-ellipsis-v" aria-hidden="true" style="font-size: 0.85rem;"></i>
+            </button>
+        </li>
+    }
+}

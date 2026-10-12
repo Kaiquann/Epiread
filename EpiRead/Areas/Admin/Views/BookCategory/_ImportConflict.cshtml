@@ -1,0 +1,260 @@
+@model BookCategoryImportConflictVm
+
+<h5 class="mt-4 mb-3"><i class="fas fa-exchange-alt"></i>Category Comparison & Conflict Resolution</h5>
+
+<div class="table-responsive">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <div>
+            <span class="badge bg-success me-1">New: @Model.Items.Count(i => i.ConflictType == "New")</span>
+            <span class="badge bg-warning text-dark me-1">Slug Exists: @Model.Items.Count(i => i.ConflictType == "Slug Exists")</span>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+            <div class="btn-group btn-group-sm" role="group" aria-label="Apply action to all">
+                <button class="btn btn-outline-success" id="applyAllAdd" title="Add all items as new categories">
+                    Apply
+                    All Add
+                </button>
+                <button class="btn btn-outline-danger" id="applyAllOverwrite">Apply All Overwrite</button>
+                <button class="btn btn-outline-secondary" id="applyAllSkip">Apply All Skip</button>
+                <button class="btn btn-outline-primary" id="applyAllMerge">Apply All Merge</button>
+            </div>
+            <button class="btn btn-success btn-sm" id="btnConfirmTop"><i class="fas fa-check"></i> Confirm</button>
+        </div>
+    </div>
+    <table id="categoryConflictTable" class="table table-bordered table-sm align-middle">
+        <thead class="table-light">
+        <tr>
+            <th>Name</th>
+            <th>Slug</th>
+            <th>Description</th>
+            <th>Parent Category</th>
+            <th>Conflict Type</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        @if (Model.Items.Any())
+        {
+            foreach (BookCategoryImportConflictItem item in Model.Items)
+            {
+                <tr data-name="@item.Row.Name" data-slug="@item.Row.Slug" data-description="@item.Row.Description"
+                    data-parentcategory="@item.Row.ParentCategory"
+                    data-createdat="@item.Row.CreatedAt.ToUniversalTime().ToString("o")"
+                    data-updatedat="@item.Row.UpdatedAt.ToUniversalTime().ToString("o")">
+                    <td>@item.Row.Name</td>
+                    <td>@item.Row.Slug</td>
+                    <td>@item.Row.Description</td>
+                    <td>@(string.IsNullOrWhiteSpace(item.Row.ParentCategory) ? "-" : item.Row.ParentCategory)</td>
+                    <td>
+                        @switch (item.ConflictType)
+                        {
+                            case "New":
+                                <span class="badge bg-success">@item.ConflictType</span>
+                                break;
+                            case "Slug Exists":
+                                <span class="badge bg-warning text-dark">@item.ConflictType</span>
+                                break;
+                            default:
+                                <span class="badge bg-secondary">@item.ConflictType</span>
+                                break;
+                        }
+                    </td>
+                    <td>
+                        @switch (item.ConflictType)
+                        {
+                            case "New":
+                            {
+                                <div class="btn-group btn-group-sm" role="group" aria-label="New item actions">
+                                    <button type="button" class="btn btn-outline-success action-btn @(item.SuggestedAction == "Add" ? "active" : "")" data-action="Add"
+                                            aria-pressed="@(item.SuggestedAction == "Add" ? "true" : "false")">
+                                        Add
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary action-btn @(item.SuggestedAction == "Skip" ? "active" : "")" data-action="Skip"
+                                            aria-pressed="@(item.SuggestedAction == "Skip" ? "true" : "false")">
+                                        Skip
+                                    </button>
+                                </div>
+                                break;
+                            }
+                            case "Slug Exists":
+                            {
+                                <div class="btn-group btn-group-sm" role="group" aria-label="Conflict actions">
+                                    <button type="button"
+                                            class="btn btn-outline-danger action-btn @(item.SuggestedAction == "Overwrite" ? "active" : "")"
+                                            data-action="Overwrite"
+                                            aria-pressed="@(item.SuggestedAction == "Overwrite" ? "true" : "false")">
+                                        Overwrite
+                                    </button>
+                                    <button type="button"
+                                            class="btn btn-outline-secondary action-btn @(item.SuggestedAction == "Skip" ? "active" : "")"
+                                            data-action="Skip"
+                                            aria-pressed="@(item.SuggestedAction == "Skip" ? "true" : "false")">
+                                        Skip
+                                    </button>
+                                    <button type="button"
+                                            class="btn btn-outline-primary action-btn @(item.SuggestedAction == "Merge" ? "active" : "")"
+                                            data-action="Merge"
+                                            aria-pressed="@(item.SuggestedAction == "Merge" ? "true" : "false")">
+                                        Merge
+                                    </button>
+                                </div>
+                                break;
+                            }
+                        }
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="5" class="text-center">No categories found in the uploaded CSV.</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+<div class="alert alert-info mt-3" role="alert">
+    <h6><i class="fas fa-info-circle"></i> Action Descriptions:</h6>
+    <ul class="mb-0">
+        <li><strong>Add:</strong> Create a new book category entry with its details. <em>(Only for New categories)</em></li>
+        <li><strong>Overwrite:</strong> Replace existing book category data completely, including all details. <em>(Only for existing categories in DB)</em></li>
+        <li><strong>Skip:</strong> Keep existing book category data unchanged, ignore imported data. <em>(Available for all conflict types)</em></li>
+        <li><strong>Merge:</strong> Update category only if imported data is newer or equal (based on UpdatedAt timestamp). <em>(For existing categories)</em></li>
+    </ul>
+    <div class="mt-2">
+        <small class="text-muted">
+            <strong>Conflict Types:</strong>
+            <span class="badge bg-success">New</span> = Not in database (Add/Skip only) •
+            <span class="badge bg-warning text-dark">Slug Exists</span> = Slug already exists in database (Overwrite/Skip/Merge)
+        </small>
+    </div>
+</div>
+
+<div class="d-flex justify-content-end gap-2 mt-3">
+    <button type="button" class="btn btn-success" id="btnConfirm">
+        <i class="fas fa-check" aria-hidden="true"></i> Confirm Import
+    </button>
+    <button type="button" class="btn btn-secondary" id="btnCancel">
+        <i class="fas fa-times" aria-hidden="true"></i> Cancel
+    </button>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // Initialize DataTable with search and pagination
+        const table = $('#categoryConflictTable').DataTable({
+            pageLength: 20,
+            lengthMenu: [[10, 20, 50, 100, -1], [10, 20, 50, 100, "All"]],
+            order: [[4, 'asc'], [0, 'asc']], // Sort by Conflict Type, then Name
+            columnDefs: [
+                { orderable: false, targets: 5 } // Disable sorting on Action column
+            ],
+            language: {
+                search: "Search categories:",
+                lengthMenu: "Show _MENU_ categories per page",
+                info: "Showing _START_ to _END_ of _TOTAL_ categories",
+                infoEmpty: "No categories to display",
+                infoFiltered: "(filtered from _MAX_ total categories)",
+                paginate: {
+                    first: "First",
+                    last: "Last",
+                    next: "Next",
+                    previous: "Previous"
+                }
+            },
+            drawCallback: function() {
+                // Update info text after filtering
+                // Use DataTables API via `this` to avoid referencing the outer `table` variable
+                // which may not be initialized yet during DataTables' initial draw (TDZ issue).
+                const api = this.api();
+                const info = api.page.info();
+                if (info.recordsDisplay === 0) {
+                    $('.dataTables_info').html('No matching categories found');
+                }
+            }
+        });
+
+        // Wire action button clicks for category rows
+        $('#categoryConflictTable tbody').on('click',
+            '.action-btn',
+            function(e) {
+                e.preventDefault();
+                const btn = $(this);
+                const $group = btn.closest('.btn-group');
+                $group.find('.action-btn').removeClass('active').attr('aria-pressed', 'false');
+                btn.addClass('active').attr('aria-pressed', 'true');
+                const row = btn.closest('tr');
+                row.attr('data-action', btn.data('action'));
+            });
+
+        // Apply to all buttons for categories
+        $('#applyAllAdd').on('click',
+            function() {
+                $('#categoryConflictTable tbody tr').each(function() {
+                    const actionBtn = $(this).find('.action-btn[data-action="Add"]');
+                    if (actionBtn.length) {
+                        actionBtn.click();
+                    }
+                });
+            });
+        $('#applyAllOverwrite').on('click',
+            function() {
+                $('#categoryConflictTable tbody tr').each(function() {
+                    $(this).find('.action-btn[data-action="Overwrite"]').click();
+                });
+            });
+        $('#applyAllSkip').on('click',
+            function() {
+                $('#categoryConflictTable tbody tr').each(function() {
+                    $(this).find('.action-btn[data-action="Skip"]').click();
+                });
+            });
+        $('#applyAllMerge').on('click',
+            function() {
+                $('#categoryConflictTable tbody tr').each(function() {
+                    $(this).find('.action-btn[data-action="Merge"]').click();
+                });
+            });
+
+        // Top confirm button proxies to bottom confirm
+        $('#btnConfirmTop').on('click',
+            function() {
+                $('#btnConfirm').trigger('click');
+            });
+    });
+</script>
+
+<style>
+    .btn-group .action-btn.active { color: #fff; }
+
+    .btn-group .action-btn.active[data-action="Add"] {
+        background-color: #198754;
+        border-color: #198754;
+    }
+
+    .btn-group .action-btn.active[data-action="Overwrite"] {
+        background-color: #d9534f;
+        border-color: #d43f3a;
+    }
+
+    .btn-group .action-btn.active[data-action="Skip"] {
+        background-color: #6c757d;
+        border-color: #6c757d;
+    }
+
+    .btn-group .action-btn.active[data-action="Merge"] {
+        background-color: #0d6efd;
+        border-color: #0b5ed7;
+    }
+
+    .pagination {
+        -moz-flex-wrap: nowrap !important;
+        -ms-flex-wrap: nowrap !important;
+        -o-flex-wrap: nowrap !important;
+        -webkit-flex-wrap: nowrap !important;
+        display: flex !important;
+        flex-wrap: nowrap !important;
+    }
+</style>

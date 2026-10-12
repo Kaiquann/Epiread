@@ -1,0 +1,87 @@
+﻿@model BookHistoryVm
+
+<div class="container py-5" style="background-color: #383D48; min-height: 100vh;">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <div class="card bg-dark border-0 rounded-4 shadow-lg p-4">
+                <h2 class="text-light mb-4 fw-bold">Book History</h2>
+
+                <!-- Filter Section -->
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+                    <div class="d-flex align-items-center gap-2">
+                        <label class="text-light fw-semibold mb-0">Filter by status:</label>
+                        <select id="progressFilter" class="form-select form-select-sm bg-dark text-light border-secondary">
+                            <option value="all" selected>All</option>
+                            <option value="not-started">Not Started</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+                </div>
+
+                @if (Model.BookHistoryList == null || !Model.BookHistoryList.Any())
+                {
+                    <div class="text-center text-secondary py-5">
+                        <i class="fas fa-book fa-3x mb-3"></i>
+                        <p class="mb-0">No reading history yet. Start reading a book!</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="accordion" id="updateBookHistory-section">
+                        <partial name="_BookHistoryList" model="@Model"/>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    body {
+        background-color: #383D48;
+    }
+
+    .accordion-button::after {
+        flex-shrink: 0;
+        width: 4rem;
+        height: 1rem;
+        background-size: 1rem;
+        filter: brightness(3);
+        transition: transform 0.3s ease, filter 0.3s ease;
+    }
+
+    .accordion-button:not(.collapsed)::after {
+        transform: rotate(90deg);
+        filter: brightness(3);
+    }
+
+    .accordion-button:hover {
+        background-color: #2b2f39;
+    }
+
+    #progressFilter {
+        width: 180px;
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const filterSelect = document.getElementById("progressFilter");
+        const items = document.querySelectorAll(".progress-item");
+
+        filterSelect.addEventListener("change", function () {
+            const value = this.value;
+
+            items.forEach(item => {
+                const status = item.dataset.status;
+
+                if (value === "all" || status === value) {
+                    item.style.display = "";
+                } else {
+                    item.style.display = "none";
+                }
+            });
+        });
+    });
+</script>

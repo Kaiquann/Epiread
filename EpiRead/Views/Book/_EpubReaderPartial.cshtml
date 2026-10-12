@@ -1,0 +1,368 @@
+﻿@{
+    var fileUrl = (string)Model.FileUrl;
+    var currentPage = (int)Model.CurrentPage;
+    var documentId = (int)Model.documentId;
+}
+
+<div class="epub-reader-wrapper">
+    <!-- Toolbar -->
+    <div class="epub-toolbar d-flex justify-content-between align-items-center px-3 py-2">
+
+        <div>
+            <button id="prevPage" class="btn btn-outline-light btn-sm me-2">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button id="nextPage" class="btn btn-outline-light btn-sm">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+            <button id="toggleBookmarkBtn" class="btn btn-outline-warning btn-sm ms-3" title="Toggle Bookmark">
+                <i id="bookmarkIcon" class="far fa-bookmark text-light"></i>
+            </button>
+            <form method="get" asp-controller="Book" asp-action="ViewBookmark" class="d-inline">
+                <input type="hidden" name="documentId" value="@documentId"/>
+                <button type="submit" class="btn btn-bookmark px-3 py-2 rounded-pill fw-semibold">
+                    <i class="fas fa-bookmark me-2"></i> View Bookmarks
+                </button>
+            </form>
+        </div>
+
+        <div class="d-flex align-items-center">
+            <span id="pageInfo" class="text-light me-2">Page -- / --</span>
+            <input type="number" id="goToPageInput" class="form-control form-control-sm bg-dark text-light border-secondary me-2" placeholder="Page #" style="width: 80px;">
+            <button id="goToPageBtn" class="btn btn-outline-info btn-sm me-3" title="Go to Page">
+                <i class="fas fa-arrow-right"></i>
+            </button>
+            <select id="fontSizeSelect" class="form-select form-select-sm bg-dark text-light border-secondary me-2">
+                <option value="80%">Small</option>
+                <option value="100%" selected>Normal</option>
+                <option value="120%">Large</option>
+                <option value="140%">Extra Large</option>
+            </select>
+            <button id="toggleBg" class="btn btn-outline-light btn-sm" title="Toggle background">
+                <i class="fas fa-adjust"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- EPUB Container -->
+    <div id="epub-viewer" class="epub-viewer"></div>
+</div>
+
+<style>
+    body { background-color: #383D48; }
+
+    .epub-reader-wrapper {
+        background-color: #1E2229;
+        border-radius: 12px;
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        height: 80vh;
+        overflow: hidden;
+    }
+
+    .epub-toolbar {
+        background: #2F333B;
+        border-bottom: 1px solid #353945;
+    }
+
+    .epub-viewer {
+        flex-grow: 1;
+        height: 100%;
+        overflow: hidden;
+        width: 100%;
+    }
+
+    .form-select-sm {
+        font-size: 0.9rem;
+        width: auto;
+    }
+
+    button.btn {
+        align-items: center;
+        border-radius: 50%;
+        display: inline-flex;
+        height: 36px;
+        justify-content: center;
+    }
+
+    button.btn i { font-size: 0.9rem; }
+
+    .epub-reader-wrapper.white-bg {
+        background-color: #fff !important;
+        color: #222 !important;
+    }
+
+    .epub-reader-wrapper.white-bg .epub-toolbar {
+        background: #f8f9fa !important;
+        color: #222 !important;
+    }
+
+    .epub-reader-wrapper.white-bg .form-select,
+    .epub-reader-wrapper.white-bg .btn {
+        background: #fff !important;
+        border-color: #ccc !important;
+        color: #222 !important;
+    }
+
+    #toggleBookmarkBtn { border-color: #ffc107; }
+
+    #toggleBookmarkBtn.active i {
+        background-color: none;
+        color: #ffc107;
+    }
+
+    #toggleBookmarkBtn:hover i { color: #ffda6a; }
+
+
+    .btn-bookmark {
+        background: linear-gradient(135deg, #00b4d8, #0077b6);
+        border: none;
+        box-shadow: 0 3px 8px rgba(0, 183, 255, 0.3);
+        color: #fff;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        transition: all 0.25s ease-in-out;
+    }
+
+    .btn-bookmark:hover {
+        background: linear-gradient(135deg, #0096c7, #023e8a);
+        box-shadow: 0 4px 12px rgba(0, 183, 255, 0.4);
+        transform: translateY(-1px);
+    }
+
+    .btn-bookmark:active { transform: scale(0.97); }
+
+    .btn-bookmark i { color: #ffe66d; }
+
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded",
+        function() {
+            const bookUrl = "@fileUrl";
+            const savedPageFromServer = @currentPage;
+            const documentId = @documentId;
+
+            const book = ePub(bookUrl);
+            const rendition = book.renderTo("epub-viewer",
+                {
+                    width: "100%",
+                    height: "100%",
+                    spread: "none",
+                    allowScriptedContent: true
+                });
+
+            // expose rendition globally for additional scripts to register hooks
+            window.epub_rendition = rendition;
+
+            let totalPages = 0;
+            let manualPage = savedPageFromServer > 0 ? savedPageFromServer : 1;
+
+            //FONT SIZE CONTROL 
+            const fontSizeSelect = document.getElementById("fontSizeSelect");
+            rendition.themes.default({ body: { "font-size": "100%" } });
+
+            rendition.hooks.content.register(function(contents) {
+                const selectedSize = fontSizeSelect.value;
+                contents.addStylesheetRules({ "body": { "font-size": selectedSize } });
+            });
+
+            fontSizeSelect.addEventListener("change",
+                function() {
+                    const newSize = this.value;
+                    rendition.themes.fontSize(newSize);
+                    const contents = rendition.getContents();
+                    contents.forEach(c => c.addStylesheetRules({ "body": { "font-size": newSize } }));
+                });
+
+            // THEME (Dark / White)
+            rendition.themes.register("dark", { body: { background: "#383d48", color: "#ffffff", "line-height": "1.6" } });
+            rendition.themes.register("white", { body: { background: "#ffffff", color: "#222", "line-height": "1.6" } });
+            rendition.themes.select("dark");
+
+            const wrapper = document.querySelector(".epub-reader-wrapper");
+            const toggleBgBtn = document.getElementById("toggleBg");
+            let isWhiteMode = false;
+            toggleBgBtn.addEventListener("click",
+                () => {
+                    isWhiteMode = !isWhiteMode;
+                    rendition.themes.select(isWhiteMode ? "white" : "dark");
+                    wrapper.classList.toggle("white-bg", isWhiteMode);
+                });
+
+            //PAGE INFO
+            function updatePageInfo() {
+                const pageInfo = document.getElementById("pageInfo");
+                if (totalPages > 0)
+                    pageInfo.textContent = `Page ${manualPage} / ${totalPages}`;
+                else
+                    pageInfo.textContent = "Page -- / --";
+            }
+
+            // INITIAL LOAD
+            book.ready.then(() => book.locations.generate(3000)).then(() => {
+                totalPages = book.locations.length();
+
+                if (savedPageFromServer > 0 && savedPageFromServer <= totalPages) {
+                    const cfi = book.locations.cfiFromLocation(savedPageFromServer - 1);
+                    rendition.display(cfi);
+                } else {
+                    rendition.display();
+                }
+                updatePageInfo();
+                updateBookmarkIcon();
+            });
+
+            // Load existing bookmarks from server
+            $.get("/Book/GetBookmarksForDocument", { documentId: documentId })
+                .done(res => {
+                    if (Array.isArray(res)) {
+                        bookmarkedPages = new Set(res);
+                        updateBookmarkIcon();
+                    }
+                })
+                .fail(() => console.error("Failed to load bookmarks."));
+
+
+            // PAGE NAVIGATION
+            function displayPage(num) {
+                if (book.locations && totalPages > 0) {
+                    saveProgressDebounced();
+                    if (num < 1) num = 1;
+                    if (num > totalPages) num = totalPages;
+                    const cfi = book.locations.cfiFromLocation(num - 1);
+                    rendition.display(cfi);
+                    manualPage = num;
+                    updateBookmarkIcon();
+                    updatePageInfo();
+                }
+            }
+
+            $("#nextPage").on("click",
+                function() {
+                    if (manualPage < totalPages) {
+                        manualPage++;
+                        displayPage(manualPage);
+                    }
+                });
+
+            $("#prevPage").on("click",
+                function() {
+                    if (manualPage > 1) {
+                        manualPage--;
+                        displayPage(manualPage);
+                    }
+                });
+
+            // GO TO PAGE
+            $("#goToPageBtn").on("click",
+                function() {
+                    const inputVal = parseInt($("#goToPageInput").val());
+                    if (isNaN(inputVal) || inputVal < 1 || inputVal > totalPages) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Invalid Page',
+                            text: `Please enter a number between 1 and ${totalPages}.`
+                        });
+                        return;
+                    }
+                    displayPage(inputVal);
+                    $("#goToPageInput").val(""); // clear after jumping
+                });
+
+            $("#goToPageInput").on("keypress",
+                function(e) {
+                    if (e.key === "Enter") {
+                        $("#goToPageBtn").click();
+                    }
+                });
+
+            //SAVE PROGRESS
+            function saveProgress() {
+                $.post("/Book/UpdateBookProgress",
+                    {
+                        documentId: documentId,
+                        currentPage: manualPage,
+                        totalPages: totalPages || 1
+                    });
+            }
+
+            let saveTimeout;
+
+            function saveProgressDebounced() {
+                clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(saveProgress, 600);
+            }
+
+            //BOOKMARKS
+            let bookmarkedPages = new Set();
+
+            function updateBookmarkIcon() {
+                const icon = $("#bookmarkIcon");
+                if (bookmarkedPages.has(manualPage)) {
+                    icon.removeClass("far text-light").addClass("fas text-warning");
+                    $("#toggleBookmarkBtn").addClass("active");
+                } else {
+                    icon.removeClass("fas text-warning").addClass("far text-light");
+                    $("#toggleBookmarkBtn").removeClass("active");
+                }
+            }
+
+            $("#toggleBookmarkBtn").on("click",
+                function() {
+                    const pageNumber = manualPage;
+
+                    if (!documentId) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Wait',
+                            text: 'Please wait for the book to load.'
+                        });
+                        return;
+                    }
+
+                    $.post("/Book/ToggleBookmark",
+                            {
+                                documentId: documentId,
+                                pageNumber: pageNumber
+                            })
+                        .done(res => {
+                            if (res.success) {
+                                if (res.action === "added") {
+                                    bookmarkedPages.add(pageNumber);
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Bookmarked!',
+                                        text: `Page ${pageNumber} saved.`,
+                                        timer: 1200,
+                                        showConfirmButton: false
+                                    });
+                                } else if (res.action === "removed") {
+                                    bookmarkedPages.delete(pageNumber);
+                                    Swal.fire({
+                                        icon: 'info',
+                                        title: 'Bookmark Removed',
+                                        text: `Page ${pageNumber} bookmark deleted.`,
+                                        timer: 1200,
+                                        showConfirmButton: false
+                                    });
+                                }
+                                updateBookmarkIcon();
+                            }
+                        })
+                        .fail(() => {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Server not reachable or unauthorized.'
+                            });
+                        });
+                });
+
+        });
+</script>
+
+@* @author: Chong Jun Xiang *@
+@* Book Translation *@
+<partial name="Translate/_EpubTools"/>

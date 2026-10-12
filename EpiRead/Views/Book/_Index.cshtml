@@ -1,0 +1,203 @@
+﻿@model BookVm
+
+<style>
+    body {
+        background-color: #383D48;
+        color: #fff;
+    }
+
+    .book-section {
+        margin-top: 2.5rem;
+    }
+
+        /* Style for parent category headings */
+        .book-section h4 {
+            color: #f8f9fa;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            border-left: 4px solid #f39c12;
+            padding-left: 0.8rem;
+        }
+
+        /* NEW STYLE: For sub-category sections, add left padding */
+        .book-section.sub-category {
+            margin-left: 2rem; /* Adjust this value for desired indentation */
+            border-left: 2px solid rgba(243, 156, 18, 0.5); /* Optional: A lighter border for sub-sections */
+            padding-left: 0.5rem; /* Space between the new border and content */
+        }
+
+            /* NEW STYLE: For sub-category headings, make them a bit smaller and potentially lighter */
+            .book-section.sub-category h4 {
+                font-size: 1.15rem; /* Slightly smaller than parent */
+                color: #ccc; /* Slightly lighter color */
+                border-left: none; /* Remove border if sub-category section has its own */
+                padding-left: 0;
+                margin-bottom: 0.8rem;
+            }
+
+
+    .book-row {
+        display: flex;
+        gap: 1.5rem;
+        overflow-x: auto;
+        padding-bottom: 1rem;
+        scroll-behavior: smooth;
+    }
+
+        .book-row::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .book-row::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 10px;
+        }
+
+            .book-row::-webkit-scrollbar-thumb:hover {
+                background: #888;
+            }
+
+    .book-card {
+        flex: 0 0 180px;
+        background: #2F333B;
+        border-radius: 14px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+        color: #E0E0E0;
+        padding: 1rem;
+        text-align: center;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+        .book-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
+        }
+
+        .book-card img {
+            border-radius: 10px;
+            height: 230px;
+            width: 100%;
+            object-fit: cover;
+            margin-bottom: 0.8rem;
+        }
+
+        .book-card h6 {
+            font-weight: 600;
+            color: #f8f9fa;
+            font-size: 1rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .book-card p {
+            font-size: 0.9rem;
+            color: #bbb;
+        }
+
+    .no-results {
+        text-align: center;
+        margin-top: 3rem;
+        font-size: 1.2rem;
+        color: #ccc;
+    }
+</style>
+
+<div class="container py-5">
+    <div class="all-books-title">
+        All Books
+    </div>
+
+    @if (Model.RelatedBooks != null && Model.RelatedBooks.Any())
+    {
+        <div class="book-section">
+            <h4>Search Results</h4>
+            <div class="book-row">
+                @foreach (var book in Model.RelatedBooks)
+                {
+                    <a asp-controller="Book"
+                       asp-action="BookDetails"
+                       asp-route-id="@book.Id"
+                       class="book-card">
+                        @{ var imgSrc = string.IsNullOrWhiteSpace(book.CoverImageLink) ? "/images/book-cover-not-available.webp" : book.CoverImageLink; }
+                        <img src="@imgSrc" alt="@book.Title" loading="lazy" />
+                        <h6>@book.Title</h6>
+                        <p>@book.AuthorName</p>
+                    </a>
+                }
+            </div>
+        </div>
+    }
+    else if (Model.BookCategory != null && Model.BookCategory.Any())
+    {
+        @* Loop through PARENT categories first *@
+        @foreach (var category in Model.BookCategory.Where(c => c.ParentId == null))
+        {
+            @* --- Section for Parent Category's Books --- *@
+            if (category.BookCategoryMaps != null && category.BookCategoryMaps.Any())
+            {
+                <div class="book-section">
+                    <h4>@category.Name</h4>
+                    <div class="book-row">
+                        @foreach (var map in category.BookCategoryMaps)
+                        {
+                            var book = map.Book;
+                            if (book != null)
+                            {
+                                <a asp-controller="Book"
+                                   asp-action="BookDetails"
+                                   asp-route-id="@book.Id"
+                                   class="book-card">
+                                    @{ var imgSrc = string.IsNullOrWhiteSpace(book.CoverImageLink) ? "/images/book-cover-not-available.webp" : book.CoverImageLink; }
+                                    <img src="@imgSrc" alt="@book.Title" loading="lazy" />
+                                    <h6>@book.Title</h6>
+                                    <p>@book.AuthorName</p>
+                                </a>
+                            }
+                        }
+                    </div>
+                </div>
+            }
+
+            @* --- NEW: Loop for SUB-CATEGORIES --- *@
+            @* Find all children of the current parent category *@
+            var subCategories = Model.BookCategory.Where(sub => sub.ParentId == category.Id);
+
+            @foreach (var subCategory in subCategories)
+            {
+                if (subCategory.BookCategoryMaps != null && subCategory.BookCategoryMaps.Any())
+                {
+                    <div class="book-section sub-category">
+                        @* ADDED CLASS: sub-category here *@
+                        <h4>@category.Name &raquo; @subCategory.Name</h4>
+                        <div class="book-row">
+                                    @foreach (var map in subCategory.BookCategoryMaps)
+                            {
+                                var book = map.Book;
+                                if (book != null)
+                                {
+                                    <a asp-controller="Book"
+                                       asp-action="BookDetails"
+                                       asp-route-id="@book.Id"
+                                       class="book-card">
+                                        @{ var imgSrc = string.IsNullOrWhiteSpace(book.CoverImageLink) ? "/images/book-cover-not-available.webp" : book.CoverImageLink; }
+                                        <img src="@imgSrc" alt="@book.Title" loading="lazy" />
+                                        <h6>@book.Title</h6>
+                                        <p>@book.AuthorName</p>
+                                    </a>
+                                }
+                            }
+                        </div>
+                    </div>
+                }
+            }
+        }
+    }
+    else if (Model.RelatedBooks == null)
+    {
+        <div class="no-results">No books found for your search.</div>
+    }
+    else
+    {
+        <div class="no-results">No books or categories found.</div>
+    }
+</div>

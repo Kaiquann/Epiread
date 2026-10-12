@@ -1,0 +1,4 @@
+﻿@model string
+
+<img src="@(string.IsNullOrEmpty(Model) ? "/images/profile-icon.webp" : Model)"
+     alt="Preview Profile Image" class="img-thumbnail" loading="lazy" style="max-height: 200px; max-width: 200px;"/>

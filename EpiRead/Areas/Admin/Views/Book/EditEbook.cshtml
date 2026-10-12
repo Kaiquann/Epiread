@@ -1,0 +1,31 @@
+@model EditEbookVm
+@{
+    ViewBag.Title = "Edit Ebook Files : " + Model.Book.Title;
+}
+
+<section>
+    <div class="container my-5">
+        <h2 class="text-center mb-4">@ViewBag.Title</h2>
+        <div class="card">
+            <div class="card-body" id="ajax-update-content">
+                <partial name="_EditEbook" model="Model"/>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    // Re-initialize file input handlers after AJAX updates
+    document.addEventListener('DOMContentLoaded',
+        function() {
+            document.body.addEventListener('ajax:complete',
+                function() {
+                    // small delay to allow DOM to update
+                    setTimeout(function() {
+                            const evt = new Event('DOMContentLoaded');
+                            document.dispatchEvent(evt);
+                        },
+                        50);
+                });
+        });
+</script>

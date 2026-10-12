@@ -1,0 +1,50 @@
+@model IPagedList<DiscussionPost>
+@{
+    string[] fields =
+    [
+        "", "Title", "Author", "Ban Reason", "Ban Date", "Actions"
+    ];
+}
+
+<partial name="_SweetAlert"/>
+
+<partial name="Table/_FilterFormPartial"/>
+<partial name="Table/_SearchBarPartial"/>
+<partial name="Table/_CountRecordPartial" model="@Model"/>
+
+<table class="table table-bordered table-sm">
+    <partial name="Table/_HeaderPartial" model="@fields"/>
+    <tbody>
+    @if (!Model.Any())
+    {
+        <tr>
+            <td colspan="@fields.Length" class="text-center">
+                <em>No records found.</em>
+            </td>
+        </tr>
+    }
+    else
+    {
+        @foreach (var discussionPost in Model)
+        {
+            <tr data-checkable>
+                <td>
+                    <input type="checkbox" name="ids" value="@discussionPost.Id" form="select-form" class="select-box"/>
+                </td>
+                <td>@discussionPost.Title</td>
+                <td>@discussionPost.User?.UserName</td>
+                <td>@discussionPost.Reason</td>
+                <td>@(discussionPost.BannedOn.HasValue ? discussionPost.BannedOn.Value.ToString("yyyy-MM-dd HH:mm") : "-")</td>
+                <td class="d-flex justify-content-center align-items-center gap-1">
+                    <a asp-area="Admin" asp-controller="Discussion" asp-action="PostDetails" asp-route-id="@discussionPost.Id" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-eye" aria-hidden="true"></i> View
+                    </a>
+                    <partial name="_ActionButtonTable" model="@discussionPost"/>
+                </td>
+            </tr>
+        }
+    }
+    </tbody>
+</table>
+
+<partial name="Table/_FooterPartial" model="@Model"/>

@@ -1,0 +1,296 @@
+<div class="d-flex justify-content-center align-items-center flex-shrink-0 w-100 chatgpt-input-bar-inner" style="padding: 1.5rem 1rem 2rem 1rem;">
+    <div class="d-flex flex-column w-100" style="gap: 0.75rem; max-width: 850px;">
+        <!-- Mode Selection Pills -->
+        <div id="selectedModePillContainer" class="d-flex flex-wrap" style="gap: 0.5rem; min-height: 0px; padding: 0;">
+        </div>
+
+        <!-- Input & Controls Row with enhanced shadow for floating effect -->
+        <div class="bg-white d-flex align-items-end chatgpt-input-row" style="border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 26px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 6px 20px rgba(0, 0, 0, 0.15); padding: 0.75rem 1rem; transition: all 0.3s ease;">
+
+            <!-- Mode Selection Button -->
+            <div class="position-relative me-2" style="flex-shrink: 0;">
+                <button id="customPlusBtn"
+                        class="btn btn-sm"
+                        type="button"
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                        aria-controls="customMenu"
+                        title="Select chat mode"
+                        style="align-items: center; background: #f0f0f0; border: none; border-radius: 50%; color: #555; cursor: pointer; display: flex; font-size: 1.3rem; font-weight: 600; height: 40px; justify-content: center; padding: 0; transition: all 0.2s ease; width: 40px;">
+                    <span aria-hidden="true">+</span>
+                    <span class="visually-hidden">Select chat mode</span>
+                </button>
+
+                <!-- Mode Menu -->
+                <div id="customMenu" class="d-none flex-column align-items-stretch"
+                     role="menu"
+                     aria-hidden="true"
+                     style="background: #fff; border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 10px; bottom: 55px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); left: 0; min-width: 200px; opacity: 0; position: absolute; transform: translateY(6px); transform-origin: bottom left; transition: opacity 180ms ease, transform 180ms ease; z-index: 1100;">
+                    <button class="btn btn-link text-start px-3 py-2 text-dark" type="button" data-mode="Find Book" style="border: none; font-size: 0.95rem; text-decoration: none; transition: background 0.2s;" role="menuitem">📚 Find Book</button>
+                    <button class="btn btn-link text-start px-3 py-2 text-dark" type="button" data-mode="Book Summarize" style="border: none; border-top: 1px solid rgba(0, 0, 0, 0.05); font-size: 0.95rem; text-decoration: none; transition: background 0.2s;" role="menuitem">✨ Book Summarize</button>
+                    <button class="btn btn-link text-start px-3 py-2 text-dark" type="button" data-mode="Book Recommendation" style="border: none; border-top: 1px solid rgba(0, 0, 0, 0.05); font-size: 0.95rem; text-decoration: none; transition: background 0.2s;" role="menuitem">⭐ Book Recommendation</button>
+                </div>
+            </div>
+
+            <!-- Input Field -->
+            <input id="chatInputBar"
+                   type="text"
+                   class="form-control border-0 chatgpt-input"
+                   placeholder="Message EpiRead..."
+                   aria-label="User question"
+                   style="background: transparent; border-radius: 18px; box-shadow: none; color: #1d1d1d; flex-grow: 1; font-size: 1rem; height: 40px; padding: 0 1rem;">
+
+            <!-- Send Button -->
+            <button id="chatSendBtn"
+                    class="btn ms-2 chatgpt-send-btn"
+                    type="button"
+                    aria-label="Send message"
+                    style="align-items: center; background: linear-gradient(135deg, #10a37f 0%, #0d8f6e 100%); border: none; border-radius: 50%; box-shadow: 0 2px 8px rgba(16, 163, 127, 0.3); color: white; cursor: pointer; display: flex; flex-shrink: 0; font-weight: 600; height: 40px; justify-content: center; padding: 0; transition: all 0.2s ease; width: 40px;">
+                <i class="fas fa-arrow-up" aria-hidden="true" style="font-size: 1.1rem;"></i>
+            </button>
+        </div>
+
+        <!-- Help Text -->
+        <p class="text-center text-muted mb-0" style="color: #999; font-size: 0.75rem; margin-top: 0.25rem;">
+            <span id="helpText">EpiRead can make mistakes. Check important info.</span>
+        </p>
+    </div>
+</div><script>
+    (function() {
+        const plusBtn = document.getElementById('customPlusBtn');
+        const menu = document.getElementById('customMenu');
+        const modePillContainer = document.getElementById('selectedModePillContainer');
+        const sendBtn = document.getElementById('chatSendBtn');
+        const inputBar = document.getElementById('chatInputBar');
+        let menuOpen = false;
+        let selectedMode = null;
+        let isSending = false;
+
+        // Get current session ID from URL
+        const urlParts = window.location.pathname.split('/');
+        let currentSessionId = null;
+        if (urlParts.length > 3 && urlParts[1] === 'Chatbot' && urlParts[2] === 'Chat' && urlParts[3]) {
+            currentSessionId = urlParts[3];
+        }
+
+        // ==========================================
+        // Menu management
+        // ==========================================
+        function showMenu() {
+            menu.classList.remove('d-none');
+            menu.setAttribute('aria-hidden', 'false');
+            plusBtn.setAttribute('aria-expanded', 'true');
+            requestAnimationFrame(() => {
+                menu.style.opacity = '1';
+                menu.style.transform = 'translateY(0)';
+            });
+            menuOpen = true;
+        }
+
+        function hideMenu() {
+            menu.style.opacity = '0';
+            menu.style.transform = 'translateY(6px)';
+            plusBtn.setAttribute('aria-expanded', 'false');
+            menu.setAttribute('aria-hidden', 'true');
+            menuOpen = false;
+            setTimeout(() => {
+                    if (!menuOpen) menu.classList.add('d-none');
+                },
+                200);
+        }
+
+        // Toggle menu visibility
+        plusBtn.addEventListener('click',
+            function(e) {
+                e.stopPropagation();
+                if (menuOpen) hideMenu();
+                else showMenu();
+            });
+
+        // Close menu when clicking outside
+        document.addEventListener('click',
+            function(e) {
+                if (menuOpen && !menu.contains(e.target) && e.target !== plusBtn) {
+                    hideMenu();
+                }
+            });
+
+        // Keyboard accessibility: Esc closes menu
+        document.addEventListener('keydown',
+            function(e) {
+                if (e.key === 'Escape' && menuOpen) {
+                    hideMenu();
+                    plusBtn.focus();
+                }
+            });
+
+        // ==========================================
+        // Handle option selection (only one at a time)
+        // ==========================================
+        menu.querySelectorAll('[data-mode]').forEach(function(btn) {
+            btn.addEventListener('click',
+                function(e) {
+                    e.stopPropagation();
+                    selectedMode = btn.getAttribute('data-mode');
+                    showSelectedModePill(selectedMode);
+                    hideMenu();
+                    inputBar.focus();
+                });
+        });
+
+        // Show the selected mode as a pill below input with dark 'x' to cancel
+        function showSelectedModePill(mode) {
+            modePillContainer.innerHTML = '';
+            const pill = document.createElement('span');
+            pill.setAttribute('class', 'badge rounded-pill bg-primary d-inline-flex align-items-center px-3 py-2');
+            pill.setAttribute('style', 'font-size: 0.95rem;');
+            pill.innerHTML = `<span>${escapeHtml(mode)}</span>`;
+
+            const closeBtn = document.createElement('button');
+            closeBtn.setAttribute('type', 'button');
+            closeBtn.setAttribute('aria-label', 'Remove selection');
+            closeBtn.setAttribute('class', 'btn btn-sm ms-2');
+            closeBtn.setAttribute('style', 'background: transparent; border: none; color: #111;  padding: 0;');
+            closeBtn.innerHTML = '<span class="fa-solid fa-xmark" aria-hidden="true"></span> <span class="visually-hidden">Close</span>';
+
+            closeBtn.addEventListener('click',
+                function(ev) {
+                    ev.stopPropagation();
+                    selectedMode = null;
+                    modePillContainer.innerHTML = '';
+                    inputBar.focus();
+                });
+
+            const wrapper = document.createElement('div');
+            wrapper.setAttribute('class', 'd-inline-flex align-items-center');
+            wrapper.appendChild(pill);
+            wrapper.appendChild(closeBtn);
+            modePillContainer.appendChild(wrapper);
+        }
+
+        // ==========================================
+        // Send message functionality
+        // ==========================================
+        sendBtn.addEventListener('click',
+            async function() {
+                await sendMessage();
+            });
+
+        // Also send on Enter key in input
+        inputBar.addEventListener('keypress',
+            async function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    await sendMessage();
+                }
+            });
+
+        async function sendMessage() {
+            const messageText = inputBar.value.trim();
+
+            // Validation
+            if (!messageText) {
+                alert('Please enter a message');
+                return;
+            }
+
+            if (isSending) {
+                return; // Prevent double-send
+            }
+
+            // Show loading state
+            isSending = true;
+            sendBtn.disabled = true;
+            const originalSendText = sendBtn.innerHTML;
+            sendBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Sending...';
+
+            try {
+                // Call SendMessage endpoint
+                const response = await fetch('/Chatbot/SendMessage',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            sessionId: currentSessionId ? currentSessionId : null,
+                            message: messageText,
+                            mode: selectedMode || 'General'
+                        })
+                    });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const newSessionId = data.sessionId;
+
+                    // Emit events for new messages (user and bot)
+                    const now = new Date();
+
+                    // User message event
+                    document.dispatchEvent(new CustomEvent('messageAdded',
+                        {
+                            detail: {
+                                message: messageText,
+                                sender: 'user',
+                                timestamp: now.toISOString()
+                            }
+                        }));
+
+                    // Bot message event
+                    document.dispatchEvent(new CustomEvent('messageAdded',
+                        {
+                            detail: {
+                                message: data.response,
+                                sender: 'bot',
+                                timestamp: new Date(Date.now() + 1000).toISOString() // Bot response slightly after
+                            }
+                        }));
+
+                    // Clear input
+                    inputBar.value = '';
+
+                    // If this was a new session, redirect to the session URL
+                    if (!currentSessionId || currentSessionId === '') {
+                        // Refresh the sessions list before redirecting
+                        if (typeof window.refreshSessionsList === 'function') {
+                            await window.refreshSessionsList();
+                        }
+
+                        setTimeout(() => {
+                                window.location.href = `/Chatbot/Chat/${newSessionId}`;
+                            },
+                            300);
+                    } else {
+                        // Refresh the sessions list to update timestamps
+                        if (typeof window.refreshSessionsList === 'function') {
+                            await window.refreshSessionsList();
+                        }
+                    }
+
+                    // Clear selected mode after sending
+                    selectedMode = null;
+                    modePillContainer.innerHTML = '';
+                } else {
+                    alert(`Error: ${data.error || 'Failed to send message'}`);
+                }
+            } catch (error) {
+                console.error('Error sending message:', error);
+                alert('Network error: Failed to send message');
+            } finally {
+                // Restore button state
+                isSending = false;
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = originalSendText;
+                inputBar.focus();
+            }
+        }
+
+        // Escape HTML special characters
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    })();
+</script>

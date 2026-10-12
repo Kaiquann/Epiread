@@ -1,0 +1,35 @@
+﻿@model string[]
+
+<form action="" method="post" id="select-form"></form>
+<thead>
+<tr>
+    @foreach (var field in Model)
+    {
+        if (field == "")
+        {
+            <th>
+                <input type="checkbox" class="select-box-all"/>
+            </th>
+            continue;
+        }
+
+        var _dir = "asc";
+        var _class = "";
+
+        if (field == ViewBag.Sort)
+        {
+            _dir = ViewBag.Dir == "des" ? "asc" : "des";
+            _class = ViewBag.Dir;
+        }
+
+        <th>
+            <a href="?search=@ViewBag.Search&sort=@field&dir=@_dir&filter=@ViewBag.Filter"
+               class="@_class"
+               data-ajax="true"
+               data-ajax-update="#table-ajax">
+                @field
+            </a>
+        </th>
+    }
+</tr>
+</thead>

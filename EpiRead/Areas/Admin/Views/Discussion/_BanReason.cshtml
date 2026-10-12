@@ -1,0 +1,35 @@
+@model DiscussionPost
+@{
+    // Get the unique modal id and post/forum identifiers from ViewData (fallbacks allowed)
+    var modalId = ViewData["BanModalId"] as string ?? "banReasonModal";
+    var postId = ViewData["BanPostId"] as int? ?? ViewData["PostId"] as int? ?? (Model?.Id ?? 0);
+}
+
+<!-- Bootstrap Modal for Ban Reason -->
+<div class="modal fade" id="@modalId" tabindex="-1" aria-labelledby="@modalId-Label" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="@modalId-Label">Ban Reason</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-area="Admin" asp-controller="Discussion" asp-action="BanPost" method="post"
+                  data-ajax="true" data-ajax-method="POST" data-ajax-mode="replace" data-ajax-update="#table-ajax">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@postId"/>
+                <div class="modal-body">
+                    <!-- Textarea for entering the ban reason -->
+                    <div class="mb-3">
+                        <label for="@modalId-Textarea" class="form-label">Please provide a reason for the ban (optional):</label>
+                        <textarea class="form-control" id="@modalId-Textarea" name="reason" rows="4" placeholder="Enter ban reason here..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <!-- Cancel and Submit buttons -->
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

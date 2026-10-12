@@ -1,0 +1,65 @@
+﻿@model CreateUserVm
+@{
+    ViewBag.Title = "Create User";
+}
+
+<section>
+    <div class="container my-5">
+        <h2 class="text-center mb-4">@ViewBag.Title</h2>
+        <form asp-area="Admin"
+              asp-controller="User"
+              asp-action="Store"
+              method="post">
+            <table class="table table-bordered">
+                <tbody>
+                <tr>
+                    <th>First name</th>
+                    <td>:</td>
+                    <td>
+                        <input asp-for="FirstName" class="form-control"/>
+                        <span asp-validation-for="FirstName" class="text-danger"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Last name</th>
+                    <td>:</td>
+                    <td>
+                        <input asp-for="LastName" class="form-control"/>
+                        <span asp-validation-for="LastName" class="text-danger"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Email</th>
+                    <td>:</td>
+                    <td>
+                        <input asp-for="Email" class="form-control"/>
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Role</th>
+                    <td>:</td>
+                    <td>
+                        <select asp-for="Role" asp-items="Model.Roles" class="form-control">
+                            <option value="">Select Role</option>
+                        </select>
+                        <span asp-validation-for="Role" class="text-danger"></span>
+                    </td>
+                </tr>
+                </tbody>
+                <tfoot>
+                <tr>
+                    <td colspan="3">
+                        <a asp-area="Admin" asp-controller="User" asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-times" aria-hidden="true"></i> Cancel
+                        </a>
+                        <button class="btn btn-success" data-confirm>
+                            <i class="fas fa-check" aria-hidden="true"></i> Create
+                        </button>
+                    </td>
+                </tr>
+                </tfoot>
+            </table>
+        </form>
+    </div>
+</section>

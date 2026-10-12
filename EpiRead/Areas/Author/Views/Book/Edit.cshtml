@@ -1,0 +1,22 @@
+@model EpiRead.Areas.Author.ViewModels.EditBookVm
+@{
+    ViewBag.Title = "Editing Book : " + Model.Title;
+}
+
+<section>
+    <div class="container my-5">
+        <h2 class="text-center mb-4">@ViewBag.Title</h2>
+        <div class="card">
+            <div class="card-body" id="ajax-update-content">
+                <partial name="_Edit" model="@Model"/>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- AI Description Generation Modal -->
+<partial name="Book/_AIGenerationDescription"/>
+
+@section Scripts {
+    <script src="~/js/ai-description-generation.js"></script>
+}

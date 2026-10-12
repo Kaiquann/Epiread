@@ -1,0 +1,97 @@
+﻿@model IPagedList<BookCategoryTreeItemVm>
+@{
+    string[] fields =
+    [
+        "", "Name", "Parent Category",
+        "Slug", "Books", "Actions"
+    ];
+}
+
+<partial name="_SweetAlert"/>
+
+<partial name="Table/_FilterFormPartial"/>
+<partial name="Table/_SearchBarPartial"/>
+<partial name="Table/_CountRecordPartial" model="@Model"/>
+
+<style>
+    .tree-indent {
+        display: inline-block;
+        margin-left: 1.5rem;
+    }
+
+    .tree-arrow {
+        color: #6c757d;
+        margin-right: 0.25rem;
+    }
+</style>
+
+<table class="table table-bordered table-sm">
+    <partial name="Table/_HeaderPartial" model="@fields"/>
+    <tbody>
+    @if (!Model.Any())
+    {
+        <tr>
+            <td colspan="@fields.Length" class="text-center">
+                <em>No records found.</em>
+            </td>
+        </tr>
+    }
+    else
+    {
+        @foreach (var item in Model)
+        {
+            var bookCategory = item.Category;
+            bool isGeneral = IsGeneral(bookCategory.Name, bookCategory.Slug);
+            <tr data-checkable>
+                <td>
+                    @if (!isGeneral)
+                    {
+                        <input type="checkbox" name="ids" value="@bookCategory.Id" form="select-form" class="select-box"/>
+                    }
+                    else
+                    {
+                        <span class="text-muted">-</span>
+                    }
+                </td>
+                <td>
+                    @for (int i = 0; i < item.Level; i++)
+                    {
+                        <span class="tree-indent"></span>
+                    }
+                    @if (item.Level > 0)
+                    {
+                        <span class="tree-arrow">↳</span>
+                    }
+                    @bookCategory.Name
+                </td>
+                <td>
+                    @if (string.IsNullOrEmpty(item.ParentName))
+                    {
+                        <span class="text-muted">—</span>
+                    }
+                    else
+                    {
+                        @item.ParentName
+                    }
+                </td>
+                <td>@bookCategory.Slug</td>
+                <td>@bookCategory.BookCategoryMaps?.Count(bcm => bcm.Book != null && bcm.Book.Status == nameof(BookStatusType.Available))</td>
+                <td class="d-flex justify-content-center align-items-center gap-1">
+                    <a asp-area="Admin" asp-controller="BookCategory" asp-action="Show" asp-route-id="@bookCategory.Id" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-eye" aria-hidden="true"></i> View
+                    </a>
+                    @if (!isGeneral)
+                    {
+                        <a asp-area="Admin" asp-controller="BookCategory" asp-action="Edit" asp-route-id="@bookCategory.Id" class="btn btn-primary btn-sm">
+                            <i class="fas fa-edit" aria-hidden="true"></i> Edit
+                        </a>
+                    }
+                    <partial name="_ActionButtonTable" model="@bookCategory"/>
+                </td>
+            </tr>
+        }
+    }
+    </tbody>
+</table>
+
+<partial name="Table/_FooterPartial" model="@Model"/>

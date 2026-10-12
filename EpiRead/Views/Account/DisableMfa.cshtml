@@ -1,0 +1,53 @@
+﻿@model DisableMfaVm;
+@{
+    ViewBag.Title = "Disable MFA";
+}
+
+<section>
+    <div class="container my-5">
+        <h2 class="text-center mb-4">@ViewBag.Title</h2>
+        <form asp-area="" asp-controller="Account" asp-action="DisableMfa" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <table class="table table-bordered">
+                <tbody>
+                <tr>
+                    <th>Password</th>
+                    <td>:</td>
+                    <td>
+                        <input asp-for="Password" class="form-control"/>
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Confirm Password</th>
+                    <td>:</td>
+                    <td>
+                        <input asp-for="ConfirmPassword" class="form-control"/>
+                        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Enter MFA 6 digit code</th>
+                    <td>:</td>
+                    <td>
+                        <input asp-for="Code" class="form-control"/>
+                        <span asp-validation-for="Code" class="text-danger"></span>
+                    </td>
+                </tr>
+                </tbody>
+                <tfoot>
+                <tr>
+                    <td colspan="3">
+                        <a asp-area="" asp-controller="Account" asp-action="Profile" class="btn btn-secondary">
+                            <i class="fas fa-times" aria-hidden="true"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary" data-confirm>
+                            <i class="fas fa-check" aria-hidden="true"></i> Disable MFA
+                        </button>
+                    </td>
+                </tr>
+                </tfoot>
+            </table>
+        </form>
+    </div>
+</section>

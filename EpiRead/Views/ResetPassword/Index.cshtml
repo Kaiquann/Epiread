@@ -1,0 +1,38 @@
+﻿@model ResetPasswordVm;
+@inject ICfCaptchaHelper CfCaptchaHelper
+@{
+    ViewBag.Title = "Reset Password";
+}
+
+<section>
+    <div class="container my-5">
+        <h2 class="text-center mb-4">@ViewBag.Title</h2>
+        <form asp-action="Index" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            @Html.Hidden("Token", Model.Token)
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label"></label>
+                <input asp-for="Email" class="form-control" readonly/>
+            </div>
+            <div class="mb-3">
+                <label asp-for="NewPassword" class="form-label"></label>
+                <input asp-for="NewPassword" class="form-control"/>
+                <span asp-validation-for="NewPassword" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="ConfirmNewPassword" class="form-label"></label>
+                <input asp-for="ConfirmNewPassword" class="form-control"/>
+                <span asp-validation-for="ConfirmNewPassword" class="text-danger"></span>
+            </div>
+            <input type="submit" value="Submit"
+                   class="btn btn-success w-100 p-2"
+                   data-confirm="Are you sure to reset your password?"/>
+            <div class="text-center mt-2">
+                <a asp-controller="Login" asp-action="Index" class="text-decoration-none mt-3">
+                    <i class="fa fa-arrow-left" aria-hidden="true"></i> Go Back
+                </a>
+            </div>
+            @CfCaptchaHelper.GetCaptchaHtml()
+        </form>
+    </div>
+</section>

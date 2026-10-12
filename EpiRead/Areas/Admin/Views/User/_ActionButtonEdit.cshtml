@@ -1,0 +1,63 @@
+﻿@model EditUserVm
+@{
+    bool isCurrentAdmin = User.IsInRole("Admin");
+    bool isTargetAdminOrSuper = Model.Role == "Admin" || Model.Role == "SuperAdmin";
+    bool canUpdateTarget = !(isCurrentAdmin && isTargetAdminOrSuper);
+}
+
+@if (Model.Status == nameof(UserStatusType.Active))
+{
+    @if (canUpdateTarget)
+    {
+        @* Open block-reason modal so admin can enter reason before submitting *@
+        <button type="button"
+                class="btn btn-warning"
+                data-bs-toggle="modal"
+                data-bs-target="#blockModal-@Model.Id"
+                aria-label="Block user">
+            <i class="fas fa-ban" aria-hidden="true"></i> Block
+        </button>
+
+        <button data-confirm="Are you sure to deactivate this user?"
+                class="btn btn-danger"
+                form="Deactivate_@Model.Id">
+            <i class="fas fa-user-slash" aria-hidden="true"></i> Deactivate
+        </button>
+    }
+}
+
+@if (Model.Status == nameof(UserStatusType.Blocked))
+{
+    @if (canUpdateTarget)
+    {
+        <button data-confirm="Are you sure to unblock this user?"
+                class="btn btn-warning"
+                form="Unblock_@Model.Id">
+            <i class="fas fa-unlock" aria-hidden="true"></i> Unblock
+        </button>
+
+        <button data-confirm="Are you sure to deactivate this user?"
+                class="btn btn-danger"
+                form="Deactivate_@Model.Id">
+            <i class="fas fa-user-slash" aria-hidden="true"></i> Deactivate
+        </button>
+    }
+}
+
+@if (Model.Status == nameof(UserStatusType.Deactivated))
+{
+    @if (canUpdateTarget)
+    {
+        <button data-confirm="Are you sure to reactivate this user?"
+                class="btn btn-warning"
+                form="Reactivate_@Model.Id">
+            <i class="fas fa-undo" aria-hidden="true"></i> Reactivate
+        </button>
+
+        <button data-confirm="Are you sure to permanently delete this user?"
+                class="btn btn-danger"
+                form="PermanentlyDelete_@Model.Id">
+            <i class="fas fa-times" aria-hidden="true"></i> Permanently Delete
+        </button>
+    }
+}

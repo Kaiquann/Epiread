@@ -1,0 +1,24 @@
+@model Discussion
+
+@* Partial for forum details view (read-only) *@
+<div class="mb-4">
+    <h4 class="fw-bold mb-3" style="color: #212529;">@Model.Title</h4>
+    <div class="mb-3">
+        <label class="form-label text-secondary">Description</label>
+        <div class="border-bottom pb-2 mb-2" style="border-color: #6c63ff !important; color: #495057; font-size: 1.1rem;">@(string.IsNullOrEmpty(Model.Description) ? "No description" : Model.Description)</div>
+    </div>
+    <div class="row mb-2">
+        <div class="col-6 col-md-3">
+            <label class="form-label text-secondary">Total Posts</label>
+            <div class="border-bottom pb-2" style="border-color: #6c63ff !important; color: #212529;">@(Model.DiscussionPosts?.Count ?? 0)</div>
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label text-secondary">Total Comments</label>
+            <div class="border-bottom pb-2" style="border-color: #6c63ff !important; color: #212529;">@(Model.DiscussionPosts?.Sum(p => p.DiscussionComments?.Count ?? 0) ?? 0)</div>
+        </div>
+        <div class="col-12 col-md-6 mt-2 mt-md-0">
+            <label class="form-label text-secondary">Created Date</label>
+            <div class="border-bottom pb-2" style="border-color: #6c63ff !important; color: #212529;">@Model.CreatedAt.ToString("yyyy-MM-dd")</div>
+        </div>
+    </div>
+</div>

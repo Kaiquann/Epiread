@@ -1,0 +1,188 @@
+﻿@{
+    Layout = "/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Admin Sidebar using Bootstrap Offcanvas for animation, accessibility, and modern UI -->
+
+<!-- Sidebar toggle button: placed below navbar, not overlapping -->
+<div id="adminSidebarToggleWrapper" style="left: 24px; position: fixed; top: 90px; z-index: 1040;">
+    <button class="btn btn-primary shadow" type="button" data-bs-toggle="offcanvas"
+            data-bs-target="#adminSidebarOffcanvas" aria-controls="adminSidebarOffcanvas" aria-label="Open admin sidebar">
+        <i class="fas fa-bars"></i>
+    </button>
+</div>
+
+<!-- Auto-open trigger area at left edge -->
+<div id="adminSidebarAutoTrigger"
+     style="background: transparent; cursor: pointer; height: 100vh; left: 0; position: fixed; top: 0; width: 24px; z-index: 1039;">
+</div>
+
+<!-- Responsive adjustment: ensure button is always below navbar -->
+<style>
+    /* Use plain CSS media queries, not Razor @@media */
+    @@media (max-width: 991.98px) {
+        #adminSidebarToggleWrapper { top: 70px; }
+    }
+
+    @@media (max-width: 575.98px) {
+        #adminSidebarToggleWrapper {
+            left: 12px;
+            top: 56px;
+        }
+
+        #adminSidebarAutoTrigger { width: 12px; }
+    }
+</style>
+
+<div class="offcanvas offcanvas-start text-bg-dark" tabindex="-1" id="adminSidebarOffcanvas"
+     aria-labelledby="adminSidebarLabel" data-bs-scroll="true">
+    <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title" id="adminSidebarLabel">
+            <i class="fas fa-cogs me-2"></i> Admin Dashboard
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body px-0">
+        <nav class="nav flex-column">
+            <a asp-area="Admin" asp-controller="User" asp-action="Index"
+               class="nav-link px-4 py-3 text-light @Html.IsActive(nameof(User)) icon-link icon-link-hover"
+               aria-label="Manage Users">
+                <i class="fas fa-user-friends me-2"></i> Manage Users
+            </a>
+            <a asp-area="Admin" asp-controller="BookCategory" asp-action="Index"
+               class="nav-link px-4 py-3 text-light @Html.IsActive(nameof(BookCategory)) icon-link icon-link-hover"
+               aria-label="Manage Book Category">
+                <i class="fas fa-book me-2"></i> Manage Book Category
+            </a>
+            <a asp-area="Admin" asp-controller="Book" asp-action="Index"
+               class="nav-link px-4 py-3 text-light @Html.IsActive(nameof(Book)) icon-link icon-link-hover"
+               aria-label="Manage Books">
+                <i class="fas fa-book me-2"></i> Manage Books
+            </a>
+            <a asp-area="Admin" asp-controller="Discussion" asp-action="Index"
+               class="nav-link px-4 py-3 text-light @Html.IsActive(nameof(Discussion)) icon-link icon-link-hover"
+               aria-label="Manage Discussion Forums">
+                <i class="fas fa-comments me-2"></i> Manage Discussion Forums
+            </a>
+            <a asp-area="Admin" asp-controller="LoginHistory" asp-action="Index"
+               class="nav-link px-4 py-3 text-light @Html.IsActive(nameof(LoginHistory)) icon-link icon-link-hover"
+               aria-label="Login History">
+                <i class="fas fa-sign-in-alt me-2"></i> Login History
+            </a>
+        </nav>
+        <!-- Optionally add a divider and more links -->
+        <hr class="my-3 border-light"/>
+        <div class="px-4">
+            <span class="text-secondary small">Tip: Use sidebar for quick admin navigation.</span>
+        </div>
+    </div>
+</div>
+
+<!-- Accessibility: Skip to main content link for keyboard users -->
+<a class="visually-hidden-focusable" href="#mainContent">Skip to main content</a>
+
+<!-- Add smooth animation for icon links -->
+<style>
+    .icon-link-hover:hover {
+        color: #0d6efd !important;
+        transform: translateX(4px);
+        transition: color 0.2s, transform 0.2s;
+    }
+</style>
+
+<!-- Auto-open/close sidebar JS logic -->
+<script>
+    document.addEventListener('DOMContentLoaded',
+        function() {
+            const trigger = document.getElementById('adminSidebarAutoTrigger');
+            const sidebar = document.getElementById('adminSidebarOffcanvas');
+            var bsSidebar = bootstrap.Offcanvas.getOrCreateInstance(sidebar);
+            var isSidebarOpen = false;
+
+            // Open sidebar when mouse enters trigger area
+            trigger.addEventListener('mouseenter',
+                function() {
+                    if (!isSidebarOpen) {
+                        bsSidebar.show();
+                    }
+                });
+
+            // Track sidebar open/close state
+            sidebar.addEventListener('shown.bs.offcanvas',
+                function() {
+                    isSidebarOpen = true;
+                });
+            sidebar.addEventListener('hidden.bs.offcanvas',
+                function() {
+                    isSidebarOpen = false;
+                });
+
+            // Close sidebar when mouse leaves sidebar area
+            sidebar.addEventListener('mouseleave',
+                function(e) {
+                    // Only close if mouse leaves to outside the sidebar
+                    if (isSidebarOpen) {
+                        bsSidebar.hide();
+                    }
+                });
+
+            // Optional: also close if mouse leaves trigger area and sidebar is open
+            trigger.addEventListener('mouseleave',
+                function() {
+                    if (isSidebarOpen) {
+                        bsSidebar.hide();
+                    }
+                });
+        });
+</script>
+
+@section Scripts {
+    <script>
+        document.addEventListener('submit',
+            async function(e) {
+                const form = e.target;
+                if (!form || !form.classList || !form.classList.contains('ajax-admin-action')) return;
+
+                e.preventDefault();
+
+                try {
+                    const url = form.action;
+                    const fd = new FormData(form);
+
+                    const resp = await fetch(url,
+                        {
+                            method: 'POST',
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                            body: fd
+                        });
+
+                    if (!resp.ok) {
+                        Swal.fire('Error', 'Server error. Please try again.', 'error');
+                        return;
+                    }
+
+                    const text = await resp.text();
+
+                    // If server returned HTML partial, replace the indicated container
+                    const replaceSelector = form.getAttribute('data-replace') || '#table-ajax';
+                    const container = document.querySelector(replaceSelector);
+                    if (container && text && text.trim().startsWith('<')) {
+                        container.innerHTML = text;
+                    }
+
+                    // Show a generic success toast. Specific messages may come from server-side TempData
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Done',
+                        text: 'Action completed successfully.',
+                        timer: 1600,
+                        showConfirmButton: false
+                    });
+                } catch (err) {
+                    console.error('AJAX admin action failed', err);
+                    Swal.fire('Error', 'Request failed. See console for details.', 'error');
+                }
+            });
+
+    </script>
+}

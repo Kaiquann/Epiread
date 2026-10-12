@@ -1,0 +1,368 @@
+/* @author: Chong Jun Xiang */
+/* @description: Enhanced styles for PDF OCR translation bubble */
+
+/* PDF Translation Bubble - Enhanced Design */
+.pdf-translation-bubble {
+  position: fixed !important;
+  z-index: 2147483647 !important;
+  background: linear-gradient(135deg, #1a1d29 0%, #2d3142 100%);
+  color: #fff;
+  padding: 0;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  max-width: 480px;
+  min-width: 320px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  animation: bubbleSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+}
+
+@keyframes bubbleSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.pdf-translation-bubble.closing {
+  animation: bubbleSlideOut 0.2s cubic-bezier(0.55, 0.09, 0.68, 0.53) forwards;
+}
+
+@keyframes bubbleSlideOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+}
+
+/* Header section with language info and close button */
+.pdf-translation-bubble .bubble-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pdf-translation-bubble .bubble-lang-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: #a8b2d1;
+  font-weight: 500;
+}
+
+.pdf-translation-bubble .bubble-lang-badge {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.pdf-translation-bubble .bubble-arrow {
+  color: #667eea;
+  font-size: 1rem;
+  margin: 0 2px;
+}
+
+.pdf-translation-bubble .bubble-close {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #fff;
+  font-size: 1.2rem;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+}
+
+.pdf-translation-bubble .bubble-close:hover {
+  background: rgba(255, 59, 48, 0.8);
+  transform: rotate(90deg);
+}
+
+/* Content sections */
+.pdf-translation-bubble .bubble-content {
+  padding: 16px;
+}
+
+.pdf-translation-bubble .bubble-section {
+  margin-bottom: 12px;
+}
+
+.pdf-translation-bubble .bubble-section:last-child {
+  margin-bottom: 0;
+}
+
+.pdf-translation-bubble .bubble-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #8892b0;
+  margin-bottom: 8px;
+}
+
+.pdf-translation-bubble .bubble-label i {
+  font-size: 0.9rem;
+}
+
+.pdf-translation-bubble .bubble-original {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #ccd6f6;
+  line-height: 1.6;
+  border-left: 3px solid rgba(255, 255, 255, 0.2);
+  max-height: 120px;
+  overflow-y: auto;
+  word-wrap: break-word;
+}
+
+.pdf-translation-bubble .bubble-original::-webkit-scrollbar {
+  width: 6px;
+}
+
+.pdf-translation-bubble .bubble-original::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.pdf-translation-bubble .bubble-original::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+}
+
+.pdf-translation-bubble .bubble-original::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.pdf-translation-bubble .bubble-translation {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+  padding: 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  color: #e6f1ff;
+  font-size: 1rem;
+  line-height: 1.6;
+  border-left: 3px solid #667eea;
+  box-shadow: 0 2px 12px rgba(102, 126, 234, 0.2);
+  max-height: 200px;
+  overflow-y: auto;
+  word-wrap: break-word;
+}
+
+.pdf-translation-bubble .bubble-translation::-webkit-scrollbar {
+  width: 6px;
+}
+
+.pdf-translation-bubble .bubble-translation::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.pdf-translation-bubble .bubble-translation::-webkit-scrollbar-thumb {
+  background: rgba(102, 126, 234, 0.5);
+  border-radius: 3px;
+}
+
+.pdf-translation-bubble .bubble-translation::-webkit-scrollbar-thumb:hover {
+  background: rgba(102, 126, 234, 0.7);
+}
+
+/* Footer with actions */
+.pdf-translation-bubble .bubble-footer {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pdf-translation-bubble .bubble-action-btn {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.pdf-translation-bubble .bubble-action-btn:hover {
+  background: rgba(102, 126, 234, 0.3);
+  border-color: #667eea;
+  transform: translateY(-1px);
+}
+
+.pdf-translation-bubble .bubble-action-btn:active {
+  transform: translateY(0);
+}
+
+.pdf-translation-bubble .bubble-action-btn i {
+  font-size: 0.9rem;
+}
+
+/* Copy success indicator */
+.pdf-translation-bubble .bubble-action-btn.copied {
+  background: rgba(52, 199, 89, 0.3);
+  border-color: #34c759;
+  animation: copyPulse 0.4s ease;
+}
+
+@keyframes copyPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* Loading state */
+.pdf-translation-bubble .bubble-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  gap: 16px;
+}
+
+.pdf-translation-bubble .bubble-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(102, 126, 234, 0.2);
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.pdf-translation-bubble .bubble-loading-text {
+  color: #a8b2d1;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Error state */
+.pdf-translation-bubble .bubble-error {
+  padding: 16px;
+  text-align: center;
+  color: #ff6b6b;
+}
+
+.pdf-translation-bubble .bubble-error i {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .pdf-translation-bubble {
+    max-width: calc(100vw - 32px);
+    min-width: auto;
+    font-size: 0.9rem;
+  }
+  
+  .pdf-translation-bubble .bubble-translation {
+    font-size: 0.95rem;
+  }
+  
+  .pdf-translation-bubble .bubble-footer {
+    flex-direction: column;
+  }
+}
+
+/* Dark theme support (already dark, but just in case) */
+@media (prefers-color-scheme: light) {
+  .pdf-translation-bubble {
+    background: linear-gradient(135deg, #ffffff 0%, #f5f7fa 100%);
+    color: #2d3142;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15), 0 0 1px rgba(0, 0, 0, 0.1) inset;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+  }
+  
+  .pdf-translation-bubble .bubble-header {
+    background: rgba(0, 0, 0, 0.03);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  }
+  
+  .pdf-translation-bubble .bubble-lang-info {
+    color: #5a6779;
+  }
+  
+  .pdf-translation-bubble .bubble-close {
+    background: rgba(0, 0, 0, 0.05);
+    color: #2d3142;
+  }
+  
+  .pdf-translation-bubble .bubble-close:hover {
+    background: rgba(255, 59, 48, 0.8);
+    color: #fff;
+  }
+  
+  .pdf-translation-bubble .bubble-label {
+    color: #5a6779;
+  }
+  
+  .pdf-translation-bubble .bubble-original {
+    background: rgba(0, 0, 0, 0.03);
+    color: #2d3142;
+    border-left-color: rgba(0, 0, 0, 0.2);
+  }
+  
+  .pdf-translation-bubble .bubble-translation {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
+    color: #1a1d29;
+    border-left-color: #667eea;
+  }
+  
+  .pdf-translation-bubble .bubble-footer {
+    background: rgba(0, 0, 0, 0.03);
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+  }
+  
+  .pdf-translation-bubble .bubble-action-btn {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.1);
+    color: #2d3142;
+  }
+  
+  .pdf-translation-bubble .bubble-loading-text {
+    color: #5a6779;
+  }
+}

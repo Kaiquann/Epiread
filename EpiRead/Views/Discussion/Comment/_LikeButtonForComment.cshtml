@@ -1,0 +1,22 @@
+﻿@model DiscussionComment
+
+@{
+    var currentUserId = ViewData["CurrentUserId"] as int? ?? 0;
+    var likes = Model.DiscussionLikeCounts ?? Enumerable.Empty<DiscussionLikeCount>();
+    bool isLiked = likes.Any(l => l.UserId == currentUserId);
+    int likeCount = likes.Count();
+}
+
+<form asp-controller="Discussion" asp-action="ToggleLikeForComment"
+      data-ajax="true"
+      data-ajax-update="#updateCommentLike-ajax-@Model.Id" data-ajax-mode="replace"
+      method="post"
+      class="d-inline">
+    <input type="hidden" name="discussionCommentId" value="@Model.Id" />
+    <button type="submit"
+            class="btn btn-sm rounded-pill px-3 py-1 @(isLiked ? "btn-primary text-white" : "btn-outline-light")">
+        <i class="fas fa-thumbs-up me-1 @(isLiked ? "text-white" : "")"></i>
+        <span class="like-count">@likeCount</span>
+        <span class="ms-1">Like</span>
+    </button>
+</form>

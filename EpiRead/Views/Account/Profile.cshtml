@@ -1,0 +1,225 @@
+﻿@model User;
+@{
+    ViewBag.Title = "Profile";
+}
+
+<section>
+    <div class="container my-5 profile-bg">
+        <div class="row g-4 align-items-center">
+            <div class="col-md-4 text-center">
+                <div class="profile-img-wrapper mx-auto mb-3">
+                    <partial name="User/_ProfileImagePartial" model="@Model.ProfileImageLink"/>
+                </div>
+                <div class="profile-name-block mb-2">
+                    <h3 class="profile-name mb-1">@Model.FirstName @Model.LastName</h3>
+                    <div class="profile-username">@Model.UserName</div>
+                </div>
+                <div class="profile-email mb-2">@Model.Email</div>
+                <div class="d-flex flex-wrap justify-content-center gap-2 mt-3">
+                    <a asp-area="" asp-controller="Account" asp-action="EditProfile" class="btn btn-primary profile-btn">
+                        <i class="fas fa-edit me-2" aria-hidden="true"></i> Edit Profile
+                    </a>
+                    <a asp-area="" asp-controller="Account" asp-action="ChangeEmail" class="btn btn-outline-info profile-btn">
+                        <i class="fas fa-envelope me-2" aria-hidden="true"></i> Change Email
+                    </a>
+                    <a asp-area="" asp-controller="Account" asp-action="ChangePassword" class="btn btn-outline-warning profile-btn">
+                        <i class="fas fa-key me-2" aria-hidden="true"></i> Change Password
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="profile-info-modern">
+                    <h1 class="mb-4 fw-bold" style="font-size: 2.1rem; letter-spacing: -1px;">Basic Information</h1>
+                    <div class="mb-4">
+                        <label class="form-label field-label">First Name</label>
+                        <div class="field-value">@Model.FirstName</div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label field-label">Last Name</label>
+                        <div class="field-value">@Model.LastName</div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label field-label">Username</label>
+                        <div class="field-value">@Model.UserName</div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label field-label">Email</label>
+                        <div class="field-value">@Model.Email</div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label field-label">Birthday</label>
+                        <div class="field-value">@(Model.DateOfBirth == null ? "N/A" : Model.DateOfBirth)</div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label field-label">Language</label>
+                        <div class="field-value">@LanguageHelper.GetLanguageName(Model.Language ?? nameof(LanguageCodeType.EN))</div>
+                    </div>
+                </div>
+                <div class="card profile-card shadow-lg border-0">
+                    <div class="card-body p-4">
+                        <h5 class="mb-3 text-info">Security</h5>
+                        <div class="row mb-2 align-items-center">
+                            <div class="col-5 profile-label">Multi Factor Authentication:</div>
+                            <div class="col-4 profile-value">@(Model.MfaEnabled ? "Enabled" : "Disabled")</div>
+                            <div class="col-3">
+                                @if (Model.MfaEnabled)
+                                {
+                                    <a asp-area="" asp-controller="Account" asp-action="DisableMfa" class="btn btn-outline-danger profile-btn w-100">
+                                        <i class="fas fa-lock me-2" aria-hidden="true"></i> Disable
+                                    </a>
+                                }
+                                else
+                                {
+                                    <a asp-area="" asp-controller="Account" asp-action="EnableMfa" class="btn btn-outline-success profile-btn w-100">
+                                        <i class="fas fa-unlock me-2" aria-hidden="true"></i> Enable
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    body, .profile-bg { background: #23262F !important; }
+
+    .profile-card {
+        background: #23262F;
+        border: 1.5px solid #444a57;
+        border-radius: 18px;
+        color: #e0e0e0;
+    }
+
+    .profile-img-wrapper img {
+        display: block;
+        height: auto;
+        margin: 0 auto;
+        max-height: 100%;
+        max-width: 100%;
+        object-fit: cover;
+        width: auto;
+    }
+
+    .profile-name {
+        color: #fff;
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    .profile-username {
+        color: #6c63ff;
+        font-size: 1.1rem;
+        font-weight: 500;
+    }
+
+    .profile-email, .profile-phone {
+        color: #b0b0b0;
+        font-size: 1.04rem;
+    }
+
+    .profile-label {
+        color: #b0b0b0;
+        font-size: 1.04rem;
+        font-weight: 500;
+    }
+
+    .profile-value {
+        color: #e0e0e0;
+        font-size: 1.04rem;
+    }
+
+    .profile-btn {
+        border-radius: 8px;
+        font-size: 1.04rem;
+        font-weight: 500;
+        min-width: 150px;
+        padding: 0.45rem 1.1rem;
+        transition: background 0.2s, color 0.2s, border 0.2s;
+    }
+
+    .btn-outline-info {
+        border-color: #1ecfff;
+        color: #1ecfff;
+    }
+
+    .btn-outline-info:hover, .btn-outline-info:focus {
+        background: #1ecfff;
+        color: #23262F;
+    }
+
+    .btn-outline-warning {
+        border-color: #ffe066;
+        color: #ffe066;
+    }
+
+    .btn-outline-warning:hover, .btn-outline-warning:focus {
+        background: #ffe066;
+        color: #23262F;
+    }
+
+    .btn-outline-danger {
+        border-color: #ff5c5c;
+        color: #ff5c5c;
+    }
+
+    .btn-outline-danger:hover, .btn-outline-danger:focus {
+        background: #ff5c5c;
+        color: #23262F;
+    }
+
+    .btn-outline-success {
+        border-color: #4be37a;
+        color: #4be37a;
+    }
+
+    .btn-outline-success:hover, .btn-outline-success:focus {
+        background: #4be37a;
+        color: #23262F;
+    }
+
+    .profile-info-list .info-row {
+        border-bottom: 1.5px solid #353945;
+        margin-bottom: 0.7rem;
+        padding-bottom: 0.7rem;
+    }
+
+    .profile-info-list .info-row:last-of-type {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .profile-info-modern {
+        background: transparent;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 0 0 1.5rem 0;
+    }
+
+    .profile-info-modern h1 {
+        color: #fff;
+        font-weight: 700;
+        text-align: left;
+    }
+
+    .profile-info-modern .field-label {
+        color: #b0b0b0;
+        font-size: 1rem;
+        font-weight: 500;
+        letter-spacing: 0.01em;
+        margin-bottom: 0.3rem;
+    }
+
+    .profile-info-modern .field-value {
+        border-bottom: 2px solid #353945;
+        color: #e0e0e0;
+        font-size: 1.1rem;
+        font-weight: 500;
+        margin-bottom: 0.7rem;
+        padding-bottom: 0.7rem;
+        word-break: break-all;
+    }
+</style>

@@ -1,0 +1,315 @@
+﻿@{
+    var fileUrl = (string)Model.FileUrl;
+    var currentPage = (int)Model.CurrentPage;
+    var documentId = (int)Model.documentId;
+}
+@Html.AntiForgeryToken()
+
+<div class="pdf-reader-wrapper">
+    <!-- Toolbar -->
+    <div class="pdf-toolbar d-flex justify-content-between align-items-center px-3 py-2">
+        <div>
+            <button id="prevPage" class="btn btn-outline-light btn-sm me-2">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button id="nextPage" class="btn btn-outline-light btn-sm me-2">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+            <button id="toggleBookmarkBtn" class="btn btn-outline-warning btn-sm ms-1" title="Toggle Bookmark">
+                <i id="bookmarkIcon" class="far fa-bookmark text-light"></i>
+            </button>
+                <form method="get" asp-controller="Book" asp-action="ViewBookmark" class="d-inline">
+                    <input type="hidden" name="documentId" value="@documentId"/>
+                    <button type="submit" class="m-2 btn btn-bookmark px-3 py-2 rounded-pill fw-semibold d-flex align-items-center">
+                        <span class="btn-bookmark-icon">
+                            <i class="fas fa-bookmark"></i>
+                        </span>
+                        <span class="btn-bookmark-text">View Bookmarks</span>
+                    </button>
+                </form>
+        </div>
+
+        <div class="d-flex align-items-center">
+            <span id="pageInfo" class="text-light me-2">Page -- / --</span>
+            <input type="number" id="goToPageInput" class="form-control form-control-sm bg-dark text-light border-secondary me-2" placeholder="Page #" style="width: 80px;">
+            <button id="goToPageBtn" class="btn btn-outline-info btn-sm me-3" title="Go to Page">
+                <i class="fas fa-arrow-right"></i>
+            </button>
+            <button id="zoomIn" class="btn btn-outline-light btn-sm me-1"><i class="fas fa-search-plus"></i></button>
+            <button id="zoomOut" class="btn btn-outline-light btn-sm"><i class="fas fa-search-minus"></i></button>
+            <partial name="Translate/_PdfTools"/>
+        </div>
+    </div>
+
+    <!-- PDF Display -->
+    <div id="pdf-viewer" class="pdf-viewer"></div>
+</div>
+
+<style>
+    .pdf-reader-wrapper {
+        display: flex;
+        flex-direction: column;
+        background-color: #1E2229;
+        color: #fff;
+        border-radius: 12px;
+        overflow: hidden;
+        height: 80vh;
+    }
+
+    .pdf-toolbar {
+        background: #2F333B;
+        border-bottom: 1px solid #353945;
+    }
+
+    .pdf-viewer {
+        flex-grow: 1;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background: #383D48;
+    }
+
+    canvas {
+        display: block;
+        margin: 0 auto;
+        max-width: 100%;
+        height: auto;
+    }
+
+    #toggleBookmarkBtn.active i {
+        color: #ffc107;
+    }
+
+    #toggleBookmarkBtn:hover i {
+        color: #ffda6a;
+    }
+
+    /* --- Bookmark button (nice design) --- */
+    .btn-bookmark {
+        --g1: linear-gradient(135deg, #6c63ff 0%, #7289fa 50%);
+        --g2: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 100%);
+        background-image: var(--g1), var(--g2);
+        border: 0;
+        color: #fff;
+        box-shadow: 0 6px 20px rgba(108, 99, 255, 0.12);
+        transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+        gap: .4rem;
+        padding: .25rem .6rem; /* smaller padding */
+        font-size: .9rem; /* slightly smaller text */
+        min-height: 34px;
+    }
+
+    .btn-bookmark .btn-bookmark-icon {
+        display:flex; align-items:center; justify-content:center;
+        width: 26px; height: 26px; border-radius: 6px; background: rgba(255,255,255,0.08);
+    }
+
+    .btn-bookmark:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 28px rgba(108, 99, 255, 0.18);
+        opacity: 0.98;
+    }
+
+    .btn-bookmark i { font-size: 13px; }
+
+    .btn-bookmark-text { font-weight: 600; letter-spacing: 0.2px; }
+
+    /* Alternate compact display - hides text at very small widths */
+    @@media (max-width: 480px) {
+        .btn-bookmark-text { display: none; }
+        .btn-bookmark { padding: .25rem .45rem; }
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const fileUrl = "@fileUrl";
+        const documentId = @documentId;
+        const token = $('input[name="__RequestVerificationToken"]').val();
+
+        let pdfDoc = null;
+        let totalPages = 0;
+        let currentPage = @currentPage > 0 ? @currentPage : 1;
+        let scale = 1.0;
+
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        document.getElementById("pdf-viewer").appendChild(canvas);
+
+        const pageInfo = document.getElementById("pageInfo");
+
+        // RENDER PAGE
+        function renderPage(num) {
+            pdfDoc.getPage(num).then(function (page) {
+                const viewport = page.getViewport({ scale });
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                const renderCtx = { canvasContext: ctx, viewport: viewport };
+                page.render(renderCtx);
+                pageInfo.textContent = `Page ${num} / ${totalPages}`;
+                updateBookmarkIcon();
+            });
+        }
+
+        //LOAD PDF
+        pdfjsLib.getDocument(fileUrl).promise.then(function (pdf) {
+            pdfDoc = pdf;
+            totalPages = pdf.numPages;
+            if (currentPage < 1 || currentPage > totalPages) currentPage = 1;
+            renderPage(currentPage);
+        });
+
+         // Load existing bookmarks from server
+        $.get("/Book/GetBookmarksForDocument", { documentId: documentId })
+            .done(res => {
+                if (Array.isArray(res)) {
+                    bookmarkedPages = new Set(res);
+                    updateBookmarkIcon();
+                }
+            })
+            .fail(() => console.error("Failed to load bookmarks."));
+
+        // UPDATE PAGE INFO
+        function updatePageInfo() {
+            pageInfo.textContent = `Page ${currentPage} / ${totalPages}`;
+        }
+
+        // DISPLAY PAGE
+        function displayPage(num) {
+            if (num < 1) num = 1;
+            if (num > totalPages) num = totalPages;
+            currentPage = num;
+            renderPage(currentPage);
+            updatePageInfo();
+            saveProgressDebounced();
+        }
+
+        //PAGE NAVIGATION
+        $("#nextPage").on("click", function () {
+            if (currentPage < totalPages) {
+                currentPage++;
+                displayPage(currentPage);
+            }
+        });
+
+        $("#prevPage").on("click", function () {
+            if (currentPage > 1) {
+                currentPage--;
+                displayPage(currentPage);
+            }
+        });
+
+        // GO TO PAGE
+        $("#goToPageBtn").on("click", function () {
+            const inputVal = parseInt($("#goToPageInput").val());
+            if (isNaN(inputVal) || inputVal < 1 || inputVal > totalPages) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Invalid Page',
+                    text: `Please enter a number between 1 and ${totalPages}.`
+                });
+                return;
+            }
+            displayPage(inputVal);
+            $("#goToPageInput").val("");
+        });
+
+        $("#goToPageInput").on("keypress", function (e) {
+            if (e.key === "Enter") {
+                $("#goToPageBtn").click();
+            }
+        });
+
+        //ZOOM CONTROL
+        $("#zoomIn").click(function () {
+            scale = Math.min(scale + 0.2, 3.0);
+            renderPage(currentPage);
+        });
+
+        $("#zoomOut").click(function () {
+            scale = Math.max(scale - 0.2, 0.5);
+            renderPage(currentPage);
+        });
+
+        // SAVE PROGRESS
+        function saveProgress() {
+            $.post("/Book/UpdateBookProgress", {
+                __RequestVerificationToken: token,
+                documentId: documentId,
+                currentPage: currentPage,
+                totalPages: totalPages
+            });
+        }
+
+        let saveTimeout;
+        function saveProgressDebounced() {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(saveProgress, 600);
+        }
+
+        //BOOKMARKS
+        let bookmarkedPages = new Set();
+
+        function updateBookmarkIcon() {
+            const icon = $("#bookmarkIcon");
+            if (bookmarkedPages.has(currentPage)) {
+                icon.removeClass("far text-light").addClass("fas text-warning");
+                $("#toggleBookmarkBtn").addClass("active");
+            } else {
+                icon.removeClass("fas text-warning").addClass("far text-light");
+                $("#toggleBookmarkBtn").removeClass("active");
+            }
+        }
+
+        $("#toggleBookmarkBtn").on("click", function () {
+            const pageNumber = currentPage;
+
+            if (!documentId) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Wait',
+                    text: 'Please wait for the PDF to load.'
+                });
+                return;
+            }
+
+            $.post("/Book/ToggleBookmark", {
+                __RequestVerificationToken: token,
+                documentId: documentId,
+                pageNumber: pageNumber
+            })
+            .done(res => {
+                if (res.success) {
+                    if (res.action === "added") {
+                        bookmarkedPages.add(pageNumber);
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Bookmarked!',
+                            text: `Page ${pageNumber} saved.`,
+                            timer: 1200,
+                            showConfirmButton: false
+                        });
+                    } else if (res.action === "removed") {
+                        bookmarkedPages.delete(pageNumber);
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Bookmark Removed',
+                            text: `Page ${pageNumber} bookmark deleted.`,
+                            timer: 1200,
+                            showConfirmButton: false
+                        });
+                    }
+                    updateBookmarkIcon();
+                }
+            })
+            .fail(() => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Server not reachable or unauthorized.'
+                });
+            });
+        });
+    });
+</script>

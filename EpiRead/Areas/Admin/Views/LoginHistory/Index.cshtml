@@ -1,0 +1,14 @@
+﻿@model IPagedList<LoginHistory>
+@{
+    ViewBag.Title = "Login History";
+}
+
+<section>
+    <div class="container my-5">
+        <h2 class="text-center mb-4">@ViewBag.Title</h2>
+
+        <div id="table-ajax">
+            <partial name="LoginHistory/_Index"/>
+        </div>
+    </div>
+</section>

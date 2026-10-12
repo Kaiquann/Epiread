@@ -1,0 +1,41 @@
+﻿@model Book
+
+<!-- Edit Ebook Button -->
+<a asp-area="Admin" asp-controller="Book" asp-action="EditEbook" asp-route-id="@Model.Id" class="btn btn-info">
+    <i class="fas fa-file-edit" aria-hidden="true"></i> Edit Ebook
+</a>
+
+<!-- Available -->
+@if (Model.Status == nameof(BookStatusType.Available))
+{
+    <form data-ajax="true"
+          data-ajax-update="#ajax-update-content"
+          action="/Admin/Book/Trash?ids=@Model.Id"
+          method="post">
+        <button data-confirm="Are you sure to move this book to trash?" class="btn btn-danger">
+            <i class="fas fa-trash" aria-hidden="true"></i> Trash
+        </button>
+    </form>
+}
+
+<!-- Trashed -->
+@if (Model.Status == nameof(BookStatusType.Trashed))
+{
+    <form data-ajax="true"
+          data-ajax-update="#ajax-update-content"
+          action="/Admin/Book/Recover?ids=@Model.Id"
+          method="post">
+        <button data-confirm="Are you sure to recover this book?" class="btn btn-warning">
+            <i class="fas fa-undo" aria-hidden="true"></i> Recover
+        </button>
+    </form>
+
+    <form data-ajax="true"
+          data-ajax-update="#ajax-update-content"
+          action="/Admin/Book/Delete?ids=@Model.Id"
+          method="post">
+        <button data-confirm="Are you sure to delete this book?" class="btn btn-danger">
+            <i class="fas fa-trash-alt" aria-hidden="true"></i> Delete
+        </button>
+    </form>
+}

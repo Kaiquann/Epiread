@@ -1,0 +1,130 @@
+﻿@model User
+
+<partial name="_SweetAlert"/>
+
+<form data-ajax="true"
+      data-ajax-update="#ajax-update-content"
+      asp-area="Admin"
+      asp-controller="User"
+      asp-action="SendResetPasswordLink"
+      asp-route-id="@Model.Id"
+      method="post"
+      id="sendResetPasswordForm">
+</form>
+
+<div class="card-body">
+    <table class="table table-bordered">
+        <thead>
+        <tr>
+            <td colspan="3">
+                <partial name="User/_ProfileImagePartial" model="@Model.ProfileImageLink"/>
+            </td>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <th>Id</th>
+            <td>:</td>
+            <td>@Model.Id</td>
+        </tr>
+        <tr>
+            <th>First name</th>
+            <td>:</td>
+            <td>@Model.FirstName</td>
+        </tr>
+        <tr>
+            <th>Last name</th>
+            <td>:</td>
+            <td>@Model.LastName</td>
+        </tr>
+        <tr>
+            <th>Username</th>
+            <td>:</td>
+            <td>@Model.UserName</td>
+        </tr>
+        <tr>
+            <th>Email</th>
+            <td>:</td>
+            <td>@Model.Email</td>
+        </tr>
+        <tr>
+            <th>Date of Birth</th>
+            <td>:</td>
+            <td>@(Model.DateOfBirth == null || Model.DateOfBirth == DateOnly.MinValue ? "N/A" : Model.DateOfBirth?.ToString("yyyy-MM-dd"))</td>
+        </tr>
+        <tr>
+            <th>Language</th>
+            <td>:</td>
+            <td>
+                @LanguageHelper.GetLanguageName(Model.Language)
+            </td>
+        </tr>
+        <tr>
+            <th>Role</th>
+            <td>:</td>
+            <td>@Model.Role</td>
+        </tr>
+        <tr>
+            <th>Status</th>
+            <td>:</td>
+            <td>@(Model.Status)</td>
+        </tr>
+        @if (Model.Status == nameof(UserStatusType.Blocked))
+        {
+            <tr>
+                <th>Block Reason</th>
+                <td>:</td>
+                <td>@(string.IsNullOrEmpty(Model.BlockReason) ? "N/A" : Model.BlockReason)</td>
+            </tr>
+        }
+        <tr>
+            <th>Created At</th>
+            <td>:</td>
+            <td>@Model.CreatedAt</td>
+        </tr>
+        <tr>
+            <th>Updated At</th>
+            <td>:</td>
+            <td>@Model.UpdatedAt</td>
+        </tr>
+        </tbody>
+        <tfoot>
+        <tr>
+            <td colspan="3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <!-- Left-aligned button -->
+                    <div>
+                        <a asp-action="Index" asp-controller="User" asp-area="Admin" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left" aria-hidden="true"></i> Go Back
+                        </a>
+                    </div>
+
+                    <!-- Center-aligned buttons -->
+                    <div class="d-flex justify-content-center align-items-center gap-1 text-center">
+                        <partial name="_ActionButtonShow" model="@Model"/>
+                        <partial name="_SendResetPasswordPartial" model="@Model"/>
+                    </div>
+
+                    <!-- Right-aligned button -->
+                    <div>
+                        @if (!(User.IsInRole("Admin") && (Model.Role == "Admin" || Model.Role == "SuperAdmin")))
+                        {
+                            <a asp-area="Admin" asp-controller="User" asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                                <i class="fas fa-edit" aria-hidden="true"></i> Edit
+                            </a>
+                        }
+                    </div>
+                </div>
+            </td>
+        </tr>
+        </tfoot>
+    </table>
+</div>
+
+@* Include the block reason modal *@
+@await Html.PartialAsync("_BlockReason", null, new ViewDataDictionary(ViewData)
+{
+    { "BlockModalId", $"blockModal-{Model.Id}" },
+    { "BlockUserId", Model.Id.ToString() },
+    { "BlockAjaxUpdateSelector", "#ajax-update-content" }
+})

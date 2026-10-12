@@ -1,0 +1,74 @@
+﻿@model DiscussionPost
+
+<!-- Active -->
+@if (Model.Status == nameof(DiscussionPostStatusType.Active))
+{
+    @* Open ban-reason modal so admin can enter reason before submitting *@
+    <button type="button" class="btn btn-warning btn-sm" aria-label="Ban post" data-bs-toggle="modal" data-bs-target="#banModal-@Model.Id">
+        <i class="fas fa-ban" aria-hidden="true"></i> Ban
+    </button>
+
+    <form data-ajax="true"
+          data-ajax-update="#table-ajax"
+          action="/Admin/Discussion/TrashPost?ids=@Model.Id"
+          method="post">
+        <button data-confirm="Are you sure to move this post to trash?"
+                class="btn btn-danger btn-sm"
+                aria-label="Trash post">
+            <i class="fas fa-trash" aria-hidden="true"></i> Trash
+        </button>
+    </form>
+}
+
+<!-- Banned -->
+@if (Model.Status == nameof(DiscussionPostStatusType.Banned))
+{
+    <form data-ajax="true"
+          data-ajax-update="#table-ajax"
+          action="/Admin/Discussion/UnbanPost?ids=@Model.Id"
+          method="post">
+        <button data-confirm="Are you sure to unban this post?"
+                class="btn btn-warning btn-sm"
+                aria-label="Unban post">
+            <i class="fas fa-undo" aria-hidden="true"></i> Unban
+        </button>
+    </form>
+
+    <form data-ajax="true"
+          data-ajax-update="#table-ajax"
+          action="/Admin/Discussion/TrashPost?ids=@Model.Id"
+          method="post">
+        <button data-confirm="Are you sure to trash this post?"
+                class="btn btn-danger btn-sm"
+                aria-label="Trash post">
+            <i class="fas fa-trash" aria-hidden="true"></i> Trash
+        </button>
+    </form>
+}
+
+<!-- Trashed -->
+@if (Model.Status == nameof(DiscussionPostStatusType.Trashed))
+{
+    <form data-ajax="true"
+          data-ajax-update="#table-ajax"
+          action="/Admin/Discussion/RecoverPost?ids=@Model.Id"
+          method="post">
+        <button data-confirm="Are you sure to recover this post?"
+                class="btn btn-warning btn-sm"
+                aria-label="Recover post">
+            <i class="fas fa-undo" aria-hidden="true"></i> Recover
+        </button>
+    </form>
+
+    <form data-ajax="true"
+          data-ajax-update="#table-ajax"
+          action="/Admin/Discussion/DeletePost?ids=@Model.Id"
+          method="post">
+        <input type="hidden" name="discussionId" value="@Model.DiscussionId"/>
+        <button data-confirm="Are you sure to permanently delete this post?"
+                class="btn btn-danger btn-sm"
+                aria-label="Permanently delete post">
+            <i class="fas fa-times" aria-hidden="true"></i> Permanently Delete
+        </button>
+    </form>
+}

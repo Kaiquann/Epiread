@@ -1,0 +1,48 @@
+@model IPagedList<Book>
+@{
+    ViewBag.Title = "Manage Books";
+}
+
+<section>
+    <div class="container my-5">
+        <h2 class="text-center mb-4" id="page-title">@ViewBag.Title</h2>
+
+        <div class="d-flex justify-content-start align-items-center mb-3 gap-1" aria-label="Book actions">
+            <a asp-area="Admin" asp-controller="Book" asp-action="Create" class="btn btn-primary" title="Create new book">
+                <i class="fas fa-plus" aria-hidden="true"></i> Create
+            </a>
+            <a asp-area="Admin" asp-controller="Book" asp-action="Trashed" class="btn btn-secondary" title="View trashed books">
+                <i class="fas fa-trash" aria-hidden="true"></i> Trashed
+            </a>
+            <a asp-area="Admin" asp-controller="Book" asp-action="Import"
+               class="btn btn-success"
+               title="Import books via ZIP">
+                <i class="fas fa-file-import" aria-hidden="true"></i> Import
+            </a>
+            <a asp-area="Admin" asp-controller="Book" asp-action="Export"
+               class="btn btn-info"
+               title="Export books as ZIP">
+                <i class="fas fa-file-download" aria-hidden="true"></i> Export as ZIP
+            </a>
+        </div>
+
+        <div class="d-flex justify-content-start align-items-center mb-3 gap-1">
+            <i class="fas fa-tasks" aria-hidden="true"></i> <b>Bulk Actions</b>
+            <button type="button"
+                    data-ajax="true"
+                    data-ajax-update="#table-ajax"
+                    data-message="Are you sure to move all the selected book to trash?"
+                    data-action="/Admin/Book/Trash"
+                    class="select-submit-btn btn btn-danger"
+                    form="select-form">
+                <i class="fas fa-trash" aria-hidden="true"></i> Trash
+            </button>
+        </div>
+
+        <partial name="_FilterBar"/>
+
+        <div id="table-ajax">
+            <partial name="_Index"/>
+        </div>
+    </div>
+</section>

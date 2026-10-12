@@ -1,0 +1,141 @@
+@model Book
+
+<partial name="_SweetAlert"/>
+
+<div class="card-body">
+    <table class="table table-bordered mb-0" aria-label="Book details">
+        <thead>
+        <tr>
+            <td colspan="3">
+                <partial name="Book/_CoverImagePartial" model="@Model.CoverImageLink"/>
+            </td>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <th scope="row">Title</th>
+            <td>:</td>
+            <td>@Model.Title</td>
+        </tr>
+        <tr>
+            <th scope="row">Author</th>
+            <td>:</td>
+            <td>@Model.AuthorName</td>
+        </tr>
+        <tr>
+            <th scope="row">Description</th>
+            <td>:</td>
+            <td>@Model.Description</td>
+        </tr>
+        <tr>
+            <th scope="row">Publication Year</th>
+            <td>:</td>
+            <td>@Model.PublicationYear?.Year</td>
+        </tr>
+        <tr>
+            <th scope="row">Language</th>
+            <td>:</td>
+            <td>@LanguageHelper.GetLanguageName(Model.LanguageCode)</td>
+        </tr>
+        <tr>
+            <th scope="row">Categories</th>
+            <td>:</td>
+            <td>
+                @{
+                    // Check for null and display categories or fallback
+                    List<string?>? categories = Model.BookCategoryMaps?.Select(c => c.BookCategory?.Name).Where(name => !string.IsNullOrEmpty(name)).ToList();
+                }
+                @if (categories is { Count: > 0 })
+                {
+                    @string.Join(", ", categories)
+                }
+                else
+                {
+                    <span class="text-muted">No categories</span>
+                }
+            </td>
+        </tr>
+        <tr>
+            <th scope="row">Status</th>
+            <td>:</td>
+            <td>@Model.Status</td>
+        </tr>
+        <tr>
+            <th scope="row">Ebook Files</th>
+            <td>:</td>
+            <td>
+                @{
+                    List<BookDocument>? bookDocuments = ViewBag.BookDocuments as List<BookDocument>;
+                }
+                @if (bookDocuments != null && bookDocuments.Count > 0)
+                {
+                    <div class="row">
+                        @foreach (BookDocument doc in bookDocuments)
+                        {
+                            string fileName = System.IO.Path.GetFileName(doc.DocumentPath);
+                            string customName = fileName.Contains("_") ? fileName.Substring(0, fileName.IndexOf("_", StringComparison.Ordinal)) : fileName;
+                            string fileExt = System.IO.Path.GetExtension(fileName).ToLowerInvariant();
+                            <div class="col-md-6 mb-2">
+                                @if (fileExt == ".pdf")
+                                {
+                                    <div>
+                                        <a href="@Url.Action("PdfPreview", "Book", new { area = "Admin", id = doc.Id })" target="_blank" class="btn btn-link" title="Preview PDF in new tab">
+                                            <i class="fas fa-file-pdf"></i> @customName <span class="text-muted">(@fileExt.Replace(".", "").ToUpper())</span>
+                                            <i class="fas fa-external-link-alt ms-1"></i>
+                                        </a>
+                                        <div>
+                                            <small class="text-muted ms-4">Created: @doc.CreatedAt.ToString("yyyy-MM-dd HH:mm")</small>
+                                        </div>
+                                    </div>
+                                }
+                                else if (fileExt == ".epub")
+                                {
+                                    <div>
+                                        <a href="@Url.Action("EpubPreview", "Book", new { area = "Admin", id = doc.Id })" target="_blank" class="btn btn-link" title="Preview EPUB in new tab">
+                                            <i class="fas fa-book-open"></i> @customName <span class="text-muted">(@fileExt.Replace(".", "").ToUpper())</span>
+                                            <i class="fas fa-external-link-alt ms-1"></i>
+                                        </a>
+                                        <div>
+                                            <small class="text-muted ms-4">Created: @doc.CreatedAt.ToString("yyyy-MM-dd HH:mm")</small>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <span class="text-muted">No ebook files</span>
+                }
+            </td>
+        </tr>
+        </tbody>
+        <tfoot>
+        <tr>
+            <td colspan="3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <!-- Left-aligned button -->
+                    <div>
+                        <a asp-action="Index" asp-controller="Book" asp-area="Admin" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left" aria-hidden="true"></i> Go Back
+                        </a>
+                    </div>
+
+                    <!-- Center-aligned buttons -->
+                    <div class="d-flex justify-content-center align-items-center gap-1 text-center">
+                        <partial name="_ActionButtonShow" model="Model"/>
+                    </div>
+
+                    <!-- Right-aligned button -->
+                    <div>
+                        <a asp-area="Admin" asp-controller="Book" asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                            <i class="fas fa-edit" aria-hidden="true"></i> Edit
+                        </a>
+                    </div>
+                </div>
+            </td>
+        </tr>
+        </tfoot>
+    </table>
+</div>

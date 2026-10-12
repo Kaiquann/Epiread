@@ -1,0 +1,785 @@
+<div id="chatbotSidebar"
+     class="d-flex flex-column text-white"
+     style="-webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); background: rgba(18, 18, 24, 0.55); border-radius: 0 12px 12px 0; box-shadow: 0 8px 30px 0 rgba(0, 0, 0, 0.45); height: 100vh; min-width: 48px; padding: 8px; transition: width 0.2s ease; width: 260px;">
+    <div class="d-flex flex-column align-items-stretch" style="gap: 8px;">
+        <div class="d-flex align-items-center">
+            <button id="sidebarToggleBtn"
+                    class="btn d-flex align-items-center justify-content-center text-white shadow"
+                    type="button"
+                    aria-controls="chatAreaContainer"
+                    aria-expanded="true"
+                    style="background: rgba(255, 255, 255, 0.06); border-radius: 50%; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25); height: 32px; padding: 0; width: 32px;">
+                <span id="sidebarChevron" class="fas fa-bars" style="font-size: 1.05rem;"></span>
+            </button>
+
+            <div id="sidebarHeaderContent" class="ms-2" style="display: block; flex: 1;">
+                <button id="newChatBtn" class="btn btn-light rounded-pill d-flex align-items-center justify-content-center fw-bold shadow-sm"
+                        type="button"
+                        style="font-size: 0.95rem; padding: 0.5rem 0.9rem;">
+                    <i class="fas fa-plus me-2"></i>
+                    New Chat
+                </button>
+            </div>
+        </div>
+
+        <hr class="my-2" style="border-color: rgba(255, 255, 255, 0.06);">
+
+    </div>
+
+    <div id="sidebarBodyContent" class="flex-grow-1 overflow-y-auto px-1" style="min-height: 0;">
+        <h6 class="mt-2 mb-2 text-white-50" style="font-size: 0.9rem;">Chat History</h6>
+
+        <ul id="chatSessionsList" class="list-group list-group-flush" style="gap: 4px; padding-bottom: 0;">
+            <!-- Sessions will be loaded dynamically via JavaScript using partial view -->
+            <li class="text-white-50 px-2 py-2" style="font-size: 0.9rem;">
+                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Loading sessions...
+            </li>
+        </ul>
+
+        <style>
+            /* Active session highlight */
+            .chat-item.active { background: rgba(255, 255, 255, 0.12) !important; }
+
+            /* Hover effect - apply to all items (active and inactive) */
+
+            .chat-item:hover {
+                background: rgba(255, 255, 255, 0.12) !important;
+                transition: background 0.2s ease !important;
+            }
+
+            /* Override Bootstrap's list-group-item-action hover - must be more specific */
+
+            .list-group-item-action:hover,
+            .list-group-item-action:focus {
+                background-color: transparent !important;
+                color: inherit !important;
+            }
+
+            /* Ensure chat items maintain their styling */
+
+            .chat-item.list-group-item-action:hover { background: rgba(255, 255, 255, 0.12) !important; }
+
+            /* Loading animation */
+
+            @@keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(10px);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .chat-item { animation: fadeIn 0.3s ease; }
+        </style>
+
+        <!-- Loading indicator for infinite scroll -->
+        <div id="sessionsLoadingIndicator" class="text-center text-white-50 py-2" style="display: none; font-size: 0.85rem;">
+            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            <span>Loading more sessions...</span>
+        </div>
+
+        <!-- End of list indicator -->
+        <div id="sessionsEndIndicator" class="text-center text-white-50 py-2" style="display: none; font-size: 0.85rem;">
+            <span>No more sessions</span>
+        </div>
+
+        <!-- Bottom gap to prevent footer from blocking last items (same as chat area) -->
+        <div class="chatbot-bottom-gap" aria-hidden="true"></div>
+    </div>
+
+    <!-- Floating single options menu reused for all items -->
+    <div id="sidebarItemMenu" role="menu" aria-hidden="true"
+         style="background: rgba(18, 18, 24, 0.97); border-radius: 6px; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45); display: none; min-width: 140px; padding: 6px; pointer-events: auto; position: fixed; z-index: 2000;">
+        <button type="button" id="menuRename" class="btn btn-sm btn-link w-100 text-start text-white"
+                role="menuitem" style="padding: 6px 8px;">
+            Rename
+        </button>
+        <button type="button" id="menuDelete" class="btn btn-sm btn-link w-100 text-start text-white"
+                role="menuitem" style="padding: 6px 8px;">
+            Delete
+        </button>
+    </div>
+</div>
+
+<script>
+    // Ensure sidebar initialization only happens once per page load
+    if (window.__SidebarInitialized) {
+        console.log('Sidebar already initialized, skipping duplicate initialization');
+    } else {
+        window.__SidebarInitialized = true;
+
+        (function() {
+            // DOM Elements
+            const sidebar = document.getElementById('chatbotSidebar');
+            const toggleBtn = document.getElementById('sidebarToggleBtn');
+            const chevron = document.getElementById('sidebarChevron');
+            const headerContent = document.getElementById('sidebarHeaderContent');
+            const bodyContent = document.getElementById('sidebarBodyContent');
+            const newChatBtn = document.getElementById('newChatBtn');
+            const sessionsList = document.getElementById('chatSessionsList');
+            const menu = document.getElementById('sidebarItemMenu');
+            const menuRenameBtn = document.getElementById('menuRename');
+            const menuDeleteBtn = document.getElementById('menuDelete');
+            const loadingIndicator = document.getElementById('sessionsLoadingIndicator');
+            const endIndicator = document.getElementById('sessionsEndIndicator');
+
+            const expandedWidth = '260px';
+            const collapsedWidth = '48px';
+            const pageSize = 15; // Number of sessions per page
+
+            let currentTargetButton = null;
+            let currentItem = null;
+            let currentPage = 1;
+            let isLoading = false;
+            let hasMoreSessions = true;
+
+            // ==========================================
+            // Load chat sessions with pagination
+            // ==========================================
+            async function loadSessionsPage(pageNumber = 1) {
+                // Reset if loading first page
+                if (pageNumber === 1) {
+                    currentPage = 1;
+                    hasMoreSessions = true;
+                    endIndicator.style.display = 'none';
+                    sessionsList.innerHTML = ''; // Clear existing sessions
+                }
+
+                // Prevent duplicate requests
+                if (isLoading) {
+                    console.log('Already loading sessions...');
+                    return;
+                }
+
+                // Prevent loading if we've reached the end
+                if (!hasMoreSessions && pageNumber > 1) {
+                    endIndicator.style.display = 'block';
+                    return;
+                }
+
+                try {
+                    isLoading = true;
+
+                    // Show loading indicator only for subsequent pages
+                    if (pageNumber > 1) {
+                        loadingIndicator.style.display = 'block';
+                    }
+
+                    const response = await fetch(`/Chatbot/GetSessionsPagedPartial?pageNumber=${pageNumber}&pageSize=${pageSize}`);
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const html = await response.text();
+
+                    // Check if we got empty results (end of list)
+                    if (!html.trim() || html.includes('No chat sessions yet')) {
+                        hasMoreSessions = false;
+                        if (pageNumber === 1) {
+                            // First page with no sessions
+                            sessionsList.innerHTML = '<li class="text-white-50 px-2 py-2" style="font-size: 0.9rem;">No chat sessions yet</li>';
+                        } else {
+                            // We've reached the end
+                            endIndicator.style.display = 'block';
+                        }
+                        loadingIndicator.style.display = 'none';
+                        return;
+                    }
+
+                    // Append sessions to the list
+                    const tempContainer = document.createElement('div');
+                    tempContainer.innerHTML = html;
+
+                    // Get all session items from the response
+                    const newSessions = tempContainer.querySelectorAll('.chat-item');
+
+                    if (newSessions.length < pageSize) {
+                        hasMoreSessions = false;
+                        endIndicator.style.display = 'block';
+                    }
+
+                    // Append to list
+                    newSessions.forEach(session => {
+                        sessionsList.appendChild(session);
+                    });
+
+                    // Re-attach event listeners after loading new content
+                    attachSessionEventListeners();
+
+                    currentPage = pageNumber;
+                    loadingIndicator.style.display = 'none';
+                } catch (error) {
+                    console.error('Error loading sessions:', error);
+                    if (pageNumber === 1) {
+                        sessionsList.innerHTML = '<li class="text-danger px-2 py-2" style="font-size: 0.9rem;">Failed to load sessions</li>';
+                    }
+                    loadingIndicator.style.display = 'none';
+                } finally {
+                    isLoading = false;
+                }
+            }
+
+            // Attach event listeners to session items
+            function attachSessionEventListeners() {
+                const sessionItems = sessionsList.querySelectorAll('.chat-item');
+
+                sessionItems.forEach(item => {
+                    const sessionId = item.getAttribute('data-session-id');
+                    const title = item.getAttribute('data-title');
+
+                    // Remove any existing listeners by cloning and replacing
+                    const newItem = item.cloneNode(true);
+                    item.parentNode.replaceChild(newItem, item);
+
+                    // Click handler for session item (excluding options button)
+                    newItem.addEventListener('click',
+                        function(e) {
+                            if (!e.target.closest('.options-btn')) {
+                                navigateToSession(sessionId);
+                            }
+                        });
+
+                    // Click handler for options button
+                    const optionsBtn = newItem.querySelector('.options-btn');
+                    if (optionsBtn) {
+                        optionsBtn.addEventListener('click',
+                            function(e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                currentItem = newItem;
+                                showMenuForButton(optionsBtn, sessionId, title);
+                            });
+                    }
+                });
+            }
+
+            // Navigate to a specific session via AJAX
+            async function navigateToSession(sessionId) {
+                try {
+                    // Update URL without page refresh
+                    window.history.pushState({ sessionId: sessionId }, '', `/Chatbot/Chat/${sessionId}`);
+
+                    // Get session title from sidebar item
+                    let sessionTitle = 'Chat Session';
+                    sessionsList.querySelectorAll('.chat-item').forEach(item => {
+                        if (item.getAttribute('data-session-id') === sessionId) {
+                            item.classList.add('active');
+                            sessionTitle = item.getAttribute('data-title') || sessionTitle;
+                        } else {
+                            item.classList.remove('active');
+                        }
+                    });
+
+                    // Update chat header with session title
+                    if (typeof window.updateChatHeader === 'function') {
+                        window.updateChatHeader(sessionTitle, 'Continue your conversation');
+                    }
+
+                    // Load messages for this session
+                    if (typeof window.loadSessionMessages === 'function') {
+                        await window.loadSessionMessages(sessionId);
+                    } else {
+                        console.warn('loadSessionMessages function not found');
+                    }
+                } catch (error) {
+                    console.error('Error navigating to session:', error);
+                    // Fallback to full page load
+                    window.location.href = `/Chatbot/Chat/${sessionId}`;
+                }
+            }
+
+            // Expose functions globally for manual refresh
+            window.refreshSessionsList = function() {
+                loadSessionsPage(1);
+            };
+
+            // Prepend a new session to the list without reloading (preserves scroll position)
+            window.prependNewSession = function(sessionId, sessionTitle) {
+                if (!sessionId || !sessionTitle) {
+                    console.warn('prependNewSession: sessionId or sessionTitle is missing');
+                    return;
+                }
+
+                // Check if this session already exists in the list
+                const existingItem = sessionsList.querySelector(`[data-session-id="${sessionId}"]`);
+                if (existingItem) {
+                    // Session already exists, just move it to top by removing and re-prepending
+                    existingItem.remove();
+                }
+
+                // Format date (today as "Today", or "MMM dd" format)
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const createdDate = new Date();
+                createdDate.setHours(0, 0, 0, 0);
+                const formattedDate = createdDate.getTime() === today.getTime() ? 'Today' : createdDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
+
+                // Helper to escape HTML for display
+                function escapeHtml(text) {
+                    const div = document.createElement('div');
+                    div.textContent = text;
+                    return div.innerHTML;
+                }
+
+                // Helper to escape HTML attributes
+                function escapeHtmlAttribute(text) {
+                    return text.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                }
+
+                // Create new session item HTML
+                const sessionItemHtml = `
+                    <li class="list-group-item list-group-item-action rounded-pill bg-transparent px-2 py-1 d-flex align-items-center chat-item active"
+                        data-session-id="${sessionId}"
+                        data-title="${escapeHtmlAttribute(sessionTitle)}"
+                        style="border: none; cursor: pointer; animation: fadeIn 0.3s ease;">
+                        <div class="flex-grow-1" style="min-width: 0;">
+                            <div class="text-white" style="font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(sessionTitle)}</div>
+                            <div class="small text-white-50" style="font-size: 0.8rem;">${formattedDate}</div>
+                        </div>
+                        <button type="button"
+                                class="btn btn-sm btn-link text-white options-btn"
+                                aria-haspopup="true"
+                                aria-expanded="false"
+                                style="margin-left: 6px; padding: 0 4px;"
+                                title="Options">
+                            <i class="fas fa-ellipsis-v" aria-hidden="true" style="font-size: 0.85rem;"></i>
+                        </button>
+                    </li>
+                `;
+
+                // Create temporary container to parse HTML
+                const tempContainer = document.createElement('div');
+                tempContainer.innerHTML = sessionItemHtml;
+                const newSessionItem = tempContainer.firstElementChild;
+
+                // Remove "No chat sessions yet" message if it exists
+                const noSessionsMsg = sessionsList.querySelector('li:not(.chat-item)');
+                if (noSessionsMsg && !sessionsList.querySelector('.chat-item')) {
+                    noSessionsMsg.remove();
+                }
+
+                // Prepend to the top of the list
+                sessionsList.insertBefore(newSessionItem, sessionsList.firstChild);
+
+                // Remove active state from all other items
+                sessionsList.querySelectorAll('.chat-item').forEach(item => {
+                    if (item !== newSessionItem) {
+                        item.classList.remove('active');
+                    }
+                });
+
+                // Attach event listeners to new session item
+                const optionsBtn = newSessionItem.querySelector('.options-btn');
+                if (optionsBtn) {
+                    optionsBtn.addEventListener('click',
+                        function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            currentItem = newSessionItem;
+                            showMenuForButton(optionsBtn, sessionId, sessionTitle);
+                        });
+                }
+
+                newSessionItem.addEventListener('click',
+                    function(e) {
+                        if (!e.target.closest('.options-btn')) {
+                            navigateToSession(sessionId);
+                        }
+                    });
+            };
+
+            // ==========================================
+            // Infinite scroll logic
+            // ==========================================
+            bodyContent.addEventListener('scroll',
+                function() {
+                    // Check if scrolled near the bottom (within 200px)
+                    const scrollTop = this.scrollTop;
+                    const scrollHeight = this.scrollHeight;
+                    const clientHeight = this.clientHeight;
+
+                    if ((scrollHeight - scrollTop - clientHeight) < 200 && !isLoading && hasMoreSessions) {
+                        // Load next page
+                        loadSessionsPage(currentPage + 1);
+                    }
+                });
+
+            // ==========================================
+            // Sidebar collapse/expand logic
+            // ==========================================
+            toggleBtn.addEventListener('click',
+                function() {
+                    const isCollapsed = sidebar.style.width === collapsedWidth;
+                    if (isCollapsed) {
+                        sidebar.style.width = expandedWidth;
+                        headerContent.style.display = 'block';
+                        bodyContent.style.display = 'block';
+                        chevron.classList.remove('fa-chevron-right');
+                        chevron.classList.add('fa-bars');
+                    } else {
+                        sidebar.style.width = collapsedWidth;
+                        headerContent.style.display = 'none';
+                        bodyContent.style.display = 'none';
+                        chevron.classList.remove('fa-bars');
+                        chevron.classList.add('fa-chevron-right');
+                    }
+                });
+
+            // ==========================================
+            // New Chat Button
+            // ==========================================
+            newChatBtn.addEventListener('click',
+                function() {
+                    // Clear all active sessions
+                    sessionsList.querySelectorAll('.chat-item').forEach(item => {
+                        item.classList.remove('active');
+                    });
+
+                    // Update URL to /Chatbot without session ID
+                    window.history.pushState({ newChat: true }, '', '/Chatbot');
+
+                    // Reset chat header to default
+                    if (typeof window.updateChatHeader === 'function') {
+                        window.updateChatHeader('EpiRead Assistant', 'Your AI-powered reading companion');
+                    }
+
+                    // Clear messages and show empty state
+                    if (typeof window.loadNewChat === 'function') {
+                        window.loadNewChat();
+                    } else {
+                        console.warn('loadNewChat function not found');
+                    }
+
+                    // Clear session ID in input area
+                    if (typeof window.updateCurrentSessionId === 'function') {
+                        window.updateCurrentSessionId(null);
+                    }
+                });
+
+            // ==========================================
+            // Options menu logic
+            // ==========================================
+            function showMenuForButton(btn, sessionId, title) {
+                if (!menu || !btn) return;
+
+                if (currentTargetButton && currentTargetButton !== btn) {
+                    currentTargetButton.setAttribute('aria-expanded', 'false');
+                }
+
+                try {
+                    if (menu.parentNode !== document.body) {
+                        document.body.appendChild(menu);
+                    }
+                } catch (e) {
+                    console.error('Failed to ensure menu parent is document.body', e);
+                }
+
+                menu.style.display = 'block';
+                menu.style.visibility = 'hidden';
+                menu.style.transform = 'none';
+                menu.style.left = '-9999px';
+                menu.style.top = '-9999px';
+
+                const menuWidth = menu.offsetWidth;
+                const menuHeight = menu.offsetHeight;
+                const rect = btn.getBoundingClientRect();
+
+                // Use fixed positioning coordinates (no window.scrollX/scrollY needed)
+                let left = rect.right + 8;
+                const viewportRight = window.innerWidth;
+
+                if (left + menuWidth > viewportRight) {
+                    left = rect.left - menuWidth - 8;
+                }
+
+                let top = rect.top + (rect.height - menuHeight) / 2;
+                const minTop = 8;
+                const maxTop = window.innerHeight - menuHeight - 8;
+                if (top < minTop) top = minTop;
+                if (top > maxTop) top = maxTop;
+
+                menu.style.position = 'fixed';
+                menu.style.left = Math.round(left) + 'px';
+                menu.style.top = Math.round(top) + 'px';
+                menu.style.visibility = '';
+                menu.style.display = 'block';
+                menu.setAttribute('aria-hidden', 'false');
+
+                btn.setAttribute('aria-expanded', 'true');
+                currentTargetButton = btn;
+            }
+
+            function hideMenu() {
+                if (currentTargetButton) {
+                    try {
+                        currentTargetButton.setAttribute('aria-expanded', 'false');
+                    } catch (e) {
+                    }
+                }
+                if (menu) {
+                    menu.style.display = 'none';
+                    menu.setAttribute('aria-hidden', 'true');
+                }
+                currentTargetButton = null;
+                currentItem = null;
+            }
+
+            // ==========================================
+            // Rename action
+            // ==========================================
+            menuRenameBtn.addEventListener('click',
+                function(ev) {
+                    ev.stopPropagation();
+                    if (!currentItem) return hideMenu();
+
+                    const editingItem = currentItem;
+                    const sessionId = editingItem.getAttribute('data-session-id');
+                    const originalTitle = editingItem.getAttribute('data-title') || '';
+
+                    const titleContainer = editingItem.querySelector('.flex-grow-1');
+                    if (!titleContainer) {
+                        hideMenu();
+                        return;
+                    }
+                    const titleEl = titleContainer.querySelector('.text-white');
+
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'form-control form-control-sm';
+                    input.value = originalTitle;
+                    input.style.background = 'rgba(255,255,255,0.06)';
+                    input.style.color = 'white';
+                    input.style.border = '1px solid rgba(255,255,255,0.12)';
+                    input.style.padding = '2px 8px';
+                    input.style.fontSize = '0.95rem';
+                    input.style.width = '100%';
+                    input.style.height = '30px';
+                    input.style.boxSizing = 'border-box';
+
+                    if (titleEl && titleEl.parentNode) {
+                        titleEl.parentNode.replaceChild(input, titleEl);
+                    } else {
+                        titleContainer.insertBefore(input, titleContainer.firstChild);
+                    }
+
+                    hideMenu();
+
+                    try {
+                        input.focus();
+                        input.select();
+                    } catch (e) {
+                        console.error(e);
+                    }
+
+                    let isSaving = false;
+
+                    function restoreOriginal() {
+                        const restored = document.createElement('div');
+                        restored.className = 'text-white';
+                        restored.style.whiteSpace = 'nowrap';
+                        restored.style.overflow = 'hidden';
+                        restored.style.textOverflow = 'ellipsis';
+                        restored.textContent = originalTitle;
+                        if (input.parentNode) {
+                            input.parentNode.replaceChild(restored, input);
+                        }
+                        editingItem.setAttribute('data-title', originalTitle);
+                    }
+
+                    function finalizeRename(commit) {
+                        if (isSaving) return;
+                        const newTitleRaw = input.value == null ? '' : String(input.value);
+                        const newTitle = newTitleRaw.trim();
+
+                        if (!commit) {
+                            restoreOriginal();
+                            return;
+                        }
+
+                        if (newTitle === '') {
+                            restoreOriginal();
+                            alert('Title cannot be empty');
+                            return;
+                        }
+
+                        const display = document.createElement('div');
+                        display.className = 'text-white';
+                        display.style.whiteSpace = 'nowrap';
+                        display.style.overflow = 'hidden';
+                        display.style.textOverflow = 'ellipsis';
+                        display.textContent = newTitle;
+                        if (input.parentNode) {
+                            input.parentNode.replaceChild(display, input);
+                        }
+                        editingItem.setAttribute('data-title', newTitle);
+
+                        isSaving = true;
+                        fetch('/Chatbot/RenameSession',
+                            {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ id: sessionId, title: newTitle })
+                            }).then(resp => {
+                            if (!resp.ok) throw new Error('server');
+                            return resp.json();
+                        }).then(data => {
+                            if (data && data.success) {
+                                // If this is the currently active session, update the chat header
+                                if (editingItem.classList.contains('active')) {
+                                    if (typeof window.updateChatHeader === 'function') {
+                                        window.updateChatHeader(newTitle, 'Continue your conversation');
+                                    }
+                                }
+                            } else {
+                                display.textContent = originalTitle;
+                                editingItem.setAttribute('data-title', originalTitle);
+                                alert('Could not rename conversation');
+                            }
+                        }).catch(err => {
+                            console.error('Rename error', err);
+                            try {
+                                const fallback = document.createElement('div');
+                                fallback.className = 'text-white';
+                                fallback.textContent = originalTitle;
+                                if (display.parentNode) {
+                                    display.parentNode.replaceChild(fallback, display);
+                                }
+                                editingItem.setAttribute('data-title', originalTitle);
+                            } catch (e) {
+                            }
+                            alert('Network error');
+                        }).finally(() => {
+                            isSaving = false;
+                        });
+                    }
+
+                    input.addEventListener('keydown',
+                        function(keyEv) {
+                            if (keyEv.key === 'Enter') {
+                                keyEv.preventDefault();
+                                finalizeRename(true);
+                            } else if (keyEv.key === 'Escape') {
+                                keyEv.preventDefault();
+                                finalizeRename(false);
+                            }
+                        });
+
+                    input.addEventListener('blur',
+                        function() {
+                            setTimeout(() => {
+                                    if (isSaving) return;
+                                    finalizeRename(true);
+                                },
+                                0);
+                        });
+                });
+
+            // ==========================================
+            // Delete action
+            // ==========================================
+            menuDeleteBtn.addEventListener('click',
+                function(ev) {
+                    ev.stopPropagation();
+                    if (!currentItem) return hideMenu();
+
+                    const sessionId = currentItem.getAttribute('data-session-id');
+                    const wasActive = currentItem.classList.contains('active');
+
+                    if (!confirm('Delete this conversation? This cannot be undone.')) {
+                        hideMenu();
+                        return;
+                    }
+
+                    fetch('/Chatbot/DeleteSession',
+                            {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ id: sessionId })
+                            }).then(resp => resp.json())
+                        .then(data => {
+                            if (data.success) {
+                                // Remove the deleted session from UI
+                                const deletedItem = sessionsList.querySelector(`[data-session-id="${sessionId}"]`);
+                                if (deletedItem) {
+                                    deletedItem.remove();
+                                }
+
+                                // Check if the list is now empty and show appropriate message
+                                const remainingItems = sessionsList.querySelectorAll('.chat-item');
+                                if (remainingItems.length === 0) {
+                                    sessionsList.innerHTML = '<li class="text-white-50 px-2 py-2" style="font-size: 0.9rem;">No chat sessions yet</li>';
+                                    // Reset pagination state
+                                    currentPage = 1;
+                                    hasMoreSessions = true;
+                                    endIndicator.style.display = 'none';
+                                }
+
+                                // If we're currently viewing this session, update UI and URL instead of full reload
+                                if (wasActive) {
+                                    // Show empty chat area
+                                    if (typeof window.loadNewChat === 'function') {
+                                        window.loadNewChat();
+                                    }
+                                    // Update session ID in input area
+                                    if (typeof window.updateCurrentSessionId === 'function') {
+                                        window.updateCurrentSessionId(null);
+                                    }
+                                    // Update chat header to default
+                                    if (typeof window.updateChatHeader === 'function') {
+                                        window.updateChatHeader('EpiRead Assistant', 'Your AI-powered reading companion');
+                                    }
+                                    // Update browser URL to /Chatbot without reload
+                                    window.history.pushState({ newChat: true }, '', '/Chatbot');
+                                    // Optionally focus new chat button for accessibility
+                                    if (typeof newChatBtn !== 'undefined' && newChatBtn) {
+                                        newChatBtn.focus();
+                                    }
+                                }
+                                // Do NOT call refreshSessionsList - just removing the item preserves scroll position
+                            } else {
+                                console.error('Failed to delete session', data);
+                                alert('Failed to delete session');
+                            }
+                        }).catch(err => {
+                            console.error('Error deleting session', err);
+                            alert('Error deleting session');
+                        }).finally(() => {
+                            hideMenu();
+                        });
+                });
+
+            // Close menu when clicking outside
+            document.addEventListener('click',
+                function(ev) {
+                    if (!menu.contains(ev.target) && !(currentTargetButton && currentTargetButton.contains(ev.target))) {
+                        hideMenu();
+                    }
+                });
+
+            // Close menu on Escape
+            document.addEventListener('keydown',
+                function(ev) {
+                    if (ev.key === 'Escape') {
+                        hideMenu();
+                    }
+                });
+
+            // Load initial sessions when page loads
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded',
+                    () => {
+                        loadSessionsPage(1);
+                    },
+                    { once: true });
+            } else {
+                loadSessionsPage(1);
+            }
+        })();
+    }
+</script>

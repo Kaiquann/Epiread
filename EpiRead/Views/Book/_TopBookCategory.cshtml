@@ -1,0 +1,51 @@
+﻿@model BookVm
+
+@{
+    // If controller didn't provide any top categories → render nothing
+    var topCount = Model.TopBookCategory?.Count ?? 0;
+
+}
+
+@if (topCount > 0)
+{
+    <h5 class="top-categories-title justify-content-between text-center">
+        @(topCount == 1 ? "Our Top Category" : "Our Top 5 Categories")
+    </h5>
+
+    <div class="top-categories-list" style="min-height:50px">
+        @* When there is only one top category, show exactly that one; when more than one, show the 'All' option plus the list *@
+        @if (topCount > 1)
+        {
+            <div class="top-category-card mt-2 align-self-center p-2">
+                <form asp-action="Index" asp-controller="Book" method="get"
+                      data-ajax="true"
+                      data-ajax-update="#book-section" data-ajax-mode="replace" style="flex-grow:1;">
+                    <button type="submit" class="top-category-label" style="background:#2F333B;">All</button>
+                </form>
+            </div>
+
+            @foreach (var bookCategory in Model.TopBookCategory!)
+            {
+                <div class="top-category-card mt-2 align-self-center p-2">
+                    <form asp-action="Index" asp-controller="Book" asp-route-CategoryId="@bookCategory.Id" method="get"
+                          data-ajax="true"
+                          data-ajax-update="#book-section" data-ajax-mode="replace" style="flex-grow:1;">
+                        <button type="submit" class="top-category-label" style="background:#2F333B;">@bookCategory.Name</button>
+                    </form>
+                </div>
+            }
+        }
+        else
+        {
+            // Exactly one top category: show only that one (no 'All' button)
+            var bookCategory = Model.TopBookCategory!.First();
+            <div class="top-category-card mt-2 align-self-center p-2">
+                <form asp-action="Index" asp-controller="Book" asp-route-CategoryId="@bookCategory.Id" method="get"
+                      data-ajax="true"
+                      data-ajax-update="#book-section" data-ajax-mode="replace" style="flex-grow:1;">
+                    <button type="submit" class="top-category-label" style="background:#2F333B;">@bookCategory.Name</button>
+                </form>
+            </div>
+        }
+    </div>
+}

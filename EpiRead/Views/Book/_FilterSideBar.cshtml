@@ -1,0 +1,347 @@
+﻿@model BookVm
+@using EpiRead.Models.Share
+
+<style>
+    .filter-sidebar {
+        background: #2a2f3a;
+        border-radius: 16px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        height: calc(100vh - 4rem);
+        overflow-y: auto;
+        padding: 1.8rem;
+        position: sticky;
+        top: 2rem;
+        color: #f2f2f2;
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+        .filter-sidebar h4 {
+            color: #6c63ff;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+    .filter-section {
+        margin-bottom: 2rem;
+        border-bottom: 1px solid #3b3b4f;
+        padding-bottom: 1rem;
+    }
+
+        .filter-section h5 {
+            color: #b8b8ff;
+            font-size: 1rem;
+            margin-bottom: 0.8rem;
+            font-weight: 500;
+        }
+
+    label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        margin-bottom: 0.4rem;
+        color: #eaeaea;
+        transition: color 0.2s ease;
+    }
+
+        label:hover {
+            color: #6c63ff;
+        }
+
+    input[type="checkbox"] {
+        accent-color: #6c63ff;
+        width: 16px;
+        height: 16px;
+    }
+
+    select {
+        background: #222;
+        color: #eee;
+        border: none;
+        border-radius: 8px;
+        padding: 8px;
+        width: 100%;
+    }
+
+    .see-more-link {
+        color: #6c63ff;
+        cursor: pointer;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        text-decoration: none;
+    }
+
+        .see-more-link:hover {
+            text-decoration: underline;
+            color: #918cff;
+        }
+
+    .hidden-items {
+        display: none;
+        margin-top: 8px;
+    }
+
+    .category-group {
+        margin-bottom: 0.6rem;
+    }
+
+    .parent-category {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        color: #eaeaea;
+        font-weight: 500;
+        cursor: pointer;
+        transition: color 0.2s ease;
+    }
+
+        .parent-category:hover {
+            color: #6c63ff;
+        }
+
+    .arrow {
+        font-size: 0.7rem;
+        transition: transform 0.25s ease;
+    }
+
+    .parent-category.open .arrow {
+        transform: rotate(90deg);
+    }
+
+    .subcategory-list {
+        margin: 0.4rem 0 0 1.8rem;
+        list-style: none;
+        padding-left: 0.5rem;
+        display: none;
+        border-left: 1px solid #3b3b4f;
+    }
+
+        .subcategory-list label {
+            gap: 6px;
+            color: #ccc;
+            font-weight: 400;
+        }
+
+            .subcategory-list label:hover {
+                color: #6c63ff;
+            }
+
+    /* Scrollbar */
+    .filter-sidebar::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .filter-sidebar::-webkit-scrollbar-thumb {
+        background: #6c63ff;
+        border-radius: 4px;
+    }
+
+    .filter-sidebar::-webkit-scrollbar-track {
+        background: #1f1f1f;
+    }
+</style>
+
+<div class="filter-sidebar">
+    <h4>Filters</h4>
+    <form id="filter-form">
+        <!-- Authors -->
+        <div class="filter-section">
+            <h5>Authors Registered</h5>
+            @{
+                var authors = Model.AuthorList;
+                int visibleCount = 3;
+            }
+            <div id="authors-list">
+                @foreach (var author in authors.Take(visibleCount))
+                {
+                    <label>
+                        <input type="checkbox" name="authorNames" value="@($"{author.FirstName} {author.LastName}")" class="filter-checkbox" />
+                        @author.FirstName @author.LastName
+                    </label>
+                }
+                @if (authors.Count > visibleCount)
+                {
+                    <div class="hidden-items" id="more-authors">
+                        @foreach (var author in authors.Skip(visibleCount))
+                        {
+                            <label>
+                                <input type="checkbox" name="authorNames" value="@($"{author.FirstName} {author.LastName}")" class="filter-checkbox" />
+                                @author.FirstName @author.LastName
+                            </label>
+                        }
+                    </div>
+                    <a href="#" class="see-more-link" id="toggle-authors">See more ▼</a>
+                }
+            </div>
+        </div>
+
+        <!-- Publication Date -->
+        <div class="filter-section">
+            <h5>Publication Date</h5>
+            <select name="publicationYear" class="filter-select" id="PublicationYear">
+                <option value="">Select year</option>
+                @foreach (var year in Enumerable.Range(Common.MinPublicationYear, Common.MaxPublicationYear - Common.MinPublicationYear + 1).Reverse())
+                {
+                    <option value="@year">@year</option>
+                }
+            </select>
+        </div>
+
+       <!-- Categories -->
+<div class="filter-section">
+    <h5>Categories</h5>
+    @{
+        var parentCategories = Model.BookCategory?.Where(c => c.ParentId == null).ToList() ?? new List<BookCategory>();
+        int visibleCategoryCount = 5;
+    }
+
+    <!-- Visible parent categories -->
+    @foreach (var parentCategory in parentCategories.Take(visibleCategoryCount))
+    {
+        var childCategories = Model.BookCategory?.Where(c => c.ParentId == parentCategory.Id).ToList() ?? new List<BookCategory>();
+        <div class="category-group">
+                    <div class="parent-category">
+                        @if (childCategories.Any())
+                        {
+                            <span class="arrow">&#9654;</span>
+                        }
+                        @* Always show the parent checkbox, regardless of children *@
+                        <input type="checkbox" name="categoryIds" value="@parentCategory.Id" class="filter-checkbox" />
+                        <span>@parentCategory.Name</span>
+                    </div>
+
+            @if (childCategories.Any())
+            {
+                <ul class="subcategory-list">
+                    @foreach (var child in childCategories)
+                    {
+                        var subChildCategories = Model.BookCategory?.Where(sc => sc.ParentId == child.Id).ToList() ?? new List<BookCategory>();
+                        if (subChildCategories.Any())
+                        {
+                            @foreach (var subChild in subChildCategories)
+                            {
+                                <li>
+                                    <label>
+                                        <input type="checkbox" name="categoryIds" value="@subChild.Id" class="filter-checkbox" />
+                                        @subChild.Name
+                                    </label>
+                                </li>
+                            }
+                        }
+                        <li>
+                            <label>
+                                <input type="checkbox" name="categoryIds" value="@child.Id" class="filter-checkbox" />
+                                @child.Name
+                            </label>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    }
+
+    <!-- Hidden (See More) parent categories -->
+    @if (parentCategories.Count > visibleCategoryCount)
+    {
+        <div class="hidden-items" id="more-categories">
+            @foreach (var parentCategory in parentCategories.Skip(visibleCategoryCount))
+            {
+               var childCategories = Model.BookCategory?.Where(c => c.ParentId == parentCategory.Id).ToList() ?? new List<BookCategory>();
+                 
+                <div class="category-group">
+                    <div class="parent-category">
+                        @if (childCategories.Any())
+                        {
+                            <span class="arrow">&#9654;</span>
+                        }
+                        @* Always show parent checkbox in the hidden section as well (matching visible list) *@
+                        <input type="checkbox" name="categoryIds" value="@parentCategory.Id" class="filter-checkbox" />
+                        <span>@parentCategory.Name</span>
+                    </div>
+                        @if (childCategories.Any())
+                        {
+                            <ul class="subcategory-list">
+                                @foreach (var child in childCategories)
+                                {
+                                    var subChildCategories = Model.BookCategory?
+                                    .Where(sc => sc.ParentId == child.Id)
+                                    .ToList() ?? new List<BookCategory>();
+
+                                    <li>
+                                        <label>
+                                            <input type="checkbox" name="categoryIds" value="@child.Id" class="filter-checkbox" />
+                                            @child.Name
+                                        </label>
+
+                                        @if (subChildCategories.Any())
+                                        {
+                                            <ul class="subcategory-list">
+                                                @foreach (var subChild in subChildCategories)
+                                                {
+                                                    <li>
+                                                        <label>
+                                                            <input type="checkbox" name="categoryIds" value="@subChild.Id" class="filter-checkbox" />
+                                                            @subChild.Name
+                                                        </label>
+                                                    </li>
+                                                }
+                                            </ul>
+                                        }
+                                    </li>
+                                }
+                            </ul>
+                        }
+
+                </div>
+            }
+        </div>
+        <a href="#" class="see-more-link" id="toggle-categories">See more ▼</a>
+    }
+</div>
+
+    </form>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(function () {
+        // Toggle see more sections
+        $(document).on("click", "#toggle-authors, #toggle-categories", function (e) {
+            e.preventDefault();
+            const target = $(this).attr("id") === "toggle-authors" ? "#more-authors" : "#more-categories";
+            $(target).slideToggle(300);
+            const expanded = $(this).text().includes("less");
+            $(this).html(expanded ? "See more ▼" : "See less ▲");
+        });
+
+      
+    $(".parent-category").on("click", function (e) {
+        const $parentDiv = $(this);
+        const $checkbox = $parentDiv.find('input[type="checkbox"]');
+
+        if ($(e.target).is("input")) {
+            return;
+        }
+
+        $parentDiv.next(".subcategory-list").slideToggle(200);
+        $parentDiv.toggleClass("open");
+
+
+        // To ensure the filter updates when the parent DIV is clicked:
+        if (!$checkbox.is(':checked') && $parentDiv.hasClass('open')) {
+        }
+
+    });
+
+    // IMPORTANT: Ensure this handler captures the state change and only triggers one request.
+    $(document).on('change', '.filter-checkbox, .filter-select', function () {
+        $.get('/Book/FilterBookList', $('#filter-form').serialize(), function (html) {
+            $('#book-section').html(html);
+        });
+    });
+    });
+</script>

@@ -1,0 +1,58 @@
+﻿<!-- Author: Chong Jun Xiang -->
+<!-- Description: PDF OCR Translate controls & scripts -->
+@{
+    var userLang = ViewBag.UserLanguage as string ?? nameof(LanguageCodeType.EN);
+}
+<!-- OCR Translate controls -->
+<select id="pdfFromLang" class="form-select form-select-sm bg-dark text-light border-secondary ms-2" style="min-width: 110px;">
+    <option value="auto">Auto</option>
+    @{
+        var langsPdfFrom = LanguageHelper.ToLanguageSelectList();
+        foreach (var li in langsPdfFrom)
+        {
+            <option value="@li.Value">@li.Text (@li.Value)</option>
+            ;
+        }
+    }
+</select>
+<select id="pdfToLang" class="form-select form-select-sm bg-dark text-light border-secondary ms-1" style="min-width: 110px;">
+    @{
+        var langsPdfTo = LanguageHelper.ToLanguageSelectList();
+        foreach (var li in langsPdfTo)
+        {
+            if (string.Equals(li.Value, userLang, StringComparison.OrdinalIgnoreCase))
+            {
+                <option value="@li.Value" selected="selected">@li.Text (@li.Value)</option>
+                ;
+            }
+            else
+            {
+                <option value="@li.Value">@li.Text (@li.Value)</option>
+                ;
+            }
+        }
+    }
+</select>
+<button id="pdfOcrBtn" class="btn btn-sm btn-success ms-2" title="OCR & Translate">OCR Translate</button>
+
+<!-- Enhanced styles for PDF OCR translation bubble -->
+<link rel="stylesheet" href="@(Url.Content("~/css/pdf-ocr-translate.css"))" asp-append-version="true"/>
+
+<!-- Tesseract OCR for client-side OCR on PDF canvas -->
+<!-- Do NOT load worker.min.js into the main document; let createWorker spawn it.
+Provide a small runtime config so the client script can point createWorker to the
+local worker file. This avoids double-loading the worker and message-handler mismatches. -->
+<script>
+    // runtime config consumed by pdf-ocr-translate.js
+    window._tesseractConfig = {
+        workerPath: '@Url.Content("~/lib/tesseract-js/worker.min.js")'
+    };
+</script>
+<script src="~/lib/tesseract-js/tesseract.min.js" asp-append-version="true"></script>
+
+<!-- PDF OCR Translate logic -->
+<script src="@(Url.Content("~/js/pdf-ocr-translate.js"))" asp-append-version="true"></script>
+<script>
+    // expose user preference to pdf-ocr translate script
+    window._userPreferredLang = "@userLang";
+</script>

@@ -1,0 +1,560 @@
+@using System.Text.Json
+@* Main chat area - Message display *@
+
+<!-- Messages Container -->
+<div id="messagesList" class="chatbot-messages-list">
+    <!-- Empty state -->
+    <div id="emptyState" class="chatbot-empty-state">
+        <div class="chatbot-empty-icon">
+            <i class="fas fa-comments"></i>
+        </div>
+        <h2 class="chatbot-empty-title">Welcome to EpiRead Assistant</h2>
+        <p class="chatbot-empty-text">Start a conversation by typing a message below</p>
+    </div>
+</div>
+
+<style>
+    .chatbot-messages-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        min-height: 100%;
+        padding-bottom: 40px;
+    }
+
+    /* Empty State */
+
+    .chatbot-empty-state {
+        align-items: center;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-height: 400px;
+        padding: 4rem 2rem;
+        text-align: center;
+    }
+
+    .chatbot-empty-icon {
+        align-items: center;
+        background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+        border-radius: 50%;
+        color: #9ca3af;
+        display: flex;
+        font-size: 2rem;
+        height: 64px;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+        width: 64px;
+    }
+
+    .chatbot-empty-title {
+        color: #1a1a1a;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .chatbot-empty-text {
+        color: #6b7280;
+        font-size: 1rem;
+        margin: 0;
+        max-width: 400px;
+    }
+
+    /* Loading State */
+
+    .chatbot-loading-state {
+        align-items: center;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        justify-content: center;
+        padding: 3rem 2rem;
+    }
+
+    .chatbot-loading-spinner {
+        animation: spin 0.8s linear infinite;
+        border: 3px solid #f3f4f6;
+        border-radius: 50%;
+        border-top-color: #10a37f;
+        height: 40px;
+        width: 40px;
+    }
+
+    @@keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    /* Message Styles */
+
+    .chatbot-message {
+        border-bottom: 1px solid #f3f4f6;
+        padding: 1.5rem 1rem;
+    }
+
+    .chatbot-message-inner {
+        display: flex;
+        gap: 1rem;
+        margin: 0 auto;
+        max-width: 48rem;
+    }
+
+    .chatbot-message.user { background: #f9fafb; }
+
+    .chatbot-message.bot { background: #ffffff; }
+
+    .chatbot-avatar {
+        align-items: center;
+        border-radius: 6px;
+        color: white;
+        display: flex;
+        flex-shrink: 0;
+        font-size: 1rem;
+        font-weight: 600;
+        height: 32px;
+        justify-content: center;
+        width: 32px;
+    }
+
+    .chatbot-avatar.user { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+
+    .chatbot-avatar.bot { background: linear-gradient(135deg, #10a37f 0%, #0d8f6e 100%); }
+
+    .chatbot-message-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .chatbot-message-header {
+        align-items: center;
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .chatbot-message-sender {
+        color: #1a1a1a;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+
+    .chatbot-message-time {
+        color: #9ca3af;
+        font-size: 0.75rem;
+    }
+
+    .chatbot-message-text {
+        color: #374151;
+        font-size: 0.9375rem;
+        line-height: 1.6;
+        word-wrap: break-word;
+    }
+
+    /* Markdown content styling */
+
+    .chatbot-message-text p { margin: 0.5rem 0; }
+
+    .chatbot-message-text ul, .chatbot-message-text ol { margin: 0.5rem 1.25rem; }
+
+    .chatbot-message-text code {
+        background: #f5f5f5;
+        border-radius: 4px;
+        padding: 0.1rem 0.3rem;
+    }
+
+    .chatbot-message-text pre {
+        background: #0b1020;
+        border-radius: 8px;
+        color: #e5e7eb;
+        overflow: auto;
+        padding: 0.75rem;
+    }
+
+    .chatbot-message-text blockquote {
+        border-left: 4px solid #e5e7eb;
+        color: #6b7280;
+        margin: 0.5rem 0;
+        padding: 0.25rem 0 0.25rem 0.75rem;
+    }
+
+    @@media (max-width: 768px) {
+        .chatbot-message { padding: 1.25rem 0.875rem; }
+
+        .chatbot-empty-state { padding: 3rem 1.5rem; }
+
+        .chatbot-empty-title { font-size: 1.25rem; }
+
+        .chatbot-empty-text { font-size: 0.9375rem; }
+    }
+</style>
+
+<!-- Typed.js CDN for animated typing effect -->
+<script src="~/lib/typedjs/typed.umd.js" asp-append-version="true"></script>
+
+<script>
+    // ==========================================
+// Global Utility Functions
+// ==========================================
+
+// Escape HTML special characters
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+// Convert markdown to safe HTML
+    function renderMarkdown(text) {
+        try {
+            // Normalize accidental indentation (1-3 leading spaces or tabs) that turns text into code blocks
+            let normalized = text || '';
+            if (!/```/.test(normalized)) {
+                normalized = normalized.replace(/^[ \t]{1,3}/gm, '');
+            }
+
+            const raw = (window.marked ? window.marked.parse(normalized) : escapeHtml(normalized));
+            const safe = (window.DOMPurify ? window.DOMPurify.sanitize(raw, { USE_PROFILES: { html: true } }) : raw);
+            return safe;
+        } catch (e) {
+            return escapeHtml(text);
+        }
+    }
+
+// Make renderMarkdown globally available
+    window.renderMarkdown = renderMarkdown;
+</script>
+
+<script>
+    // Ensure this code only runs once per page load (prevent duplicate initialization)
+    if (window.__ChatAreaInitialized) {
+        console.log('ChatArea already initialized, skipping duplicate initialization');
+    } else {
+        window.__ChatAreaInitialized = true;
+
+        (function() {
+            const messagesList = document.getElementById('messagesList');
+            const emptyState = document.getElementById('emptyState');
+
+            // Get current session ID from URL or ViewBag
+            const currentSessionId = '@(ViewBag.CurrentSessionId ?? "")';
+            const currentSession = @Html.Raw(JsonSerializer.Serialize(ViewBag.CurrentSession ?? new { }));
+
+            // Pagination state
+            let currentPage = 1;
+            let isLoading = false;
+            let hasMoreMessages = true;
+            const pageSize = 20;
+
+            // ==========================================
+            // Load Messages
+            // ==========================================
+            async function loadMessages() {
+                if (!currentSessionId || currentSessionId === '00000000-0000-0000-0000-000000000000') {
+                    // Show empty state
+                    if (emptyState) {
+                        emptyState.style.display = 'flex';
+                    }
+                    return;
+                }
+
+                try {
+                    isLoading = true;
+
+                    // Show loading
+                    messagesList.innerHTML = `
+                    <div class="chatbot-loading-state">
+                        <div class="chatbot-loading-spinner"></div>
+                        <p style="color: #6b7280; font-size: 0.9375rem;">Loading messages...</p>
+                    </div>
+                `;
+
+                    // Fetch messages
+                    const response = await fetch(`/Chatbot/GetMessagesPagedPartial/${currentSessionId}?pageNumber=1&pageSize=${pageSize}`);
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const html = await response.text();
+
+                    // Check if response contains the empty state HTML
+                    if (html.includes('chatbot-empty-state')) {
+                        // Empty state - use HTML directly from server
+                        messagesList.innerHTML = html;
+                        hasMoreMessages = false;
+                    } else {
+                        // Has messages - use server-rendered HTML directly (no re-rendering needed)
+                        messagesList.innerHTML = html;
+
+                        // Render markdown for any content that needs it
+                        document.querySelectorAll('.chatbot-message-text').forEach(el => {
+                            if (el.getAttribute('data-md-rendered') === 'true') return;
+
+                            const content = el.textContent || '';
+                            if (content.trim()) {
+                                el.innerHTML = renderMarkdown(content);
+                                el.setAttribute('data-md-rendered', 'true');
+                            }
+                        });
+
+                        // Update header
+                        if (typeof window.updateChatHeader === 'function' && currentSession.title) {
+                            window.updateChatHeader(currentSession.title, 'Continue your conversation');
+                        }
+
+                        // Scroll to bottom
+                        scrollToBottom();
+
+                        // Check if there are more messages
+                        const messages = messagesList.querySelectorAll('[data-message-id]');
+                        if (messages.length < pageSize) {
+                            hasMoreMessages = false;
+                        }
+                    }
+
+                    currentPage = 1;
+                } catch (error) {
+                    console.error('Error loading messages:', error);
+                    messagesList.innerHTML = `
+                    <div class="chatbot-empty-state">
+                        <div class="chatbot-empty-icon" style="background: linear-gradient(135deg, #fee 0%, #fdd 100%); color: #dc2626;">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <h2 class="chatbot-empty-title">Error loading messages</h2>
+                        <p class="chatbot-empty-text">Please refresh the page to try again</p>
+                    </div>
+                `;
+                } finally {
+                    isLoading = false;
+                }
+            }
+
+            // ==========================================
+            // Render Message
+            // ==========================================
+            function renderMessage(msgData) {
+                let isUser, content, timestamp;
+
+                // Check if msgData is already a DOM element or raw data
+                if (msgData.nodeType) {
+                    // It's a DOM element from partial view
+                    isUser = msgData.classList.contains('chatgpt-user-row') || msgData.querySelector('[data-sender="user"]');
+                    content = msgData.querySelector('.chatgpt-message-content')?.textContent || msgData.textContent;
+                    timestamp = msgData.querySelector('.text-muted')?.textContent || new Date().toLocaleTimeString();
+                } else {
+                    // It's raw data from event
+                    isUser = msgData.sender === 'user';
+                    content = msgData.message || msgData.content;
+                    timestamp = msgData.timestamp ? new Date(msgData.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString();
+                }
+
+                // Create message element
+                const messageEl = document.createElement('div');
+                messageEl.className = `chatbot-message ${isUser ? 'user' : 'bot'}`;
+
+                const contentHtml = renderMarkdown(content);
+
+                messageEl.innerHTML = `
+                <div class="chatbot-message-inner">
+                    <div class="chatbot-avatar ${isUser ? 'user' : 'bot'}">
+                        <i class="fas fa-${isUser ? 'user' : 'robot'}"></i>
+                    </div>
+                    <div class="chatbot-message-content">
+                        <div class="chatbot-message-header">
+                            <span class="chatbot-message-sender">${isUser ? 'You' : 'EpiRead'}</span>
+                            <span class="chatbot-message-time">${timestamp}</span>
+                        </div>
+                        <div class="chatbot-message-text">${contentHtml}</div>
+                    </div>
+                </div>
+            `;
+
+                messagesList.appendChild(messageEl);
+
+                // Hide empty state if it exists
+                if (emptyState) {
+                    emptyState.style.display = 'none';
+                }
+            }
+
+            // ==========================================
+            // Append New Message (for real-time updates)
+            // ==========================================
+            function appendMessage(message, sender, timestamp) {
+                renderMessage({
+                    message: message,
+                    sender: sender,
+                    timestamp: timestamp
+                });
+
+                scrollToBottom();
+            }
+
+            // ==========================================
+            // Scroll to Bottom
+            // ==========================================
+            function scrollToBottom(smooth = true) {
+                const container = document.querySelector('.chatbot-scroll-area');
+                if (container) {
+                    setTimeout(() => {
+                            if (smooth) {
+                                container.scrollTo({
+                                    top: container.scrollHeight,
+                                    behavior: 'smooth'
+                                });
+                            } else {
+                                container.scrollTop = container.scrollHeight;
+                            }
+                        },
+                        100);
+                }
+            }
+
+            // ==========================================
+            // Event Listeners
+            // ==========================================
+
+            // Listen for new messages from input area (with proper cleanup)
+            function handleMessageAdded(e) {
+                const { message, sender, timestamp } = e.detail;
+                appendMessage(message, sender, timestamp);
+            }
+
+            document.removeEventListener('messageAdded', handleMessageAdded);
+            document.addEventListener('messageAdded', handleMessageAdded);
+
+            // Load messages on page load
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', loadMessages, { once: true });
+            } else {
+                loadMessages();
+            }
+
+            // Expose functions globally
+            window.chatAreaLoadMessages = loadMessages;
+            window.chatAreaAppendMessage = appendMessage;
+
+            // Global function to load new chat (empty state)
+            window.loadNewChat = function() {
+                // Clear messages and show empty state
+                messagesList.innerHTML = `
+                <div class="chatbot-empty-state">
+                    <div class="chatbot-empty-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <h2 class="chatbot-empty-title">Welcome to EpiRead Assistant</h2>
+                    <p class="chatbot-empty-text">Start a conversation by typing a message below</p>
+                </div>
+            `;
+
+                // Reset pagination state
+                currentPage = 1;
+                hasMoreMessages = true;
+            };
+
+            // Global function to load messages for a specific session (called from sidebar)
+            window.loadSessionMessages = async function(sessionId) {
+                if (!sessionId) return;
+
+                try {
+                    isLoading = true;
+
+                    // Show loading
+                    messagesList.innerHTML = `
+                    <div class="chatbot-loading-state">
+                        <div class="chatbot-loading-spinner"></div>
+                        <p style="color: #6b7280; font-size: 0.9375rem;">Loading messages...</p>
+                    </div>
+                `;
+
+                    // Fetch messages for this session
+                    const response = await fetch(`/Chatbot/GetMessages/${sessionId}`);
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const html = await response.text();
+
+                    // Replace messages container content
+                    messagesList.innerHTML = html;
+                    // Convert any server-rendered message bodies to markdown
+                    document.querySelectorAll('.chatgpt-message-content, .chatbot-message-text')
+                        .forEach(function(el) {
+                            if (el.getAttribute('data-md-rendered') === 'true') return;
+                            const raw = el.textContent || '';
+                            el.innerHTML = renderMarkdown(raw);
+                            el.setAttribute('data-md-rendered', 'true');
+                        });
+
+                    // Check if we have messages
+                    const messages = messagesList.querySelectorAll('[data-message-id]');
+
+                    if (messages.length === 0) {
+                        messagesList.innerHTML = `
+                        <div class="chatbot-empty-state">
+                            <div class="chatbot-empty-icon">
+                                <i class="fas fa-comments"></i>
+                            </div>
+                            <h2 class="chatbot-empty-title">No messages yet</h2>
+                            <p class="chatbot-empty-text">Start the conversation by sending a message below</p>
+                        </div>
+                    `;
+                    }
+
+                    // Update session ID in input area
+                    if (typeof window.updateCurrentSessionId === 'function') {
+                        window.updateCurrentSessionId(sessionId);
+                    }
+
+                    // Scroll to bottom
+                    scrollToBottom();
+
+                    // Reset pagination state
+                    currentPage = 1;
+                    hasMoreMessages = messages.length >= pageSize;
+                } catch (error) {
+                    console.error('Error loading session messages:', error);
+                    messagesList.innerHTML = `
+                    <div class="chatbot-empty-state">
+                        <div class="chatbot-empty-icon" style="background: linear-gradient(135deg, #fee 0%, #fdd 100%); color: #dc2626;">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <h2 class="chatbot-empty-title">Error loading messages</h2>
+                        <p class="chatbot-empty-text">Please refresh the page to try again</p>
+                    </div>
+                `;
+                } finally {
+                    isLoading = false;
+                }
+            };
+        })();
+    }
+</script>
+
+<!-- Rename / Delete modal (not used in new design but kept for reference) -->
+<div class="modal fade" id="renameModal" tabindex="-1" aria-labelledby="renameModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 id="renameModalLabel" class="modal-title">Conversation settings</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="renameForm" novalidate>
+                    <div class="mb-3">
+                        <label for="renameInput" class="form-label">Rename conversation</label>
+                        <input id="renameInput" type="text" class="form-control" maxlength="255"/>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <button id="deleteConversationBtn" type="button" class="btn btn-outline-danger">Delete conversation</button>
+                        <div>
+                            <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+                            <button id="saveRenameBtn" type="submit" class="btn btn-primary">Save</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

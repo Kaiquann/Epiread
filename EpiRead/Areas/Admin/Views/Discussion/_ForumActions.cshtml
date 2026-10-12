@@ -1,0 +1,28 @@
+@* Partial for forum action buttons (Back, Trashed, Banned) *@
+<div class="d-flex align-items-center mt-3">
+    <a asp-area="Admin" asp-controller="Discussion" asp-action="Index"
+       class="btn btn-secondary me-2"
+       aria-label="Go back">
+        <i class="fas fa-arrow-left me-2"></i> Back
+    </a>
+    <div class="d-flex gap-2 ms-auto">
+        <a asp-area="Admin"
+           asp-controller="Discussion"
+           asp-action="TrashedPosts"
+           asp-route-id="@ViewBag.ForumId"
+           class="btn btn-secondary"
+           aria-label="View trashed posts"
+           title="View trashed posts">
+            <i class="fas fa-trash me-2"></i> Trashed Posts
+        </a>
+        <a asp-area="Admin"
+           asp-controller="Discussion"
+           asp-action="BannedPosts"
+           asp-route-id="@ViewBag.ForumId"
+           class="btn btn-danger"
+           aria-label="View banned posts"
+           title="View banned posts">
+            <i class="fas fa-ban me-2"></i> Banned Posts
+        </a>
+    </div>
+</div>

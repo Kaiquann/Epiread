@@ -1,0 +1,25 @@
+@model DiscussionPost
+@{
+    var topLevelCount = Model?.DiscussionComments?.Count(c => c.ReplyCommentId == null) ?? 0;
+}
+
+<partial name="_SweetAlert"/>
+
+<div class="mb-3 d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">Comments (@topLevelCount)</h5>
+</div>
+
+<div>
+    @if (Model?.DiscussionComments != null && Model.DiscussionComments.Any())
+    {
+        // Render top-level comments (those without a ReplyCommentId)
+        foreach (var comment in Model.DiscussionComments.Where(c => c.ReplyCommentId == null).OrderBy(c => c.CreatedAt))
+        {
+            @await Html.PartialAsync("_Comment", comment)
+        }
+    }
+    else
+    {
+        <div class="text-muted">No comments yet.</div>
+    }
+</div>

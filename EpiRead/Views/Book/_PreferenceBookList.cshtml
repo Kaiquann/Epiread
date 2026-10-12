@@ -1,0 +1,47 @@
+﻿@model List<PreferenceBook>
+
+@if (Model == null || !Model.Any())
+{
+    <p style="color: gray;">No books in your preference list yet.</p>
+}
+else
+{
+    foreach (var bookPreference in Model)
+{
+    var book = bookPreference.Book;
+
+    if (book != null)
+    {
+        <div class="preference-book-card">
+            @{ var imgSrc = string.IsNullOrWhiteSpace(book.CoverImageLink) ? "/images/book-cover-not-available.webp" : book.CoverImageLink; }
+            <img src="@imgSrc" alt="@book.Title" loading="lazy" />
+
+            <div class="preference-book-info">
+                <div class="preference-book-title">@book.Title</div>
+                <div class="preference-book-meta">
+                    by @book.AuthorName | @book.LanguageCode
+                </div>
+
+                <div class="preference-actions">
+                    <form asp-action="BookDetails" asp-controller="Book" method="post" style="display:inline;">
+                        <input type="hidden" name="id" value="@book.Id" />
+                        <button type="submit" class="read-btn">
+                            📖 Go to Book page
+                        </button>
+                    </form>
+
+                    <form asp-action="preferenceBookAction" asp-controller="Book" data-ajax="true"
+                          data-ajax-update="#updateBookPreference-section" data-ajax-mode="replace" method="post" style="display:inline;">
+                        <input type="hidden" name="bookId" value="@bookPreference.BookId" />
+                        <input type="hidden" name="preferencePage" value="true" />
+                        <button type="submit" class="remove-btn">
+                            Remove
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    }
+}
+}

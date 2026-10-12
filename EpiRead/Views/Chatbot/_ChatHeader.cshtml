@@ -1,0 +1,112 @@
+@using System.Text.Json
+@* Chat Header - Clean, minimal top bar *@
+<div class="chatbot-header">
+    <div class="chatbot-header-content">
+        <div class="chatbot-header-icon">
+            <i class="fas fa-book-reader"></i>
+        </div>
+        <div class="chatbot-header-text">
+            <h1 id="chatHeaderTitle" class="chatbot-header-title">EpiRead Assistant</h1>
+            <p id="chatHeaderSubtitle" class="chatbot-header-subtitle">Your AI-powered reading companion</p>
+        </div>
+    </div>
+</div>
+
+<style>
+    .chatbot-header {
+        background: #ffffff;
+        border-bottom: 1px solid #e5e5e5;
+        flex-shrink: 0;
+        padding: 1rem 1.5rem;
+    }
+
+    .chatbot-header-content {
+        align-items: center;
+        display: flex;
+        gap: 1rem;
+        margin: 0 auto;
+        max-width: 48rem;
+    }
+
+    .chatbot-header-icon {
+        align-items: center;
+        background: linear-gradient(135deg, #10a37f 0%, #0d8f6e 100%);
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(16, 163, 127, 0.2);
+        color: white;
+        display: flex;
+        flex-shrink: 0;
+        font-size: 1.25rem;
+        height: 40px;
+        justify-content: center;
+        width: 40px;
+    }
+
+    .chatbot-header-text {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .chatbot-header-title {
+        color: #1a1a1a;
+        font-size: 1.125rem;
+        font-weight: 600;
+        line-height: 1.4;
+        margin: 0;
+    }
+
+    .chatbot-header-subtitle {
+        color: #666;
+        font-size: 0.875rem;
+        line-height: 1.4;
+        margin: 0;
+    }
+
+    @@media (max-width: 768px) {
+        .chatbot-header { padding: 0.75rem 1rem; }
+
+        .chatbot-header-icon {
+            font-size: 1.125rem;
+            height: 36px;
+            width: 36px;
+        }
+
+        .chatbot-header-title { font-size: 1rem; }
+
+        .chatbot-header-subtitle { font-size: 0.8125rem; }
+    }
+</style>
+
+<script>
+    (function() {
+        // Update header based on current session
+        const currentSession = @Html.Raw(JsonSerializer.Serialize(ViewBag.CurrentSession ?? new { }));
+
+        function updateHeader() {
+            const titleEl = document.getElementById('chatHeaderTitle');
+            const subtitleEl = document.getElementById('chatHeaderSubtitle');
+
+            if (currentSession && currentSession.title) {
+                titleEl.textContent = currentSession.title;
+                subtitleEl.textContent = 'Continue your conversation';
+            } else {
+                titleEl.textContent = 'EpiRead Assistant';
+                subtitleEl.textContent = 'Your AI-powered reading companion';
+            }
+        }
+
+        // Update on page load
+        document.addEventListener('DOMContentLoaded', updateHeader);
+        if (document.readyState !== 'loading') {
+            updateHeader();
+        }
+
+        // Expose function for external updates
+        window.updateChatHeader = function(title, subtitle) {
+            const titleEl = document.getElementById('chatHeaderTitle');
+            const subtitleEl = document.getElementById('chatHeaderSubtitle');
+            if (titleEl && title) titleEl.textContent = title;
+            if (subtitleEl && subtitle) subtitleEl.textContent = subtitle;
+        };
+    })();
+</script>

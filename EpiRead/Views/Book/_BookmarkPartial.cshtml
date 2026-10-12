@@ -1,0 +1,85 @@
+﻿@model List<Bookmark>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.unobtrusive-ajax/3.2.6/jquery.unobtrusive-ajax.min.js"></script>
+@if (Model != null && Model.Any())
+{
+
+    var grouped = Model.GroupBy(b => b.BookDocument.Book);
+
+    @foreach (var group in grouped)
+    {
+        var book = group.Key;
+        var bookmarks = group.ToList();
+
+        var doc = bookmarks.FirstOrDefault()?.BookDocument;
+        string fileName = doc != null ? System.IO.Path.GetFileName(doc.DocumentPath) : "Unknown";
+        string displayName = fileName.Contains("_")
+        ? fileName.Substring(0, fileName.IndexOf("_", StringComparison.Ordinal))
+        : System.IO.Path.GetFileNameWithoutExtension(fileName);
+
+
+        <div class="bookmark-section mb-4 p-4 rounded-4 shadow-sm" style="background-color: #2F333B;">
+            <div class="d-flex align-items-center mb-4">
+                @{ var imgSrc = string.IsNullOrWhiteSpace(book.CoverImageLink) ? "/images/book-cover-not-available.webp" : book.CoverImageLink; }
+                <img src="@imgSrc" loading="lazy"
+                         alt="Book Cover"
+                     class="rounded-3 shadow-sm me-3"
+                     style="height: 85px; width: 60px; object-fit: cover;">
+                <div>
+                    <div class="fw-semibold text-light fs-5">@book.Title (@displayName): @doc.FormatType version</div>
+                    <span class="badge bg-info text-dark mt-1">
+                        @bookmarks.Count Bookmark@(bookmarks.Count > 1 ? "s" : "")
+                    </span>
+                </div>
+            </div>
+
+            <div class="bookmark-list">
+                @foreach (var bm in bookmarks)
+                {
+                    <div class="bookmark-item d-flex justify-content-between align-items-center mb-3 p-3 rounded-3 shadow-sm"
+                         style="background-color: #3B404C; border: 1px solid rgba(255,255,255,0.08);">
+                        <div>
+                            <div class="text-light mb-1">
+                                <span class="fw-semibold">Page @bm.Page</span>
+                            </div>
+                          
+                            <div class="d-flex gap-2">
+
+                                <form asp-controller="Book" asp-action="ReadBook" method="post">
+                                    <input type="hidden" name="documentId" value="@bm.BookDocumentId" />
+                                    <input type="hidden" name="documentFormat" value="@doc.FormatType" />
+                                    <input type="hidden" name="currentPage" value="@bm.Page" />
+                                    <button type="submit" class="btn btn-outline-light btn-sm"> <i class="fas fa-book-open me-1"></i>go to Page</button>
+                                </form>
+
+
+                                <form method="post" asp-controller="Book" asp-action="RemoveBookmark"
+                                      data-ajax="true"
+                                      data-ajax-update="#bookMark-section" data-ajax-mode="replace"
+                                      class="d-inline">
+                                    <button class="btn btn-outline-danger btn-sm px-3 py-1 fw-semibold remove-history"
+                                            data-id="@bm.Id" title="Remove from history" type="submit">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    <input type="hidden" value="@bm.Id" name="bookmarkId" />
+                                    <input type="hidden" value="@bm.BookDocumentId" name="documentId" />
+                                </form>
+
+                            </div>
+                        </div>
+                        <i class="fas fa-bookmark text-info fs-5"></i>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+}
+else
+{
+    <div class="text-center text-secondary py-5">
+        <i class="fas fa-bookmark fa-3x mb-3 text-muted"></i>
+        <p class="mb-0 fs-5">You have no bookmarks yet.</p>
+    </div>
+}
+
+    

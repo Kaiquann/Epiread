@@ -1,0 +1,90 @@
+﻿@model BookCategoryShowVm
+@{
+    BookCategory bookCategory = Model.BookCategory;
+    bool isGeneral = IsGeneral(bookCategory.Name, bookCategory.Slug);
+}
+
+<partial name="_SweetAlert"/>
+
+<div class="card-body">
+    <table class="table table-bordered">
+        <tbody>
+        <tr>
+            <th>Name</th>
+            <td>:</td>
+            <td>@bookCategory.Name</td>
+        </tr>
+        <tr>
+            <th>Slug</th>
+            <td>:</td>
+            <td>@bookCategory.Slug</td>
+        </tr>
+        <tr>
+            <th>Description</th>
+            <td>:</td>
+            <td>@bookCategory.Description</td>
+        </tr>
+        <tr>
+            <th>Parent Category</th>
+            <td>:</td>
+            <td>@(string.IsNullOrEmpty(bookCategory.Parent?.Name) ? "None" : bookCategory.Parent.Name)</td>
+        </tr>
+        <tr>
+            <th>Sub Categories</th>
+            <td>:</td>
+            <td>
+                @if (bookCategory.SubBookCategories != null && bookCategory.SubBookCategories.Any())
+                {
+                    <ul class="list-unstyled mb-0">
+                        @foreach (var subCategory in bookCategory.SubBookCategories.OrderBy(sc => sc.Name))
+                        {
+                            <li>
+                                <a asp-area="Admin" asp-controller="BookCategory" asp-action="Show" asp-route-id="@subCategory.Id" target="_blank">
+                                    @subCategory.Name
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <span class="text-muted">None</span>
+                }
+            </td>
+        </tr>
+        </tbody>
+        <tfoot>
+        <tr>
+            <td colspan="3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <!-- Left-aligned button -->
+                    <div>
+                        <a asp-area="Admin" asp-controller="BookCategory" asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left" aria-hidden="true"></i> Go Back
+                        </a>
+                    </div>
+
+                    <!-- Center-aligned buttons -->
+                    <div class="d-flex justify-content-center align-items-center gap-1 text-center">
+                        <partial name="_ActionButtonShow" model="@bookCategory"/>
+                    </div>
+
+                    <!-- Right-aligned button -->
+                    <div>
+                        @if (!isGeneral)
+                        {
+                            <a asp-area="Admin" asp-controller="BookCategory" asp-action="Edit" asp-route-id="@bookCategory.Id" class="btn btn-primary">
+                                <i class="fas fa-edit" aria-hidden="true"></i> Edit
+                            </a>
+                        }
+                    </div>
+                </div>
+            </td>
+        </tr>
+        </tfoot>
+    </table>
+</div>
+
+<div class="card-body" id="table-ajax">
+    <partial name="_ShowBooks" model="@Model"/>
+</div>

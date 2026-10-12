@@ -1,0 +1,110 @@
+﻿@model BookHistoryVm
+
+@{
+    var groupedBooks = Model.BookHistoryList.GroupBy(h => h.BookId).ToList();
+}
+
+
+@foreach (var group in groupedBooks)
+{
+    var first = group.First();
+    string bookId = $"book_{first.BookId}";
+
+    <div class="accordion-item bg-transparent border-0 mb-3">
+        <h2 class="accordion-header" id="heading_@bookId">
+            <button class="accordion-button collapsed bg-dark text-light rounded-3 shadow-sm"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapse_@bookId"
+                    aria-expanded="false"
+                    aria-controls="collapse_@bookId">
+                 @{ var imgSrc = string.IsNullOrWhiteSpace(first.Book.CoverImageLink) ? "/images/book-cover-not-available.webp" : first.Book.CoverImageLink; }
+                 <img src="@imgSrc" alt="Book Cover" loading="lazy"
+                     class="rounded-3 shadow-sm me-3"
+                     style="height: 70px; width: 50px; object-fit: cover;">
+                <span class="fw-semibold">@first.Book.Title</span>
+            </button>
+        </h2>
+
+        <div id="collapse_@bookId"
+             class="accordion-collapse collapse"
+             aria-labelledby="heading_@bookId"
+             data-bs-parent="#bookHistoryAccordion">
+            <div class="accordion-body pt-3 pb-0">
+                <!--partial view of book -->
+                @foreach (var history in group)
+                {
+                    var doc = Model.DocumentList.FirstOrDefault(d => d.Id == history.BookDocumentId);
+                    string fileName = System.IO.Path.GetFileName(doc.DocumentPath);
+                    string displayName = fileName.Contains("_")
+                    ? fileName.Substring(0, fileName.IndexOf("_", StringComparison.Ordinal))
+                    : System.IO.Path.GetFileNameWithoutExtension(fileName);
+
+                    int progress = history.BookProgress;
+                    var isCompleted = progress >= 100;
+                    var progressColor = isCompleted ? "bg-success" :
+                    progress >= 60 ? "bg-info" :
+                    progress >= 30 ? "bg-warning" : "bg-secondary";
+
+                    string progressStatus = progress == 0 ? "not-started"
+                    : (progress < 100 ? "in-progress" : "completed");
+
+                    <div class="episode-item mb-4 ps-4 progress-item" data-status="@progressStatus">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-light fw-semibold">@displayName (@(doc?.FormatType ?? history.BookDocument?.FormatType ?? "Unknown"))</div>
+                                <div class="progress mt-2" style="background: #23262F; height: 8px;">
+                                    <div class="progress-bar @progressColor"
+                                         role="progressbar"
+                                         style="width:@progress%;"
+                                         aria-valuenow="@progress"
+                                         aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <div class="small text-secondary mt-1">
+                                    @(isCompleted
+                                                                ? "Progress: 100% (Completed)"
+                                                                : progress == 0
+                                                                ? "Progress: 0% (Not Started)"
+                                                                : $"Progress: {progress}% — Page {history.CurrentPage} of {history.TotalPages}")
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                                @if (history.BookDocument?.Bookmarks?.Any(b => Model.CurrentUserId.HasValue && b.UserId == Model.CurrentUserId.Value) ?? false)
+                                {
+                                    <form method="get" asp-controller="Book" asp-action="ViewBookmark" class="d-inline">
+                                        <input type="hidden" name="documentId" value="@history.BookDocumentId" />
+                                        <button type="submit" class="btn btn-outline-info btn-sm px-3 py-1 fw-semibold">
+                                            <i class="fas fa-bookmark"></i> Bookmark
+                                        </button>
+                                    </form>
+                                }
+
+                                <form asp-controller="Book" asp-action="ReadBook" method="post">
+                                    <input type="hidden" name="documentId" value="@history.BookDocumentId" />
+                                    <input type="hidden" name="documentFormat" value="@(doc?.FormatType ?? history.BookDocument?.FormatType ?? string.Empty)" />
+                                    @if (history.BookProgress < 100)
+                                    {
+                                        <input type="hidden" name="currentPage" value="@history.CurrentPage" />
+                                    }
+                                    <button type="submit" class="btn btn-outline-light btn-sm">
+                                        @(history.BookProgress >= 100 ? "Read Again" : "Continue")
+                                    </button>
+                                </form>
+
+                                <form method="post" asp-controller="Book" asp-action="RemoveBookHistory"
+                                      data-ajax="true"
+                                      data-ajax-update="#updateBookHistory-section" data-ajax-mode="replace" class="d-inline">
+                                    <button class="btn btn-outline-danger btn-sm px-3 py-1 fw-semibold remove-history"
+                                            data-id="@history.Id" title="Remove from history" type="submit">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    <input type="hidden" value="@history.Id" name="id" />
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}

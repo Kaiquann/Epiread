@@ -1,0 +1,119 @@
+@model Book
+
+<partial name="_SweetAlert"/>
+
+<div class="card-body animate__animated animate__fadeInUp">
+    <div class="row g-4">
+        <div class="col-12 col-md-4 text-center">
+            <div class="mb-3">
+                <partial name="~/Views/Shared/Book/_CoverImagePartial.cshtml" model="Model.CoverImageLink"/>
+            </div>
+            <div class="d-grid gap-2">
+                <a asp-area="Author" asp-controller="Book" asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit Book</a>
+                <a asp-area="Author" asp-controller="Book" asp-action="EditEbook" asp-route-id="@Model.Id" class="btn btn-info">Edit Ebook Files</a>
+                <a asp-area="Author" asp-controller="Book" asp-action="Index" class="btn btn-outline-secondary">Back to my books</a>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-8">
+            <h3 class="mb-1">@Model.Title</h3>
+            <div class="mb-2 text-muted">by <strong>@Model.AuthorName</strong></div>
+
+            <div class="mb-3">
+                <span class="badge bg-info text-dark me-1">@LanguageHelper.GetLanguageName(Model.LanguageCode)</span>
+                @{
+                    var status = Model.Status ?? string.Empty;
+                    string badgeClass = status switch
+                    {
+                        "Available" => "bg-success",
+                        "Trashed" => "bg-warning text-dark",
+                        "Deleted" => "bg-danger",
+                        _ => "bg-secondary"
+                    };
+                }
+                <span class="badge @badgeClass">@status</span>
+                <small class="text-muted ms-2">Updated @Model.UpdatedAt.ToString("g")</small>
+            </div>
+
+            <div class="mb-3">
+                <h5 class="h6">Categories</h5>
+                @if (Model.BookCategoryMaps != null && Model.BookCategoryMaps.Any())
+                {
+                    foreach (var map in Model.BookCategoryMaps)
+                    {
+                        var cat = map.BookCategory;
+                        if (cat != null)
+                        {
+                            <span class="badge bg-light text-dark border me-1">@cat.Name</span>
+                        }
+                    }
+                }
+                else if (Model.BookCategories != null && Model.BookCategories.Any())
+                {
+                    foreach (var cat in Model.BookCategories)
+                    {
+                        <span class="badge bg-light text-dark border me-1">@cat.Name</span>
+                    }
+                }
+                else
+                {
+                    <div class="text-muted">No categories assigned.</div>
+                }
+            </div>
+
+            <div class="mb-3">
+                <h5 class="h6">Description</h5>
+                <div class="border rounded p-3" style="background: #fafafa; max-height: 260px; overflow: auto;">
+                    @Html.Raw(string.IsNullOrEmpty(Model.Description) ? "<div class=\"text-muted\">No description provided.</div>" : Html.Encode(Model.Description).Replace("\n", "<br/>"))
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <h5 class="h6">Ebook Files</h5>
+                @if (ViewBag.BookDocuments is List<BookDocument> docs && docs.Any())
+                {
+                    <ul class="list-group">
+                        @foreach (var d in docs)
+                        {
+                            var rawFileName = System.IO.Path.GetFileName(d.DocumentPath ?? d.DocumentLink ?? string.Empty);
+                            var displayName = string.IsNullOrEmpty(rawFileName)
+                                ? string.IsNullOrEmpty(d.DocumentPath) ? "" : d.DocumentPath
+                                : rawFileName.Contains("_")
+                                    ? rawFileName.Substring(0, rawFileName.IndexOf("_", StringComparison.Ordinal))
+                                    : System.IO.Path.GetFileNameWithoutExtension(rawFileName);
+                            var fileExt = string.IsNullOrEmpty(rawFileName) ? string.Empty : System.IO.Path.GetExtension(rawFileName).ToUpperInvariant();
+
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>@displayName</strong>
+                                    <div class="small text-muted">
+                                        @fileExt
+                                    </div>
+                                    <div class="small text-muted">
+                                        Created: @d.CreatedAt.ToString("yyyy-MM-dd HH:mm")
+                                    </div>
+                                </div>
+                                <div class="btn-group" role="group">
+                                    @if (fileExt == ".PDF")
+                                    {
+                                        <a href="@Url.Action("PdfPreview", "Book", new { area = "Author", id = d.Id })" target="_blank" class="btn btn-sm btn-outline-primary">View</a>
+                                        <a href="@d.DocumentLink" target="_blank" class="btn btn-sm btn-outline-success">Download</a>
+                                    }
+                                    else if (fileExt == ".EPUB")
+                                    {
+                                        <a href="@Url.Action("EpubPreview", "Book", new { area = "Author", id = d.Id })" target="_blank" class="btn btn-sm btn-outline-primary">View</a>
+                                        <a href="@d.DocumentLink" target="_blank" class="btn btn-sm btn-outline-success">Download</a>
+                                    }
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <div class="text-muted">No ebook files uploaded.</div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,150 @@
+﻿@model IllegalLoginVm
+
+@* Author: Chong Jun Xiang *@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Illegal Login</title>
+    <style>
+        body {
+            background-color: #f4f4f4;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            margin: 0 auto;
+            max-width: 650px;
+            padding: 20px;
+            width: 100%;
+        }
+
+        .card {
+            background: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-top: 30px;
+            padding: 30px;
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px 8px 0 0;
+            color: #fff;
+            margin: -30px -30px 20px -30px;
+            padding: 25px 30px;
+            text-align: center;
+        }
+
+        .card-header h5 {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .card-header p {
+            font-size: 14px;
+            margin: 8px 0 0 0;
+            opacity: 0.9;
+        }
+
+        .alert-box {
+            background-color: #f8d7da;
+            border-left: 4px solid #dc3545;
+            color: #721c24;
+            margin-bottom: 20px;
+            padding: 15px;
+        }
+
+        .info-section { margin-bottom: 20px; }
+
+        .info-row {
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+        }
+
+        .info-row:last-child { border-bottom: none; }
+
+        .info-label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .info-value {
+            color: #333;
+            font-weight: 600;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 6px;
+            color: #fff;
+            cursor: pointer;
+            display: inline-block;
+            font-size: 16px;
+            font-weight: 600;
+            padding: 12px 30px;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .footer {
+            border-top: 1px solid #eee;
+            color: #999;
+            font-size: 12px;
+            margin-top: 25px;
+            padding-top: 15px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h5>⚠️ Unauthorized Login Attempt</h5>
+            <p>Someone tried to access your account</p>
+        </div>
+
+        <div class="alert-box">
+            <strong>Security Alert:</strong> An unauthorized login attempt was detected on your account.
+        </div>
+
+        <p style="color: #666; margin-bottom: 20px;">If this was you, you can safely ignore this email. Otherwise, please take action immediately.</p>
+
+        <div class="info-section">
+            <div class="info-row">
+                <span class="info-label">Email:</span>
+                <span class="info-value">@Model.Email</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">IP Address:</span>
+                <span class="info-value">@Model.Ip</span>
+            </div>
+        </div>
+
+        <div style="margin-top: 25px; text-align: center;">
+            <a href="@Model.Url" class="btn">Reset Your Password</a>
+        </div>
+
+        <div class="footer">
+            <p>If this wasn't you, please reset your password immediately and enable two-factor authentication.</p>
+            <p>This is an automated security notification. Please do not reply to this email.</p>
+        </div>
+    </div>
+</div>
+</body>
+</html>

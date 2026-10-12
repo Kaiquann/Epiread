@@ -1,0 +1,20 @@
+﻿@model IPagedList<dynamic>
+@{
+    var options = PagedListRenderOptions.ClassicPlusFirstAndLast;
+    options.LinkToFirstPageFormat = "First";
+    options.LinkToLastPageFormat = "Last";
+    options.LinkToPreviousPageFormat = "Previous";
+    options.LinkToNextPageFormat = "Next";
+
+    var ajaxOptions = new AjaxOptions
+    {
+        HttpMethod = "GET",
+        UpdateTargetId = "table-ajax"
+    };
+}
+
+@Html.PagedListPager(
+    Model,
+    page => $"?search={ViewBag.Search}&sort={ViewBag.Sort}&dir={ViewBag.Dir}&page={page}&filter={ViewBag.Filter}",
+    PagedListRenderOptions.EnableUnobtrusiveAjaxReplacing(options, ajaxOptions)
+)

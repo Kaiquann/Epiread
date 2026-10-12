@@ -1,0 +1,36 @@
+﻿@model BookVm
+
+<div id="search-dropdown" class="search-dropdown">
+    @if (Model.SearchHistory?.Any() ?? false)
+    {
+        foreach (var history in Model.SearchHistory.Take(6))
+        {
+            <div class="search-item">
+                <div class="left">
+                    <i class="fas fa-history"></i>
+                    <form asp-action="Search" asp-controller="Book" data-ajax="true" data-ajax-update="#book-section" data-ajax-mode="replace" method="get" style="flex-grow:1;">
+                        <input type="hidden" name="search" value="@history.Context" />
+                        <button type="submit">@history.Context</button>
+                    </form>
+                </div>
+                <div class="actions">
+                <form asp-action="ToggleSavedSearch" asp-controller="Book" data-ajax="true" data-ajax-update="#search-section" data-ajax-mode="replace" method="post">
+                        <input type="hidden" name="id" value="@history.SearchHistoryId" />
+                        <button class="star-btn">
+                            <i class="fa-star @(history.IsSaved ? "fas text-warning" : "far")"></i>
+                        </button>
+                    </form>
+                <form asp-action="DeleteSearchHistory" asp-controller="Book" data-ajax="true" data-ajax-update="#search-section" data-ajax-mode="replace" method="post">
+                        <input type="hidden" name="id" value="@history.SearchHistoryId" />
+                        <button class="delete-btn">×</button>
+                    </form>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+
+        <div class="no-history">No recent searches</div>
+    }
+</div>

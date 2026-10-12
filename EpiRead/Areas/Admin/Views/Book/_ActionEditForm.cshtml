@@ -1,0 +1,40 @@
+﻿@model EditBookVm
+
+<form data-ajax="true"
+      data-ajax-update="#ajax-update-content"
+      asp-area="Admin"
+      asp-controller="Book"
+      asp-action="RemoveCoverImage"
+      asp-route-id="@Model.Id"
+      method="post"
+      id="removeCoverImageForm">
+</form>
+
+<!-- Available -->
+@if (Model.Status == nameof(BookStatusType.Available))
+{
+    <form data-ajax="true"
+          data-ajax-update="#ajax-update-content"
+          action="/Admin/Book/Trash?ids=@Model.Id"
+          method="post"
+          id="Trash_@Model.Id">
+    </form>
+}
+
+<!-- Trashed -->
+@if (Model.Status == nameof(BookStatusType.Trashed))
+{
+    <form data-ajax="true"
+          data-ajax-update="#ajax-update-content"
+          action="/Admin/Book/Recover?ids=@Model.Id"
+          method="post"
+          id="Recover_@Model.Id">
+    </form>
+
+    <form data-ajax="true"
+          data-ajax-update="#ajax-update-content"
+          action="/Admin/Book/Delete?ids=@Model.Id"
+          method="post"
+          id="Delete_@Model.Id">
+    </form>
+}

@@ -1,0 +1,60 @@
+﻿@model CreateBookCategoryVm
+@{
+    ViewBag.Title = "Create Book Category";
+}
+
+<section>
+    <div class="container my-5">
+        <h2 class="text-center mb-4">@ViewBag.Title</h2>
+        <form asp-area="Admin" asp-controller="BookCategory" asp-action="Store">
+            <table class="table table-bordered">
+                <tbody>
+                <tr>
+                    <th>Name</th>
+                    <td>:</td>
+                    <td>
+                        <input asp-for="Name" class="form-control"/>
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Slug</th>
+                    <td>:</td>
+                    <td>
+                        <input asp-for="Slug" class="form-control"/>
+                        <span asp-validation-for="Slug" class="text-danger"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Description</th>
+                    <td>:</td>
+                    <td>
+                        <textarea asp-for="Description" class="form-control" data-trim></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Parent Category</th>
+                    <td>:</td>
+                    <td>
+                        <select asp-for="ParentId" asp-items="Model.ParentBookCategories" class="form-control"></select>
+                        <span asp-validation-for="ParentId" class="text-danger"></span>
+                    </td>
+                </tr>
+                </tbody>
+                <tfoot>
+                <tr>
+                    <td colspan="3">
+                        <a asp-area="Admin" asp-controller="BookCategory" asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-times" aria-hidden="true"></i> Cancel
+                        </a>
+                        <button class="btn btn-success" data-confirm>
+                            <i class="fas fa-check" aria-hidden="true"></i> Create
+                        </button>
+                    </td>
+                </tr>
+                </tfoot>
+            </table>
+        </form>
+    </div>
+</section>

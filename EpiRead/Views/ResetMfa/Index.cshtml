@@ -1,0 +1,70 @@
+﻿@model ResetMfaVm;
+@inject ICfCaptchaHelper CfCaptchaHelper
+@{
+    ViewBag.Title = "Reset MFA";
+}
+
+<section>
+    <div class="container my-5">
+        <h2 class="text-center mb-4">@ViewBag.Title</h2>
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            @Html.Hidden("Token", Model.Token)
+            <table class="table table-bordered">
+                <tbody>
+                <tr>
+                    <th>Email</th>
+                    <td>:</td>
+                    <td>@Model.Email</td>
+                </tr>
+                <tr>
+                    <th>QrCode</th>
+                    <td>:</td>
+                    <td>
+                        <img src="@Model.QrCodeUrl" class="img-thumbnail" alt="@Model.ManualEntryCode" loading="lazy"/>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Manual Entry Code</th>
+                    <td>:</td>
+                    <td>@Model.ManualEntryCode</td>
+                </tr>
+                <tr>
+                    <th>Enter Code</th>
+                    <td>:</td>
+                    <td>
+                        <input asp-for="Code" class="form-control"/>
+                        <span asp-validation-for="Code" class="text-danger"></span>
+                    </td>
+                </tr>
+                </tbody>
+                <tfoot>
+                <tr>
+                    <td colspan="3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <!-- Left-aligned button -->
+                            <div>
+                            </div>
+
+                            <!-- Center-aligned buttons -->
+                            <div class="text-center">
+                                <a asp-controller="Login" asp-action="Index" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left me-2" aria-hidden="true"></i> Back
+                                </a>
+                                <button type="submit" class="btn btn-success" data-confirm>
+                                    <i class="fas fa-check" aria-hidden="true"></i> Submit
+                                </button>
+                            </div>
+
+                            <!-- Right-aligned button -->
+                            <div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                </tfoot>
+            </table>
+            @CfCaptchaHelper.GetCaptchaHtml()
+        </form>
+    </div>
+</section>

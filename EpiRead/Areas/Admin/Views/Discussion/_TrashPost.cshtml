@@ -1,0 +1,51 @@
+@model DiscussionPost
+@{
+    // Determine the modal ID provided via ViewData or fall back to a safe default.
+    var modalId = ViewData["TrashModalId"] as string;
+    if (string.IsNullOrEmpty(modalId))
+    {
+        modalId = $"trashModal-{(Model != null ? Model.Id.ToString() : "unknown")}";
+    }
+
+    // Prepare a short excerpt of the post content for the confirmation message.
+    var rawContent = Model?.Content ?? string.Empty;
+    var excerpt = rawContent.Length > 140 ? rawContent.Substring(0, 200) + "..." : rawContent;
+}
+
+@* 
+    Partial: _TrashPost.cshtml
+    Purpose: Render a Bootstrap modal to confirm move a post to trash (frontend-only).
+*@
+
+<div class="modal fade" id="@modalId" tabindex="-1" role="dialog" aria-labelledby="@($"{modalId}-label")" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="@($"{modalId}-label")">Trash Post</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <p class="mb-2">
+                    <strong>Author:</strong> @Model?.User?.UserName
+                </p>
+                <p class="mb-0">
+                    <strong>Post excerpt:</strong>
+                </p>
+                <p class="text-muted small">@Html.Raw(HtmlSanitizerHelper.SanitizeAndFormat(excerpt))</p>
+                <p class="mt-2">Are you sure you want to move this post to trash? This action can be undone </p>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-label="Cancel move to trash">Cancel</button>
+
+                <form asp-area="Admin" asp-controller="Discussion" asp-action="TrashPost" method="post" class="d-inline"
+                      data-ajax="true" data-ajax-method="POST" data-ajax-mode="replace" data-ajax-update="#table-ajax">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="ids" value="@Model?.Id"/>
+                    <button type="submit" class="btn btn-warning" data-confirm="Are you sure you want to trash this post?" aria-label="Confirm move post to trash">Trash</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

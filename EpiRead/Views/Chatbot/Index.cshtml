@@ -1,0 +1,239 @@
+﻿@{
+    ViewBag.Title = "ChatBot";
+}
+
+<div class="chatbot-container">
+    <!-- Sidebar - Session history -->
+    <partial name="_Sidebar"/>
+
+    <!-- Main Chat Area -->
+    <div class="chatbot-main">
+        <!-- Header -->
+        <partial name="_ChatHeader"/>
+
+        <!-- Messages + Input: shared scroll area so input can be sticky inside the same context -->
+        <div class="chatbot-scroll-area">
+            <!-- Messages Container -->
+            <div class="chatbot-messages-container">
+                <div class="chatbot-messages-inner">
+                    <partial name="_ChatArea"/>
+                </div>
+            </div>
+            <!-- Persistent bottom gap inside scroll area so last message clears input -->
+            <div class="chatbot-bottom-gap" aria-hidden="true"></div>
+        </div>
+
+        <!-- Input Area (sticky inside scroll area) -->
+        <partial name="_InputArea"/>
+    </div>
+</div>
+
+<style>
+    /* Modern Chatbot Layout - Claude/ChatGPT inspired */
+    .chatbot-container {
+        background: #f7f7f8;
+        display: flex;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        height: calc(100vh - 40px); /* viewport minus fixed footer height */
+        overflow: hidden; /* enable internal scroll in chat area */
+        width: 100%;
+    }
+
+    .chatbot-main {
+        background: #ffffff;
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        height: 100%;
+        min-height: 0; /* allow children to control overflow */
+        min-width: 0;
+        position: relative;
+    }
+
+    /* The scrollable area contains messages and the input so sticky positioning works */
+
+    .chatbot-scroll-area {
+        background: #ffffff;
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        min-height: 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+
+    .chatbot-messages-container {
+        background: #ffffff;
+        /* messages take available space inside the scroll area */
+        flex: 1 1 auto;
+        min-height: 0;
+        padding-bottom: 24px; /* small inner spacing; main clearance provided by bottom gap */
+        position: relative;
+    }
+
+    .chatbot-messages-inner {
+        min-height: 100%;
+        padding: 1rem 0;
+    }
+
+    /* Spacer at the very bottom so the latest message is never covered */
+
+    .chatbot-bottom-spacer {
+        flex-shrink: 0;
+        height: 0; /* deprecated (was used inside message list); keep for compatibility */
+        width: 100%;
+    }
+
+    /* Fixed spacer INSIDE scroll area, below messages, unaffected by AJAX reloads */
+
+    .chatbot-bottom-gap {
+        flex-shrink: 0;
+        height: 160px; /* tune to desired gap above input */
+        width: 100%;
+    }
+
+    /* Smooth scrolling */
+
+    .chatbot-messages-container { scroll-behavior: smooth; }
+
+    /* Custom scrollbar */
+
+    .chatbot-messages-container::-webkit-scrollbar { width: 8px; }
+
+    .chatbot-messages-container::-webkit-scrollbar-track { background: transparent; }
+
+    .chatbot-messages-container::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 4px;
+    }
+
+    .chatbot-messages-container::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.3); }
+
+    /* Body styling for chatbot page (allow normal layout with header/footer) */
+
+    body.chatbot-page {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+</style>
+
+<script>
+    // Ensure page initialization only happens once
+    if (window.__ChatbotPageInitialized) {
+        console.log('Chatbot page already initialized, skipping duplicate initialization');
+    } else {
+        window.__ChatbotPageInitialized = true;
+
+        // Apply chatbot-specific styles to body on page load
+        function initChatbotPage() {
+            document.body.classList.add('chatbot-page');
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initChatbotPage, { once: true });
+        } else {
+            initChatbotPage();
+        }
+
+        // Handle browser back/forward buttons (only attach once)
+        window.addEventListener('popstate',
+            function(event) {
+                if (event.state && event.state.sessionId) {
+                    // Get session title from sidebar
+                    let sessionTitle = 'Chat Session';
+                    document.querySelectorAll('.chat-item').forEach(item => {
+                        if (item.getAttribute('data-session-id') === event.state.sessionId) {
+                            item.classList.add('active');
+                            sessionTitle = item.getAttribute('data-title') || sessionTitle;
+                        } else {
+                            item.classList.remove('active');
+                        }
+                    });
+
+                    // Update chat header
+                    if (typeof window.updateChatHeader === 'function') {
+                        window.updateChatHeader(sessionTitle, 'Continue your conversation');
+                    }
+
+                    // Load the session from history
+                    if (typeof window.loadSessionMessages === 'function') {
+                        window.loadSessionMessages(event.state.sessionId);
+
+                        // Update session ID in input area
+                        if (typeof window.updateCurrentSessionId === 'function') {
+                            window.updateCurrentSessionId(event.state.sessionId);
+                        }
+                    }
+                } else if (event.state && event.state.newChat) {
+                    // Reset chat header to default
+                    if (typeof window.updateChatHeader === 'function') {
+                        window.updateChatHeader('EpiRead Assistant', 'Your AI-powered reading companion');
+                    }
+
+                    // Handle new chat state
+                    if (typeof window.loadNewChat === 'function') {
+                        window.loadNewChat();
+
+                        // Clear active state from all sessions
+                        document.querySelectorAll('.chat-item').forEach(item => {
+                            item.classList.remove('active');
+                        });
+
+                        // Clear session ID in input area
+                        if (typeof window.updateCurrentSessionId === 'function') {
+                            window.updateCurrentSessionId(null);
+                        }
+                    }
+                } else {
+                    // Reset chat header to default
+                    if (typeof window.updateChatHeader === 'function') {
+                        window.updateChatHeader('EpiRead Assistant', 'Your AI-powered reading companion');
+                    }
+
+                    // No state, go to empty chatbot page
+                    if (typeof window.loadNewChat === 'function') {
+                        window.loadNewChat();
+
+                        // Clear active state from all sessions
+                        document.querySelectorAll('.chat-item').forEach(item => {
+                            item.classList.remove('active');
+                        });
+
+                        // Clear session ID in input area
+                        if (typeof window.updateCurrentSessionId === 'function') {
+                            window.updateCurrentSessionId(null);
+                        }
+                    } else {
+                        window.location.href = '/Chatbot';
+                    }
+                }
+            },
+            { once: false }); // Browser can emit multiple popstate events, so don't use 'once'
+
+        // Set initial state on page load
+        window.addEventListener('load',
+            function(event) {
+                const urlParts = window.location.pathname.split('/');
+                if (urlParts.length > 3 && urlParts[1] === 'Chatbot' && urlParts[2] === 'Chat' && urlParts[3]) {
+                    const currentSessionId = urlParts[3];
+                    // Replace current state to include session ID
+                    window.history.replaceState({ sessionId: currentSessionId }, '', window.location.href);
+                } else if (window.location.pathname === '/Chatbot' || window.location.pathname === '/Chatbot/') {
+                    // We're on the new chat page, set the newChat state
+                    window.history.replaceState({ newChat: true }, '', window.location.href);
+                }
+            },
+            { once: true });
+    }
+</script>
+
+<!-- Markdown rendering libs (scoped to Chatbot page) -->
+<script>
+    // Configure marked globally for friendlier chat rendering
+    if (window.marked) {
+        window.marked.setOptions({
+            breaks: true,
+            gfm: true
+        });
+    }
+</script>

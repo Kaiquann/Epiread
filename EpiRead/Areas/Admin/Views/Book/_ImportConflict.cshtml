@@ -1,0 +1,717 @@
+@using Microsoft.AspNetCore.Html
+@model BookImportConflictVm
+
+@functions {
+
+    private bool IsDifferent(string? val1, string? val2)
+    {
+        if (val1 == val2) return false;
+        if (string.IsNullOrWhiteSpace(val1) && string.IsNullOrWhiteSpace(val2)) return false;
+        return val1?.Trim() != val2?.Trim();
+    }
+
+    private string FormatValue(string? value, string defaultText = "N/A")
+    {
+        return string.IsNullOrWhiteSpace(value) ? defaultText : value;
+    }
+
+    private IHtmlContent GetComparisonHtml(string? dbValue, string? excelValue, bool showBadge = false)
+    {
+        var isDiff = IsDifferent(dbValue, excelValue);
+
+        if (!isDiff)
+        {
+            if (showBadge)
+            {
+                var unchangedHtml = $"<div>{FormatValue(excelValue)}</div><small class='badge bg-secondary'>Unchanged</small>";
+                return new HtmlString(unchangedHtml);
+            }
+
+            return new HtmlString(FormatValue(excelValue));
+        }
+
+        var formattedDb = FormatValue(dbValue, "Empty");
+        var formattedExcel = FormatValue(excelValue, "Empty");
+
+        var html = $"<div class='comparison-container'><div class='comparison-old text-muted'><del>{formattedDb}</del></div><div class='comparison-arrow'><i class='fas fa-arrow-right fa-xs'></i></div><div class='comparison-new fw-bold text-primary'>{formattedExcel}</div></div>";
+
+        if (showBadge)
+        {
+            html += "<small class='badge bg-warning text-dark'>Changed</small>";
+        }
+
+        return new HtmlString(html);
+    }
+
+}
+
+<h5 class="mt-4 mb-3"><i class="fas fa-exchange-alt"></i> Book Comparison & Conflict Resolution</h5>
+
+<div class="table-responsive">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <div>
+            <span class="badge bg-success me-1">New: @Model.Items.Count(i => i.ConflictType == "New")</span>
+            <span class="badge bg-warning text-dark me-1">Duplicate: @Model.Items.Count(i => i.ConflictType == "Duplicate")</span>
+            <span class="badge bg-danger me-1">Title Conflict: @Model.Items.Count(i => i.ConflictType == "Title Conflict")</span>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+            <div class="btn-group btn-group-sm" role="group" aria-label="Apply action to all">
+                <button class="btn btn-outline-success" id="applyAllAdd">Apply All Add</button>
+                <button class="btn btn-outline-danger" id="applyAllOverwrite">Apply All Overwrite</button>
+                <button class="btn btn-outline-secondary" id="applyAllSkip">Apply All Skip</button>
+                <button class="btn btn-outline-primary" id="applyAllMerge">Apply All Merge</button>
+            </div>
+            <button class="btn btn-success btn-sm" id="btnConfirmTop"><i class="fas fa-check"></i> Confirm</button>
+        </div>
+    </div>
+    <table id="bookConflictTable" class="table table-bordered table-sm align-middle">
+        <thead class="table-light">
+        <tr>
+            <th>Cover</th>
+            <th style="min-width: 200px;">Title / Author</th>
+            <th>Description</th>
+            <th>Year</th>
+            <th>Language</th>
+            <th>Status</th>
+            <th>Categories</th>
+            <th style="min-width: 180px;">Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        @if (Model.Items.Any())
+        {
+            foreach (BookImportConflictItem item in Model.Items)
+            {
+                var hasExisting = item.ExistingBook != null;
+                var dbCover = item.ExistingBook?.CoverImageLink ?? item.ExistingBook?.CoverImagePath;
+                var excelCover = item.Row.CoverImageLink ?? item.Row.CoverImagePath;
+                var dbYear = item.ExistingBook?.PublicationYear?.Year.ToString();
+                var excelYear = item.Row.PublicationYear?.ToString();
+                var dbLang = item.ExistingBook != null ? LanguageHelper.GetLanguageName(item.ExistingBook.LanguageCode) : null;
+                var excelLang = LanguageHelper.GetLanguageName(item.Row.LanguageCode);
+                var dbStatus = item.ExistingBook?.Status;
+                var excelStatus = item.Row.Status;
+                var dbCategories = item.ExistingBook?.BookCategoryMaps != null && item.ExistingBook.BookCategoryMaps.Any()
+                    ? string.Join(", ", item.ExistingBook.BookCategoryMaps.Select(m => m.BookCategory?.Name ?? "Unknown"))
+                    : null;
+                var excelCategories = item.Categories.Any() ? string.Join(", ", item.Categories) : "None";
+
+                <tr data-title="@item.Row.Title"
+                    data-authorname="@item.Row.AuthorName"
+                    data-description="@item.Row.Description"
+                    data-publicationyear="@item.Row.PublicationYear"
+                    data-languagecode="@item.Row.LanguageCode"
+                    data-language="@LanguageHelper.GetLanguageName(item.Row.LanguageCode)"
+                    data-coverimagepath="@item.Row.CoverImagePath"
+                    data-coverimagelink="@item.Row.CoverImageLink"
+                    data-userid="@(item.Row.UserId.HasValue ? item.Row.UserId.ToString() : "")"
+                    data-useremail="@item.Row.UserEmail"
+                    data-status="@item.Row.Status"
+                    data-createdat="@item.Row.CreatedAt.ToUniversalTime().ToString("o")"
+                    data-updatedat="@item.Row.UpdatedAt.ToUniversalTime().ToString("o")"
+                    @* Add existing book data for comparison *@
+                    data-has-existing="@(item.ExistingBook != null ? "true" : "false")"
+                    data-existing-title="@(item.ExistingBook?.Title ?? "")"
+                    data-existing-authorname="@(item.ExistingBook?.AuthorName ?? "")"
+                    data-existing-description="@(item.ExistingBook?.Description ?? "")"
+                    data-existing-publicationyear="@(item.ExistingBook?.PublicationYear?.Year.ToString() ?? "")"
+                    data-existing-languagecode="@(item.ExistingBook?.LanguageCode ?? "")"
+                    data-existing-language="@(item.ExistingBook != null ? LanguageHelper.GetLanguageName(item.ExistingBook.LanguageCode) : "")"
+                    data-existing-coverimagepath="@(item.ExistingBook?.CoverImagePath ?? "")"
+                    data-existing-coverimagelink="@(item.ExistingBook?.CoverImageLink ?? "")"
+                    data-existing-status="@(item.ExistingBook?.Status ?? "")"
+                    data-existing-createdat="@(item.ExistingBook?.CreatedAt.ToUniversalTime().ToString("o") ?? "")"
+                    data-existing-updatedat="@(item.ExistingBook?.UpdatedAt.ToUniversalTime().ToString("o") ?? "")"
+                    data-existing-categoryname="@(dbCategories ?? "")"
+                    data-categoryname="@excelCategories">
+                    @* Cover Image *@
+                    <td class="align-middle text-center">
+                        @if (hasExisting && IsDifferent(dbCover, excelCover))
+                        {
+                            <div class="d-flex flex-column gap-1 align-items-center">
+                                <div class="text-muted" style="font-size: 0.7rem;">Current</div>
+                                <img src="@(dbCover ?? "/images/Book/default-cover.webp")" alt="DB Cover" class="import-thumb" style="height: 65px; object-fit: cover; width: 50px;"/>
+                                <i class="fas fa-arrow-down fa-xs text-warning"></i>
+                                <div class="text-primary" style="font-size: 0.7rem;">New</div>
+                                <img src="@(excelCover ?? "/images/Book/default-cover.webp")" alt="Excel Cover" class="import-thumb" style="height: 65px; object-fit: cover; width: 50px;"/>
+                            </div>
+                        }
+                        else
+                        {
+                            <img src="@(excelCover ?? "/images/Book/default-cover.webp")" alt="Cover" class="import-thumb" style="height: 80px; object-fit: cover; width: 60px;"/>
+                            @if (hasExisting)
+                            {
+                                <div>
+                                    <small class="badge bg-secondary mt-1">Same</small>
+                                </div>
+                            }
+                        }
+                    </td>
+
+                    @* Title / Author *@
+                    <td class="align-middle">
+                        @if (hasExisting)
+                        {
+                            <div class="mb-2">
+                                <div class="small text-muted mb-1">Title:</div>
+                                @GetComparisonHtml(item.ExistingBook?.Title, item.Row.Title)
+                            </div>
+                            <div>
+                                <div class="small text-muted mb-1">Author:</div>
+                                @GetComparisonHtml(item.ExistingBook?.AuthorName, item.Row.AuthorName)
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="fw-semibold">@item.Row.Title</div>
+                            <div class="text-muted small">@item.Row.AuthorName</div>
+                        }
+                    </td>
+
+                    @* Description *@
+                    <td class="align-middle">
+                        @if (hasExisting)
+                        {
+                            var descDiff = IsDifferent(item.ExistingBook?.Description, item.Row.Description);
+                            var descText = item.Row.Description ?? "N/A";
+                            var descPreview = descText != "N/A" && descText.Length > 80 ? descText.Substring(0, 80) + "..." : descText;
+                            <div class="text-truncate" style="max-width: 200px;" title="@item.Row.Description">
+                                @descPreview
+                            </div>
+                            <small class="badge @(descDiff ? "bg-warning text-dark" : "bg-secondary") mt-1">
+                                @(descDiff ? "Changed" : "Same")
+                            </small>
+                        }
+                        else
+                        {
+                            var descText = item.Row.Description ?? "N/A";
+                            var descPreview = descText != "N/A" && descText.Length > 80 ? descText.Substring(0, 80) + "..." : descText;
+                            <div class="text-truncate" style="max-width: 200px;" title="@item.Row.Description">
+                                @descPreview
+                            </div>
+                        }
+                        <button type="button" class="btn btn-link btn-sm text-muted preview-btn p-0 mt-1" title="Preview full description">
+                            <i class="fas fa-eye"></i> Preview
+                        </button>
+                    </td>
+
+                    @* Year *@
+                    <td class="align-middle">
+                        @if (hasExisting)
+                        {
+                            @GetComparisonHtml(dbYear, excelYear)
+                        }
+                        else
+                        {
+                            @(excelYear ?? "N/A")
+                        }
+                    </td>
+
+                    @* Language *@
+                    <td class="align-middle">
+                        @if (hasExisting)
+                        {
+                            @GetComparisonHtml(dbLang, excelLang)
+                        }
+                        else
+                        {
+                            @excelLang
+                        }
+                    </td>
+
+                    @* Status *@
+                    <td class="align-middle">
+                        @if (hasExisting)
+                        {
+                            @GetComparisonHtml(dbStatus, excelStatus)
+                        }
+                        else
+                        {
+                            <span class="badge @(excelStatus == "Available" ? "bg-success" : "bg-secondary")">
+                                @excelStatus
+                            </span>
+                        }
+                    </td>
+
+                    @* Categories *@
+                    <td class="align-middle">
+                        @if (hasExisting)
+                        {
+                            var catDiff = IsDifferent(dbCategories, excelCategories);
+                            if (catDiff)
+                            {
+                                <div class="small">
+                                    <div class="text-muted">
+                                        <del>@FormatValue(dbCategories, "None")</del>
+                                    </div>
+                                    <i class="fas fa-arrow-down fa-xs text-warning"></i>
+                                    <div class="text-primary fw-bold">@excelCategories</div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div>@excelCategories</div>
+                                <small class="badge bg-secondary">Same</small>
+                            }
+                        }
+                        else
+                        {
+                            @excelCategories
+                        }
+                    </td>
+                    @* Action *@
+                    <td class="align-middle">
+                        <div class="mb-1">
+                            <span class="badge @(item.ConflictType == "New" ? "bg-success" : item.ConflictType == "Duplicate" ? "bg-warning text-dark" : "bg-danger")">
+                                @item.ConflictType
+                            </span>
+                        </div>
+                        @switch (item.ConflictType)
+                        {
+                            case "New":
+                            {
+                                @* New books: Only Add or Skip *@
+                                <div class="btn-group btn-group-sm d-flex" role="group" aria-label="Conflict actions">
+                                    <button type="button" class="btn btn-outline-success action-btn @(item.SuggestedAction == "Add" ? "active" : "")" data-action="Add" aria-pressed="@(item.SuggestedAction == "Add" ? "true" : "false")">Add</button>
+                                    <button type="button" class="btn btn-outline-secondary action-btn @(item.SuggestedAction == "Skip" ? "active" : "")" data-action="Skip" aria-pressed="@(item.SuggestedAction == "Skip" ? "true" : "false")">Skip</button>
+                                </div>
+                                break;
+                            }
+                            case "Duplicate":
+                            case "Title Conflict":
+                            {
+                                @* Existing books (Duplicate/Title Conflict): Overwrite, Skip, or Merge *@
+                                <div class="btn-group btn-group-sm d-flex mb-1" role="group" aria-label="Conflict actions">
+                                    <button type="button" class="btn btn-outline-danger action-btn @(item.SuggestedAction == "Overwrite" ? "active" : "")" data-action="Overwrite" aria-pressed="@(item.SuggestedAction == "Overwrite" ? "true" : "false")">Replace</button>
+                                    <button type="button" class="btn btn-outline-secondary action-btn @(item.SuggestedAction == "Skip" ? "active" : "")" data-action="Skip" aria-pressed="@(item.SuggestedAction == "Skip" ? "true" : "false")">Skip</button>
+                                    <button type="button" class="btn btn-outline-primary action-btn @(item.SuggestedAction == "Merge" ? "active" : "")" data-action="Merge" aria-pressed="@(item.SuggestedAction == "Merge" ? "true" : "false")">Merge</button>
+                                </div>
+                                <button type="button" class="btn btn-info btn-sm w-100 compare-btn" title="Detailed Comparison" aria-label="View detailed comparison">
+                                    <i class="fas fa-code-compare"></i> Full Details
+                                </button>
+                                break;
+                            }
+                        }
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="8" class="text-center">No books found in the uploaded ZIP file.</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+<div class="alert alert-info mt-3" role="alert">
+    <h6><i class="fas fa-info-circle"></i> Action Descriptions:</h6>
+    <ul class="mb-0">
+        <li><strong>Add:</strong> Create a new book entry with its categories and documents. <em>(Only for New books)</em></li>
+        <li><strong>Overwrite:</strong> Replace existing book data completely, including categories and documents. <em>(Only for existing books in DB)</em></li>
+        <li><strong>Skip:</strong> Keep existing book data unchanged, ignore imported data. <em>(Available for all conflict types)</em></li>
+        <li><strong>Merge:</strong> Update book only if imported data is newer or equal (based on UpdatedAt timestamp). <em>(For existing books)</em></li>
+    </ul>
+    <div class="mt-2">
+        <small class="text-muted">
+            <strong>Conflict Types:</strong>
+            <span class="badge bg-success">New</span> = Not in database (Add/Skip only) •
+            <span class="badge bg-warning text-dark">Duplicate</span> = Exists in database (Overwrite/Skip/Merge)
+        </small>
+    </div>
+</div>
+
+<div class="d-flex justify-content-end gap-2 mt-3">
+    <button type="button" class="btn btn-success" id="btnConfirm">
+        <i class="fas fa-check" aria-hidden="true"></i> Confirm Import
+    </button>
+    <button type="button" class="btn btn-secondary" id="btnCancel">
+        <i class="fas fa-times" aria-hidden="true"></i> Cancel
+    </button>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // Initialize DataTable with search and pagination
+        const table = $('#bookConflictTable').DataTable({
+            pageLength: 20,
+            lengthMenu: [[10, 20, 50, 100, -1], [10, 20, 50, 100, "All"]],
+            order: [[5, 'asc'], [0, 'asc']], // Sort by Conflict Type, then Title
+            columnDefs: [
+                { orderable: false, targets: 6 } // Disable sorting on Action column
+            ],
+            language: {
+                search: "Search books:",
+                lengthMenu: "Show _MENU_ books per page",
+                info: "Showing _START_ to _END_ of _TOTAL_ books",
+                infoEmpty: "No books to display",
+                infoFiltered: "(filtered from _MAX_ total books)",
+                paginate: {
+                    first: "First",
+                    last: "Last",
+                    next: "Next",
+                    previous: "Previous"
+                }
+            },
+            drawCallback: function() {
+                // Update info text after filtering
+                // Use DataTables API via `this` to avoid referencing the outer `table` variable
+                // which may not be initialized yet during DataTables' initial draw (TDZ issue).
+                const api = this.api();
+                const info = api.page.info();
+                if (info.recordsDisplay === 0) {
+                    $('.dataTables_info').html('No matching books found');
+                }
+            }
+        });
+
+        // Initialize action buttons state on each row and wire click handlers
+        $('#bookConflictTable tbody').on('click',
+            '.action-btn',
+            function(e) {
+                e.preventDefault();
+                const btn = $(this);
+                const $group = btn.closest('.btn-group');
+                // remove active from group, set aria-pressed
+                $group.find('.action-btn').removeClass('active').attr('aria-pressed', 'false');
+                btn.addClass('active').attr('aria-pressed', 'true');
+                // store selection on the row
+                const row = btn.closest('tr');
+                row.attr('data-action', btn.data('action'));
+            });
+
+        // On preview click, show modal with details
+        $('body').append(`
+                        <div class="modal fade" id="importPreviewModal" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-lg modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Book Preview</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="d-flex gap-3">
+                                            <img id="previewCover" src="" alt="Cover" style="width:120px;height:160px;object-fit:cover;" class="rounded" />
+                                            <div>
+                                                <h4 id="previewTitle"></h4>
+                                                <p class="text-muted mb-1" id="previewAuthor"></p>
+                                                <p id="previewDescription"></p>
+                                                <ul class="list-inline text-muted small" id="previewMeta"></ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                `);
+
+        // Add comparison modal
+        $('body').append(`
+                        <div class="modal fade" id="compareModal" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-light">
+                                        <h5 class="modal-title"><i class="fas fa-code-compare"></i> Compare: Database vs Excel Import</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th style="width:20%">Field</th>
+                                                        <th style="width:40%" class="table-info">Current (Database)</th>
+                                                        <th style="width:40%" class="table-warning">New (Excel)</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="compareTableBody">
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div class="alert alert-info mt-3">
+                                            <i class="fas fa-info-circle"></i> <strong>Note:</strong> 
+                                            <span id="compareActionNote"></span>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                `);
+
+        $('#bookConflictTable tbody').on('click',
+            '.preview-btn',
+            function(e) {
+                e.preventDefault();
+                const row = $(this).closest('tr');
+                const cover = row.data('coverimagelink') || row.data('coverimagepath');
+                const title = row.data('title') || '';
+                const author = row.data('authorname') || '';
+                const desc = row.data('description') || '';
+                const year = row.data('publicationyear') || '';
+                const lang = row.data('languagecode') || '';
+                const langName = row.data('language') || lang || '';
+                const status = row.data('status') || '';
+
+                $('#previewCover').attr('src', cover ? cover : '/images/Book/default-cover.webp');
+                $('#previewTitle').text(title);
+                $('#previewAuthor').text(author + (year ? (` • ${year}`) : ''));
+                $('#previewDescription').text(desc);
+                $('#previewMeta').html(`<li class="list-inline-item">Language: ${langName}</li><li class="list-inline-item">Status: ${status}</li>`);
+
+                const previewModal = new bootstrap.Modal(document.getElementById('importPreviewModal'));
+                previewModal.show();
+            });
+
+        // Helper function to format value display
+        function formatValue(value, defaultText = 'N/A') {
+            if (value === null || value === undefined || value === '') return defaultText;
+            if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+            return value;
+        }
+
+        // Helper function to check if values are different
+        function isDifferent(val1, val2) {
+            if (val1 === val2) return false;
+            if ((val1 === null || val1 === undefined || val1 === '') &&
+                (val2 === null || val2 === undefined || val2 === '')) return false;
+            return String(val1).trim() !== String(val2).trim();
+        }
+
+        // On compare click, show comparison modal
+        $('#bookConflictTable tbody').on('click',
+            '.compare-btn',
+            function(e) {
+                e.preventDefault();
+                const tr = $(this).closest('tr');
+                const hasExisting = tr.data('has-existing') === true;
+
+                if (!hasExisting) {
+                    alert('No existing book data to compare');
+                    return;
+                }
+
+                const actionBtn = tr.find('.action-btn.active');
+                const action = actionBtn.length > 0 ? actionBtn.data('action') : 'None';
+
+                // Excel (imported) data
+                const excel = {
+                    title: tr.data('title') || '',
+                    authorName: tr.data('authorname') || '',
+                    description: tr.data('description') || '',
+                    publicationYear: tr.data('publicationyear') || '',
+                    language: tr.data('language') || '',
+                    status: tr.data('status') || '',
+                    categoryName: tr.data('categoryname') || '',
+                    cover: tr.data('coverimagelink') || tr.data('coverimagepath') || ''
+                };
+
+                // Database (existing) data
+                const db = {
+                    title: tr.data('existing-title') || '',
+                    authorName: tr.data('existing-authorname') || '',
+                    description: tr.data('existing-description') || '',
+                    publicationYear: tr.data('existing-publicationyear') || '',
+                    language: tr.data('existing-language') || '',
+                    status: tr.data('existing-status') || '',
+                    categoryName: tr.data('existing-categoryname') || '',
+                    cover: tr.data('existing-coverimagelink') || tr.data('existing-coverimagepath') || '',
+                    lastUpdated: tr.data('existing-lastupdated') || ''
+                };
+
+                // Build comparison rows
+                const fields = [
+                    { label: 'Title', dbKey: 'title', excelKey: 'title' },
+                    { label: 'Author Name', dbKey: 'authorName', excelKey: 'authorName' },
+                    { label: 'Description', dbKey: 'description', excelKey: 'description', isLong: true },
+                    { label: 'Publication Year', dbKey: 'publicationYear', excelKey: 'publicationYear' },
+                    { label: 'Language', dbKey: 'language', excelKey: 'language' },
+                    { label: 'Status', dbKey: 'status', excelKey: 'status' },
+                    { label: 'Category', dbKey: 'categoryName', excelKey: 'categoryName' },
+                    { label: 'Cover Image', dbKey: 'cover', excelKey: 'cover', isImage: true }
+                ];
+
+                let tbody = '';
+                fields.forEach(field => {
+                    const dbVal = db[field.dbKey];
+                    const excelVal = excel[field.excelKey];
+                    const different = isDifferent(dbVal, excelVal);
+                    const highlightClass = different ? 'table-danger' : '';
+
+                    if (field.isImage) {
+                        const dbImg = dbVal || '/images/Book/default-cover.webp';
+                        const excelImg = excelVal || '/images/Book/default-cover.webp';
+                        tbody += `
+                            <tr class="${highlightClass}">
+                                <td><strong>${field.label}</strong></td>
+                                <td><img src="${dbImg}" alt="DB Cover" style="max-width:80px;max-height:100px;" class="img-thumbnail" /></td>
+                                <td><img src="${excelImg}" alt="Excel Cover" style="max-width:80px;max-height:100px;" class="img-thumbnail" /></td>
+                            </tr>`;
+                    } else if (field.isLong) {
+                        tbody += `
+                            <tr class="${highlightClass}">
+                                <td><strong>${field.label}</strong></td>
+                                <td><div style="max-height:100px;overflow-y:auto;white-space:pre-wrap;">${formatValue(dbVal)}</div></td>
+                                <td><div style="max-height:100px;overflow-y:auto;white-space:pre-wrap;">${formatValue(excelVal)}</div></td>
+                            </tr>`;
+                    } else {
+                        tbody += `
+                            <tr class="${highlightClass}">
+                                <td><strong>${field.label}</strong></td>
+                                <td>${formatValue(dbVal)}</td>
+                                <td>${formatValue(excelVal)}</td>
+                            </tr>`;
+                    }
+                });
+
+                // Add last updated row
+                tbody += `
+                    <tr>
+                        <td><strong>Last Updated</strong></td>
+                        <td>${formatValue(db.lastUpdated)}</td>
+                        <td class="text-muted"><em>Will update on import</em></td>
+                    </tr>`;
+
+                $('#compareTableBody').html(tbody);
+
+                // Set action note
+                let actionNote = '';
+                switch (action) {
+                case 'Overwrite':
+                    actionNote = 'All database values will be <strong>replaced</strong> with Excel values.';
+                    break;
+                case 'Merge':
+                    actionNote = 'Empty database fields will be <strong>filled</strong> with Excel values. Existing database values will be <strong>kept</strong>.';
+                    break;
+                case 'Skip':
+                    actionNote = 'No changes will be made. Database values will remain unchanged.';
+                    break;
+                default:
+                    actionNote = 'Please select an action to see what will happen.';
+                }
+                $('#compareActionNote').html(actionNote);
+
+                const compareModal = new bootstrap.Modal(document.getElementById('compareModal'));
+                compareModal.show();
+            });
+
+        // Apply to all buttons - only apply to rows where the action button exists
+        $('#applyAllAdd').on('click',
+            function() {
+                $('#bookConflictTable tbody tr').each(function() {
+                    const addBtn = $(this).find('.action-btn[data-action="Add"]');
+                    if (addBtn.length > 0) {
+                        addBtn.click();
+                    }
+                });
+            });
+        $('#applyAllOverwrite').on('click',
+            function() {
+                $('#bookConflictTable tbody tr').each(function() {
+                    const overwriteBtn = $(this).find('.action-btn[data-action="Overwrite"]');
+                    if (overwriteBtn.length > 0) {
+                        overwriteBtn.click();
+                    }
+                });
+            });
+        $('#applyAllSkip').on('click',
+            function() {
+                $('#bookConflictTable tbody tr').each(function() {
+                    const skipBtn = $(this).find('.action-btn[data-action="Skip"]');
+                    if (skipBtn.length > 0) {
+                        skipBtn.click();
+                    }
+                });
+            });
+        $('#applyAllMerge').on('click',
+            function() {
+                $('#bookConflictTable tbody tr').each(function() {
+                    const mergeBtn = $(this).find('.action-btn[data-action="Merge"]');
+                    if (mergeBtn.length > 0) {
+                        mergeBtn.click();
+                    }
+                });
+            });
+
+        // Top confirm button proxies to the bottom confirm
+        $('#btnConfirmTop').on('click',
+            function() {
+                $('#btnConfirm').trigger('click');
+            });
+    });
+</script>
+
+<style>
+        /* Small improvements for import conflict UI */
+    .import-thumb {
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.12);
+    }
+
+    .btn-group .action-btn.active { color: #fff; }
+
+    .btn-group .action-btn.active[data-action="Add"] {
+        background-color: #198754;
+        border-color: #198754;
+    }
+
+    .btn-group .action-btn.active[data-action="Overwrite"] {
+        background-color: #d9534f;
+        border-color: #d43f3a;
+    }
+
+    .btn-group .action-btn.active[data-action="Skip"] {
+        background-color: #6c757d;
+        border-color: #6c757d;
+    }
+
+    .btn-group .action-btn.active[data-action="Merge"] {
+        background-color: #0d6efd;
+        border-color: #0b5ed7;
+    }
+
+    .pagination {
+        -moz-flex-wrap: nowrap !important;
+        -ms-flex-wrap: nowrap !important;
+        -o-flex-wrap: nowrap !important;
+        -webkit-flex-wrap: nowrap !important;
+        display: flex !important;
+        flex-wrap: nowrap !important;
+    }
+
+    /* Comparison styling */
+
+    .comparison-container {
+        align-items: center;
+        display: flex;
+        font-size: 0.875rem;
+        gap: 0.25rem;
+    }
+
+    .comparison-old {
+        color: #6c757d;
+        text-decoration: line-through;
+    }
+
+    .comparison-arrow {
+        color: #ffc107;
+        margin: 0 0.1rem;
+    }
+
+    .comparison-new {
+        color: #0d6efd;
+        font-weight: 600;
+    }
+
+    #bookConflictTable td { vertical-align: middle; }
+
+    #bookConflictTable .badge { font-size: 0.7rem; }
+</style>

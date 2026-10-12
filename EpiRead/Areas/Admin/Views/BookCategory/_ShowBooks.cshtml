@@ -1,0 +1,37 @@
+﻿@model BookCategoryShowVm
+
+<h4 class="mb-3">Books in this category</h4>
+@{
+    // Get the paginated books from view model (already filtered, sorted, and paginated by controller)
+    IPagedList<Book> pagedBooks = Model.PagedBooks;
+    string[] fields = ["Title", "Author Name", "Year", "Language", "Actions"];
+}
+
+<partial name="Table/_FilterFormPartial"/>
+<partial name="Table/_SearchBarPartial"/>
+<partial name="Table/_CountRecordPartial" model="@pagedBooks"/>
+
+<table class="table table-bordered table-sm">
+    <partial name="Table/_HeaderPartial" model="@fields"/>
+    <tbody>
+    @foreach (var book in pagedBooks)
+    {
+        <tr>
+            <td>@book.Title</td>
+            <td>@book.AuthorName</td>
+            <td>@book.PublicationYear?.Year</td>
+            <td>@LanguageHelper.GetLanguageName(book.LanguageCode)</td>
+            <td class="d-flex justify-content-center align-items-center gap-1">
+                <a asp-area="Admin" asp-controller="Book" asp-action="Show" asp-route-id="@book.Id" target="_blank" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-eye" aria-hidden="true"></i> View
+                </a>
+                <div class="popup">
+                    <partial name="Book/_PreviewImagePartial" model="book.CoverImageLink"/>
+                </div>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<partial name="Table/_FooterPartial" model="@pagedBooks"/>

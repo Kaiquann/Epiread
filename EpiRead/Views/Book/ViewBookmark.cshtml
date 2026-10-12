@@ -1,0 +1,45 @@
+﻿@model List<Bookmark>
+
+<style>
+    body {
+        background-color: #383D48;
+    }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.unobtrusive-ajax/3.2.6/jquery.unobtrusive-ajax.min.js"></script>
+
+<div class="container py-5" style="background-color: #383D48; min-height: 100vh;">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <div class="card bg-dark border-0 rounded-4 shadow-lg p-4">
+
+                <h2 class="text-light mb-4 fw-bold d-flex align-items-center">
+                    @{ var doc = Model?.FirstOrDefault()?.BookDocument; }
+                    @if (doc != null)
+                    {
+                        <form asp-controller="Book" asp-action="ReadBook" method="post" class="d-inline">
+                            <input type="hidden" name="documentId" value="@doc.Id" />
+                            <input type="hidden" name="documentFormat" value="@doc.FormatType" />
+                            <input type="hidden" name="currentPage" value="0" />
+                            <button type="submit" class="btn btn-outline-light btn-sm px-3 py-1 rounded-pill">
+                                <i class="fas fa-arrow-left me-2"></i> Back
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <a asp-controller="Book" asp-action="Index" class="btn btn-outline-light btn-sm px-3 py-1 rounded-pill">
+                            <i class="fas fa-arrow-left me-2"></i> Back
+                        </a>
+                    }
+                    <i class="fas fa-bookmark me-2 text-warning"></i> My Bookmarks
+                </h2>
+                <!--ajax partial-->
+                <div id="bookMark-section">
+                    <partial name="_BookmarkPartial" model="@Model" />
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

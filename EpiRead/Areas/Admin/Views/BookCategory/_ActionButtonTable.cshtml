@@ -1,0 +1,17 @@
+﻿@model BookCategory
+@{
+    bool isGeneral = IsGeneral(Model.Name, Model.Slug);
+}
+
+@if (!isGeneral)
+{
+    <form data-ajax="true"
+          data-ajax-update="#table-ajax"
+          action="/Admin/BookCategory/Delete?ids=@Model.Id"
+          method="post">
+        <button data-confirm="Are you certain you want to delete this book category? This action cannot be undone."
+                class="btn btn-danger btn-sm">
+            <i class="fas fa-trash" aria-hidden="true"></i> Delete
+        </button>
+    </form>
+}

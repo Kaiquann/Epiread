@@ -1,0 +1,284 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>@ViewBag.Title</title>
+
+    <!-- Icon -->
+    <link rel="website icon" type="jpg" href="/images/logo.webp"/>
+
+    <!-- Library Css -->
+    <!-- Bootstrap5 -->
+    <link rel="stylesheet" href="/lib/bootstrap/css/bootstrap.min.css" asp-append-version="true"/>
+
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="/lib/animatecss/animate.min.css" asp-append-version="true"/>
+
+    <!-- Font-Awesome -->
+    <link rel="stylesheet" href="/lib/fontawesome/css/all.min.css" asp-append-version="true"/>
+
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="/lib/sweetalert2/sweetalert2.min.css" asp-append-version="true"/>
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="/lib/bootstrap-icons/font/bootstrap-icons.min.css" asp-append-version="true"/>
+
+    <!-- DataTablesJS -->
+    <link rel="stylesheet" href="/lib/datatables/dataTables.bootstrap5.min.css" asp-append-version="true"/>
+
+    <!-- Quill -->
+    <link rel="stylesheet" href="/lib/quilljs/dist/quill.snow.min.css" asp-append-version="true"/>
+
+    <!-- PDF.JS -->
+    @* <link rel="stylesheet" href="/lib/pdfjs/pdf_viewer.css" asp-append-version="true"> *@
+
+    <!-- Own Css -->
+    <link rel="stylesheet" href="/css/app.css" asp-append-version="true"/>
+    <link rel="stylesheet" href="/css/pager.css" asp-append-version="true"/>
+    <link rel="stylesheet" href="~/@(Common.ProjectName).styles.css" asp-append-version="true"/>
+
+    @await RenderSectionAsync("head", false)
+</head>
+<body class="h-100 w-100">
+<style>
+    .container-fluid {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    /* Floating Chatbot Button */
+
+    .chatbot-float-btn {
+        align-items: center;
+        background: #0d6efd;
+        border: none;
+        border-radius: 50%;
+        bottom: 32px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        color: #fff;
+        cursor: pointer;
+        display: flex;
+        font-size: 2rem;
+        height: 60px;
+        justify-content: center;
+        position: fixed;
+        right: 32px;
+        transition: background 0.2s;
+        width: 60px;
+        z-index: 9999;
+    }
+
+    .chatbot-float-btn:hover {
+        background: #0b5ed7;
+        color: #fff;
+        text-decoration: none;
+    }
+
+    /* Floating Chatbot Message */
+
+    .chatbot-float-message {
+        background: #222;
+        border-radius: 16px;
+        bottom: 100px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        color: #fff;
+        font-size: 1rem;
+        max-width: 260px;
+        opacity: 0;
+        padding: 12px 20px;
+        pointer-events: none;
+        position: fixed;
+        right: 40px;
+        text-align: center;
+        transition: opacity 0.3s;
+        z-index: 10000;
+    }
+
+    .chatbot-float-message.show {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .navbar { background: #111; }
+
+    /* body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #383D48;
+            color: white;
+        } */
+
+    .nav-link.active { color: white; }
+
+    .nav-link:hover { color: red; }
+
+    .dropdown-menu {
+        background-color: white;
+        border: 1px solid #ddd;
+        border-radius: 0px;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        display: none;
+        left: auto !important;
+        margin-right: 0;
+        padding: 0.5rem 0;
+        position: absolute;
+        right: 0 !important;
+        z-index: 1000;
+    }
+
+    .dropdown-menu.show { display: block; }
+
+    .dropdownToggle { background-color: #DCDCDC; }
+
+    footer {
+        background: #111;
+        bottom: 0;
+        color: #777;
+        line-height: 30px;
+        padding: 5px;
+        position: fixed;
+        text-align: center;
+        width: 100%;
+    }
+
+/* html { background-color: #383D48; } */
+</style>
+
+<header>
+    @{
+        // Don't show the global loader on the Home/Index page — users reported
+        // the spinner overlay being visible on the homepage and we prefer a
+        // cleaner initial view. The loader is still used on other pages.
+        var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
+        var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? string.Empty;
+        var isHomeIndex = string.Equals(currentController, "Home", StringComparison.OrdinalIgnoreCase)
+                          && string.Equals(currentAction, "Index", StringComparison.OrdinalIgnoreCase);
+    }
+
+    @if (!isHomeIndex)
+    {
+        <div id="loader">
+            <div class="spinner"></div>
+        </div>
+    }
+
+    <div class="container-fluid">
+        <nav class="navbar navbar-expand-lg navbar-dark py-3">
+            <div class="container-fluid">
+                <a class="navbar-brand ms-5" asp-area="" asp-controller="Home" asp-action="Index" style="color: white">@Common.CompanyName</a>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link mx-3 my-2 @Html.IsActive("Home", "Index")" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link mx-3 my-2 @Html.IsActive("Home", "AboutUs")" asp-area="" asp-controller="Home" asp-action="AboutUs">About Us</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link mx-3 my-2 @Html.IsActive("Book", "Index")" asp-area="" asp-controller="Book" asp-action="Index">Book</a>
+                        </li>
+
+                        @if (User.HasAdminAccess())
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link mx-3 my-2 @Html.IsActive("User", "Index")" asp-area="Admin" asp-controller="User" asp-action="Index">Admin Dashboard</a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+
+                <div class="dropdown mx-4">
+                    <button id="dropdownToggle" class="dropdownToggle btn btn-light">
+                        <i class="bi bi-three-dots"></i>
+                    </button>
+                    <partial name="_LoginPartial"/>
+                </div>
+
+            </div>
+        </nav>
+    </div>
+</header>
+
+<div class="container-fluid">
+    <main role="main" class="pb-0">
+        @RenderBody()
+    </main>
+</div>
+
+<footer class="border-top text-muted" style="z-index: 1000">
+    <div class="container" style="color: white">
+        &copy; @DateTime.Today.Year - @Common.CompanyName
+    </div>
+</footer>
+
+<!-- Library Js -->
+<!-- jQuery -->
+<script src="/lib/jquery/jquery.min.js" asp-append-version="true"></script>
+<script src="/lib/jquery-validate/jquery.validate.min.js" asp-append-version="true"></script>
+<script src="/lib/jquery-ajax-unobtrusive/jquery.unobtrusive-ajax.min.js" asp-append-version="true"></script>
+<script src="/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js" asp-append-version="true"></script>
+
+<!-- Boostrap5 -->
+<script src="/lib/bootstrap/js/bootstrap.min.js" asp-append-version="true"></script>
+
+<!-- Font-Awesome -->
+<script src="/lib/fontawesome/js/all.min.js" asp-append-version="true"></script>
+
+<!-- SweetAlert2 -->
+<script src="/lib/sweetalert2/sweetalert2.all.min.js" asp-append-version="true"></script>
+
+<!-- jszip -->
+<script src="/lib/jszip/jszip.min.js" asp-append-version="true"></script>
+
+<!-- EpubJS -->
+<script src="/lib/epubjs/dist/epub.min.js" asp-append-version="true"></script>
+
+<!-- DataTablesJS -->
+<script src="/lib/datatables/dataTables.min.js" asp-append-version="true"></script>
+<script src="/lib/datatables/dataTables.bootstrap5.min.js" asp-append-version="true"></script>
+
+<!-- MarkdownJS -->
+<script src="/lib/markedjs/lib/marked.umd.js" asp-append-version="true"></script>
+
+<!-- DomPurifyJS -->
+<script src="/lib/dompurify/purify.min.js" asp-append-version="true"></script>
+
+<!-- CanvasJs -->
+<script src="/lib/canvasjs/canvasjs.min.js" asp-append-version="true"></script>
+
+<!-- PDF.JS -->
+<script src="/lib/pdfjs/pdf.min.mjs" asp-append-version="true" type="module"></script>
+
+<!-- PDF.JS (Mozilla) -->
+<script src="/lib/pdfjs-dist/build/pdf.mjs" asp-append-version="true" type="module"></script>
+<script src="/lib/pdfjs-dist/build/pdf.worker.mjs" asp-append-version="true" type="module"></script>
+
+<!-- HTML5-QRCode -->
+<script src="/lib/html5-qrcode/html5-qrcode.min.js" asp-append-version="true"></script>
+
+<!-- Quill -->
+<script src="/lib/quilljs/dist/quill.min.js" asp-append-version="true"></script>
+
+<!-- Turnstile -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" asp-append-version="true" async defer></script>
+
+<!-- Own Js -->
+<script src="/js/app.js" asp-append-version="true"></script>
+
+<partial name="_SweetAlert"/>
+<div id="ajax-sweetalert">
+    <partial name="_SweetAlert"/>
+</div>
+
+@await RenderSectionAsync("Scripts", false)
+
+<!-- Floating Chatbot Button and Message -->
+<partial name="_ChatbotButton"/>
+
+</body>
+</html>

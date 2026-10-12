@@ -1,0 +1,5 @@
+﻿@model IPagedList<dynamic>
+<p class="my-3">
+    @Model.Count() of @Model.TotalItemCount record(s) |
+    Page @Model.PageNumber of @Model.PageCount
+</p>

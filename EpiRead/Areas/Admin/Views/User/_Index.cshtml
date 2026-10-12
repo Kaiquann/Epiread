@@ -1,0 +1,76 @@
+﻿@model IPagedList<User>
+@{
+    string[] fields =
+    [
+        "", "Id", "FirstName", "LastName",
+        "Email", "Role", "Block Reason", "Actions"
+    ];
+}
+
+<partial name="_SweetAlert"/>
+
+<partial name="Table/_FilterFormPartial"/>
+<partial name="Table/_SearchBarPartial"/>
+<partial name="Table/_CountRecordPartial" model="@Model"/>
+
+<table class="table table-bordered table-sm">
+    <partial name="Table/_HeaderPartial" model="@fields"/>
+    <tbody>
+    @if (!Model.Any())
+    {
+        <tr>
+            <td colspan="@fields.Length" class="text-center">No records found.</td>
+        </tr>
+    }
+    else
+    {
+        @foreach (User user in Model)
+        {
+            <tr data-checkable>
+                <td>
+                    <input type="checkbox" name="ids" value="@user.Id" form="select-form" class="select-box"/>
+                </td>
+                <td>@user.Id</td>
+                <td>@user.FirstName</td>
+                <td>@user.LastName</td>
+                <td>@user.Email</td>
+                <td>@user.Role</td>
+                <td>@(string.IsNullOrEmpty(user.BlockReason) ? "N/A" : user.BlockReason)</td>
+                <td class="d-flex justify-content-center align-items-center gap-1">
+                    <a asp-area="Admin" asp-controller="User" asp-action="Show" asp-route-id="@user.Id" class="btn btn-secondary btn-sm" aria-label="View user">
+                        <i class="fas fa-eye" aria-hidden="true"></i> View
+                    </a>
+                    @if (!(User.IsInRole("Admin") && (user.Role == "Admin" || user.Role == "SuperAdmin")))
+                    {
+                        <a asp-area="Admin" asp-controller="User" asp-action="Edit" asp-route-id="@user.Id" class="btn btn-primary btn-sm" aria-label="Edit user">
+                            <i class="fas fa-edit" aria-hidden="true"></i> Edit
+                        </a>
+                    }
+                    else
+                    {
+                        <!-- Admins cannot edit other Admin/SuperAdmin - hide edit link -->
+                    }
+                    <partial name="_ActionButtonTable" model="@user"/>
+                    <div class="popup">
+                        <partial name="User/_PreviewImagePartial" model="user.ProfileImageLink"/>
+                    </div>
+                </td>
+            </tr>
+            @* Block reason modal will be rendered outside table to avoid being replaced during ajax updates *@
+        }
+    }
+    </tbody >
+</table>
+
+<partial name="Table/_FooterPartial" model="@Model"/>
+
+@* Render block modals outside of #table-ajax to prevent leftover backdrops after table replacement *@
+@foreach (User user in Model)
+{
+    @await Html.PartialAsync("_BlockReason", user, new ViewDataDictionary(ViewData)
+    {
+        { "BlockModalId", $"blockModal-{user.Id}" },
+        { "BlockUserId", user.Id.ToString() },
+        { "BlockAjaxUpdateSelector", "#table-ajax" }
+    })
+}

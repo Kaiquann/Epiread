@@ -1,0 +1,216 @@
+@model DiscussionShowVm
+@{
+    ViewBag.Title = Model.Discussion?.Title ?? "Forum Details";
+}
+
+<partial name="_SweetAlert"/>
+
+<section>
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-lg border-0 mb-4" style="background: #fff; border: 1px solid #e6e6e6; border-radius: 18px; color: #212529;">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <h2 id="forumTitle" class="fw-bold mb-0 text-info text-center flex-grow-1" style="font-size: 2rem;">@ViewBag.Title</h2>
+                            <button id="editForumBtn" class="btn btn-outline-info ms-3" type="button" title="Edit Forum Details">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </div>
+                        <div id="forumDetailsView">
+                            @await Html.PartialAsync("_ForumDetailsView", Model.Discussion)
+                        </div>
+                        <div id="forumDetailsEdit" style="display: none;">
+                            @await Html.PartialAsync("_ForumDetailsEdit", new EditDiscussionVm { Id = Model?.Discussion?.Id ?? 0, Title = Model?.Discussion?.Title ?? string.Empty, Description = Model?.Discussion?.Description })
+                        </div>
+                        <hr style="border-top: 1.5px solid #353945; margin: 1.5rem 0 0.5rem 0;"/>
+                        <div id="forumActionsView">
+                            @await Html.PartialAsync("_ForumActions")
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container my-5">
+        <div class="justify-content-center">
+            <!-- Search Bar -->
+            <div class="mb-4">
+                <form data-ajax="true"
+                      data-ajax-update="#table-ajax"
+                      id="search-form"
+                      class="d-flex mb-3 align-items-center"
+                      method="get"
+                      asp-area="Admin"
+                      asp-controller="Discussion"
+                      asp-action="Post"
+                      asp-route-id="@ViewBag.ForumId">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-search" aria-hidden="true"></i>
+                        </span>
+                        <input type="search" id="search" name="search" value="@(ViewBag.Search ?? string.Empty)" class="form-control" placeholder="Search posts by title or content..." aria-label="Search posts" style="width: auto;"/>
+                        <button type="submit" class="btn btn-outline-primary" style="height: auto;">
+                            <i class="fas fa-search" aria-hidden="true"></i> Search
+                        </button>
+                        @if (!string.IsNullOrEmpty(ViewBag.Search))
+                        {
+                            <a class="btn btn-outline-secondary" asp-area="Admin" asp-controller="Discussion" asp-action="Post" asp-route-id="@ViewBag.ForumId" style="height: auto;">
+                                <i class="fas fa-times" aria-hidden="true"></i> Clear
+                            </a>
+                        }
+                    </div>
+                </form>
+            </div>
+            <div id="table-ajax">
+                @await Html.PartialAsync("_Posts", Model?.Posts)
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    document.addEventListener('DOMContentLoaded',
+        function() {
+            const editBtn = document.getElementById('editForumBtn');
+            var detailsView = document.getElementById('forumDetailsView');
+            var detailsEdit = document.getElementById('forumDetailsEdit');
+            var actionsView = document.getElementById('forumActionsView');
+            editBtn.addEventListener('click',
+                function() {
+                    detailsView.style.display = 'none';
+                    detailsEdit.style.display = '';
+                    actionsView.style.display = 'none';
+                });
+            document.getElementById('cancelEditForumBtn').addEventListener('click',
+                function() {
+                    detailsView.style.display = '';
+                    detailsEdit.style.display = 'none';
+                    actionsView.style.display = '';
+                });
+
+            // When the unobtrusive-ajax form posts successfully it will replace #forumDetailsView.
+            // After that replacement we toggle the edit UI back to view mode.
+            $(document).on('ajaxSuccess',
+                function(event, xhr, settings) {
+                    try {
+                        // Only respond to the Edit endpoint responses (safeguard)
+                        if (!settings || !settings.url) return;
+
+                        const url = settings.url.toLowerCase();
+
+                        // If this was the Edit endpoint, toggle UI back to view and update title
+                        if (url.indexOf('/admin/discussion/edit') !== -1) {
+                            // Toggle UI back to view
+                            detailsView.style.display = '';
+                            detailsEdit.style.display = 'none';
+                            actionsView.style.display = '';
+
+                            // Update header title from the replaced partial (if present)
+                            const newTitleEl = document.querySelector('#forumDetailsView h3, #forumDetailsView h2');
+                            if (newTitleEl) {
+                                document.getElementById('forumTitle').textContent = newTitleEl.textContent || document.getElementById('forumTitle').textContent;
+                            }
+                        }
+
+                        // If this was a moderation action performed via AJAX (trash/ban/delete), ensure any open modal is closed
+                        // and the backdrop is removed to avoid lingering "modal-backdrop fade show" elements.
+                        if (url.indexOf('/admin/discussion/trashpost') !== -1 || url.indexOf('/admin/discussion/banpost') !== -1 || url.indexOf('/admin/discussion/deletepost') !== -1) {
+                            try {
+                                // Use setTimeout to ensure modal animation completes before cleanup
+                                setTimeout(function() {
+                                        // Prefer Bootstrap 5 API if available
+                                        if (window.bootstrap && typeof window.bootstrap.Modal === 'function') {
+                                            document.querySelectorAll('.modal.show, .modal').forEach(function(m) {
+                                                try {
+                                                    const instance = window.bootstrap.Modal.getInstance(m);
+                                                    if (instance) {
+                                                        instance.hide();
+                                                        instance.dispose();
+                                                    } else {
+                                                        m.classList.remove('show', 'fade');
+                                                        m.style.display = 'none';
+                                                        m.setAttribute('aria-hidden', 'true');
+                                                        m.removeAttribute('aria-modal');
+                                                    }
+                                                } catch (e) { /* ignore */
+                                                }
+                                            });
+                                        } else {
+                                            // Fallback: hide modals via jQuery if available
+                                            if (window.jQuery) {
+                                                try {
+                                                    $('.modal').modal('hide').modal('dispose');
+                                                } catch (e) { /* ignore */
+                                                }
+                                            }
+                                            // Final DOM-level cleanup if plugins aren't present or failed
+                                            document.querySelectorAll('.modal.show, .modal').forEach(function(m) {
+                                                m.classList.remove('show', 'fade');
+                                                m.style.display = 'none';
+                                                m.setAttribute('aria-hidden', 'true');
+                                                m.removeAttribute('aria-modal');
+                                            });
+                                        }
+
+                                        // Remove any remaining backdrops and restore body state
+                                        document.querySelectorAll('.modal-backdrop').forEach(function(b) {
+                                            if (b.parentNode) {
+                                                b.parentNode.removeChild(b);
+                                            }
+                                        });
+
+                                        // Restore body state
+                                        document.body.classList.remove('modal-open');
+                                        document.body.style.overflow = '';
+                                        document.body.style.paddingRight = '';
+
+                                        // Force a reflow to ensure styles are applied
+                                        document.body.offsetHeight;
+                                    },
+                                    150);
+                            } catch (err) {
+                                console.error('Error cleaning up modal/backdrop after AJAX moderation action', err);
+                            }
+                        }
+                        // Additional UX helpers for ban modal: focus textarea when opened and disable submit on submit
+                        try {
+                            // Focus ban textarea when shown
+                            document.querySelectorAll('[id^="banModal-"]').forEach(function(modalEl) {
+                                modalEl.addEventListener('shown.bs.modal',
+                                    function(e) {
+                                        try {
+                                            const ta = modalEl.querySelector('textarea');
+                                            if (ta) ta.focus();
+                                        } catch (e) { /* ignore */
+                                        }
+                                    });
+                            });
+
+                            // Disable submit buttons on AJAX form submit to prevent double submits
+                            document.addEventListener('submit',
+                                function(e) {
+                                    try {
+                                        const form = e.target;
+                                        if (!form) return;
+                                        const action = (form.getAttribute('action') || '').toLowerCase();
+                                        // Target moderation forms: banpost, trashpost, deletepost, recoverpost, unbanpost
+                                        if (action.indexOf('banpost') !== -1 || action.indexOf('trashpost') !== -1 || action.indexOf('deletepost') !== -1 || action.indexOf('recoverpost') !== -1 || action.indexOf('unbanpost') !== -1 || (form.getAttribute('data-ajax') === 'true' && form.querySelector('input[name="id"], input[name="ids"]'))) {
+                                            const btns = form.querySelectorAll('button[type="submit"]');
+                                            btns.forEach(function(b) {
+                                                b.disabled = true;
+                                                b.dataset._disabled = '1';
+                                            });
+                                        }
+                                    } catch (err) { /* ignore */
+                                    }
+                                },
+                                true);
+                        } catch (err) { /* ignore */
+                        }
+                    } catch (err) {
+                        console.error('Error handling ajaxSuccess for forum edit', err);
+                    }
+                });
+        });
+</script>

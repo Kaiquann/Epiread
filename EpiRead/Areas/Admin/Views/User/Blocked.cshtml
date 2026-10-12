@@ -1,0 +1,44 @@
+﻿@model IPagedList<User>
+@{
+    ViewBag.Title = "Manage Blocked Users";
+}
+
+<section>
+    <div class="container my-5">
+        <h2 class="text-center mb-4">@ViewBag.Title</h2>
+
+        <div class="d-flex justify-content-start align-items-center mb-3 gap-1">
+            <a asp-controller="User" asp-action="Index" class="btn btn-secondary d-flex align-items-center">
+                <i class="fas fa-arrow-left" aria-hidden="true"></i> Go Back
+            </a>
+        </div>
+
+        <div class="d-flex justify-content-start align-items-center mb-3 gap-1">
+            <i class="fas fa-tasks" aria-hidden="true"></i> <b>Bulk Actions</b>
+            <button type="button"
+                    data-ajax="true"
+                    data-ajax-update="#table-ajax"
+                    data-message="Are you sure to unblock all the selected users?"
+                    data-action="/Admin/User/Unblock"
+                    class="select-submit-btn btn btn-warning"
+                    form="select-form">
+                <i class="fas fa-unlock" aria-hidden="true"></i> Unblock
+            </button>
+            <button type="button"
+                    data-ajax="true"
+                    data-ajax-update="#table-ajax"
+                    data-message="Are you sure to deactivate all the selected users?"
+                    data-action="/Admin/User/Deactivate"
+                    class="select-submit-btn btn btn-danger"
+                    form="select-form">
+                <i class="fas fa-user-slash" aria-hidden="true"></i> Deactivate
+            </button>
+        </div>
+
+        <partial name="_FilterBar"/>
+
+        <div id="table-ajax">
+            <partial name="_Index"/>
+        </div>
+    </div>
+</section>

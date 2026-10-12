@@ -1,0 +1,28 @@
+﻿@model LoginMfaVm;
+@inject ICfCaptchaHelper CfCaptchaHelper
+@{
+    ViewBag.Title = "Login MFA";
+}
+
+<section>
+    <div class="container my-5">
+        <h2 class="text-center mb-4">@ViewBag.Title</h2>
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl"/>
+            <div class="mb-3">
+                <label asp-for="Code" class="form-label"></label>
+                <input asp-for="Code" class="form-control"/>
+                <span asp-validation-for="Code" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <button type="submit" class="btn btn-success w-100 p-2" data-confirm>
+                    <i class="fas fa-check" aria-hidden="true"></i> Verify
+                </button>
+            </div>
+            <div class="mb-3">
+                @CfCaptchaHelper.GetCaptchaHtml()
+            </div>
+        </form>
+    </div>
+</section>

@@ -1,0 +1,29 @@
+# Visual Studio / .NET build output
+**/bin/
+**/obj/
+.vs/
+*.user
+*.suo
+
+# Runtime output
+**/Logs/
+**/logs/
+
+# Local configuration containing credentials
+EpiRead/appsettings.json
+EpiRead/appsettings.Development.json
+DB/SuperAdmin.txt
+run_sql_scripts.bat
+run_sql_scripts.sh
+
+# Local database/tool state
+.config/dotnet-tools.json
+
+# Large generated test exports
+TestData/Books/*.zip
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

@@ -1,0 +1,60 @@
+﻿@model BookVm
+
+
+<div class="book-rating text-warning fs-5 mb-3">
+    @for (int star = 1; star <= 5; star++)
+    {
+        if (star <= Math.Floor(Model.AverageRating))
+        {
+            <i class="fas fa-star"></i>
+        }
+        else if (star == Math.Ceiling(Model.AverageRating) && Model.AverageRating % 1 != 0)
+        {
+            <i class="fas fa-star-half-alt"></i>
+        }
+        else
+        {
+            <i class="far fa-star"></i>
+        }
+    }
+    <span class="text-secondary ms-2">(@Model.AverageRating.ToString("0.0")/5)</span>
+</div>
+
+<!-- Allow User Rating -->
+@if (Model.CanRate)
+{
+    <form asp-action="SubmitRating" asp-controller="Book" method="post" class="mt-4 p-4 rating-box shadow-sm">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="bookId" value="@Model.Id" />
+
+        <h6 class="text-info fw-semibold mb-3">
+            <i class="fas fa-star me-2 text-warning"></i> Your Rating
+        </h6>
+
+        <div class="rating-input mb-3">
+            @for (int i = 5; i >= 1; i--)
+            {
+                <input type="radio"
+                       name="ratingValue"
+                       id="star-@i"
+                       value="@i"
+                       @(Model.UserRatingValue == i ? "checked" : "") />
+                <label for="star-@i">&#9733;</label>
+            }
+        </div>
+
+        <div class="text-end">
+            <button type="submit" class="btn btn-outline-info px-4 py-1 fw-semibold rounded-pill">
+                Submit Rating
+            </button>
+        </div>
+    </form>
+}
+else
+{
+    <div class="rating-box mt-4 p-4 text-center shadow-sm">
+        <p class="text-secondary fst-italic m-0">
+            You can rate this book after reading it.
+        </p>
+    </div>
+}

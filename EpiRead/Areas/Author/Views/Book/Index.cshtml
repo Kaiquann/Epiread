@@ -1,0 +1,58 @@
+@model IPagedList<Book>
+@{
+    ViewBag.Title = "My Books";
+}
+
+<section>
+    <div class="container my-5">
+        <h2 class="text-center mb-4">@ViewBag.Title</h2>
+
+        <div class="d-flex justify-content-start align-items-center mb-3 gap-1">
+            <a asp-area="Author" asp-controller="Book" asp-action="Create" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Create
+            </a>
+            <a asp-area="Author" asp-controller="Book" asp-action="Trash" class="btn btn-secondary">
+                <i class="fas fa-trash"></i> Trashed
+            </a>
+        </div>
+
+        <!-- Filter & Search (AJAX) -->
+        <form id="filter-form" class="mb-3" data-ajax="true" data-ajax-update="#table-ajax" asp-area="Author" asp-controller="Book" asp-action="Index" method="get" role="search">
+            <div class="row g-2 align-items-center">
+                <div class="col-auto">
+                    <input type="search" name="q" value="@(ViewBag.Q ?? string.Empty)" class="form-control" placeholder="Search title, author or description" aria-label="Search"/>
+                </div>
+                <div class="col-auto">
+                    <select name="filter" class="form-select" aria-label="Filter">
+                        <option value="">All</option>
+                        <optgroup label="By Category">
+                            @if (ViewBag.BookCategories is IEnumerable<BookCategory> bookCategories)
+                            {
+                                foreach (var c in bookCategories)
+                                {
+                                    <option value="C:@(c.Id)" selected="@((ViewBag.Filter ?? string.Empty) == $"C:{c.Id}")">@c.Name</option>
+                                }
+                            }
+                        </optgroup>
+                        <optgroup label="By Language">
+                            @if (ViewBag.Languages is SelectList languages)
+                            {
+                                foreach (SelectListItem item in languages)
+                                {
+                                    <option value="L:@(item.Value)" selected="@((ViewBag.Filter ?? string.Empty) == $"L:{item.Value}")">@item.Text</option>
+                                }
+                            }
+                        </optgroup>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-outline-primary">Apply</button>
+                </div>
+            </div>
+        </form>
+
+        <div id="table-ajax">
+            <partial name="_Index" model="Model"/>
+        </div>
+    </div>
+</section>

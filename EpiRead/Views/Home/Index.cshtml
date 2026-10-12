@@ -1,0 +1,429 @@
+﻿@model HomeVm
+@{
+    ViewBag.Title = "Welcome to " + Common.CompanyName;
+}
+<style>
+    body {
+        background-color: #383D48;
+        color: white;
+    }
+
+    .hero {
+        align-items: center;
+        background: linear-gradient(135deg, #546063, #2e55b3);
+        display: flex;
+        justify-content: space-between;
+        padding: 100px 10%;
+    }
+
+    .hero-text h1 {
+        color: #fff;
+        font-size: 3rem;
+        font-weight: bold;
+    }
+
+    .hero-text p {
+        color: #ccc;
+        font-size: 1.2rem;
+        margin: 20px 0;
+    }
+
+    .hero-text .btn {
+        background: #6c63ff;
+        border-radius: 25px;
+        color: #fff;
+        font-weight: bold;
+        padding: 12px 30px;
+    }
+
+    .slider {
+        border-radius: 10px;
+        height: 400px;
+        overflow: hidden;
+        position: relative;
+        width: 300px;
+    }
+
+    .slider img {
+        height: 100%;
+        left: 0;
+        object-fit: cover;
+        position: absolute;
+        top: 0;
+        transition: opacity 0.5s ease-in-out;
+        width: 100%;
+    }
+
+    /* Book category image sizing */
+    .bookCategory img {
+        height: 220px;
+        width: 150px;
+        object-fit: cover;
+    }
+
+    .bookCategory {
+        box-shadow: 0 4px 6px rgba(255 255 255 / 10%);
+    }
+
+
+    /*features box*/
+    .features {
+        padding: 80px 10%;
+        text-align: center;
+    }
+
+    .feature-box {
+        background: #1c1c1c;
+        border-radius: 10px;
+        padding: 30px;
+        transition: 0.3s;
+    }
+
+    .feature-box:hover {
+        background: #292929;
+        transform: translateY(-5px);
+    }
+
+
+    < !--Treding book-->.trending-books {
+        background: #1a1a1a;
+        color: #fff;
+    }
+
+    .book-carousel {
+        align-items: center;
+        display: flex;
+        justify-content: center;
+        position: relative;
+        width: 100%;
+    }
+
+    .carousel-wrapper {
+        margin: 0 auto;
+        overflow: hidden;
+        position: relative;
+        width: 80%;
+    }
+
+    .carousel-track {
+        display: flex;
+        overflow-x: scroll;
+        scroll-behavior: smooth;
+        scrollbar-width: none;
+    }
+
+    .carousel-track::-webkit-scrollbar {
+        display: none;
+    }
+
+    .book-item {
+        flex: 0 0 250px;
+        margin: 0 10px;
+        text-align: center;
+    }
+
+    .book-item img {
+        border-radius: 8px;
+        height: 320px;
+        object-fit: cover;
+        width: 100%;
+    }
+
+    .carousel-btn {
+        background-color: rgba(0, 0, 0, 0.5);
+        border: none;
+        border-radius: 50%;
+        color: white;
+        cursor: pointer;
+        font-size: 2rem;
+        padding: 10px;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        transition: background 0.3s;
+        z-index: 10;
+    }
+
+    .carousel-btn:hover {
+        background-color: rgba(0, 0, 0, 0.8);
+    }
+
+    .left-btn {
+        left: 10px;
+    }
+
+    .right-btn {
+        right: 10px;
+    }
+
+
+    .newsletter {
+        background: #141414;
+        padding: 60px 10%;
+        text-align: center;
+    }
+
+    .newsletter input {
+        margin: auto;
+        max-width: 400px;
+    }
+
+    .card {
+        height: 558px;
+    }
+
+    .card-image {
+        min-height: 414px;
+    }
+
+    .card img {
+        height: 100%;
+        object-fit: cover;
+        width: 100%;
+    }
+
+    .card-body {
+        background-color: #272323;
+        min-height: 170px;
+    }
+
+    /* Personalized summary removed - recommendations only */
+
+    /* Recommended cards layout */
+    .recommended-cards {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding: 20px 10px;
+    }
+
+    .rec-card {
+        flex: 0 0 200px;
+        /* fixed card width */
+        max-width: 200px;
+    }
+
+    .rec-card .card-image img {
+        height: 320px;
+        object-fit: cover;
+        width: 100%;
+    }
+
+    .rec-card .card-body {
+        min-height: 110px;
+        overflow: hidden;
+    }
+
+    /* Small screens: allow wrapping */
+    @@media (max-width: 768px) {
+        .recommended-cards {
+            flex-wrap: nowrap;
+        }
+
+        .rec-card {
+            flex: 0 0 160px;
+            max-width: 160px;
+        }
+
+        .rec-card .card-image img {
+            height: 240px;
+        }
+    }
+</style>
+
+<!-- Top session -->
+<section class="hero">
+    <div class="hero-text">
+        <h1>Discover Your Next Favorite Book</h1>
+        <p>Explore AI-powered recommendations, track your progress, and join an amazing reading community.</p>
+        <a asp-area="" asp-controller="Book" asp-action="Index" class="btn">Get Started</a>
+    </div>
+    <div id="book-slider" class="slider">
+        @foreach (var book in Model.TrendingBooks.Take(4)) //swap image every 2 seconds
+        {
+            var imgSrc = string.IsNullOrWhiteSpace(book.CoverImageLink) ? "/images/book-cover-not-available.webp" :
+            book.CoverImageLink;
+            <a asp-area="" asp-controller="Book" asp-action="BookDetails" asp-route-id="@book.Id">
+                <img src="@imgSrc" alt="@book.Title" class="slide" style="display: block;" loading="lazy">
+            </a>
+        }
+    </div>
+</section>
+
+<!-- Book Categories Section -->
+<section class="py-3 text-center">
+    <div class="row justify-content-between m-3">
+        @{
+            var books = new[] { Model.NewReleases?.FirstOrDefault(), Model.MostLiked?.FirstOrDefault(), Model.TopRated?.FirstOrDefault() };
+            var bgColors = new[] { "rgb(101 116 150)", "#363b3b", "rgb(141 78 78)" };
+            var btnColors = new[] { "#5d608b", "#4a4a4a", "#a86d6d" };
+            var titles = new[] { "New Release.", "Most people like.", "Top Rated." };
+
+            var panels = new List<(Book Book, string Title, string Bg, string Btn)>();
+            for (int i = 0; i < books.Length; i++)
+            {
+                if (books[i] != null)
+                    panels.Add((books[i], titles[i], bgColors[i], btnColors[i]));
+            }
+        }
+
+        @foreach (var panel in panels)
+        {
+            var book = panel.Book;
+            var bg = panel.Bg;
+            var btn = panel.Btn;
+            var imgSrc = string.IsNullOrWhiteSpace(book.CoverImageLink) ? "/images/book-cover-not-available.webp" : book.CoverImageLink;
+
+            <div class="bookCategory col-3 mx-3 row" style="background-color: @bg; width: 25%;">
+                <!-- Text Section -->
+                <div class="col-6 align-self-end my-5">
+                    <h2 class="mx-4">@panel.Title</h2>
+                    <button class="text-white px-4 py-2 rounded border-0" style="background-color: @btn;">
+                        <a asp-area="" asp-controller="Book" asp-action="BookDetails" asp-route-id="@book.Id" class="btn">Read me</a>
+                    </button>
+                </div>
+
+                <!-- Image Section -->
+                <div class="justify-center col-6">
+                    <a asp-area="" asp-controller="Book" asp-action="BookDetails" asp-route-id="@book.Id">
+                        <img src="@imgSrc" alt="@book.Title" class="my-3" style="display: block;" loading="lazy">
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
+</section>
+
+
+<section class="features mx-4">
+    <div class="features-title text-center m-3">
+        <h2 class="text-align-center m-2">What You Will Get</h2>
+    </div>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="feature-box">
+                <h4>Smart Search</h4>
+                <p>Find books easily with AI-driven semantic search.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-box">
+                <h4>Personalized Recommendations</h4>
+                <p>Get tailored suggestions based on your reading habits.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-box">
+                <h4>Community Interaction</h4>
+                <p>Join forums, share ideas, and connect with other readers.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- AJAX placeholders for sections (loaded async to make initial page fast) -->
+<div id="trending-container" class="my-4"> <!-- trending partial will be loaded here -->
+    <div class="text-center text-muted p-3">Loading trending books…</div>
+</div>
+
+<div id="recommend-container"> <!-- recommend partial will be loaded here -->
+    <div class="text-center text-muted p-3">Loading recommendations…</div>
+</div>
+
+<div id="similar-container"> <!-- similar partial will be loaded here -->
+    <div class="text-center text-muted p-3">Loading similar books…</div>
+</div>
+
+<!-- Newsletter -->
+<section class="newsletter text-center py-5">
+    <h2>Get Instant Access to the Full eBook Package</h2>
+    <p>Sign up to get updates and exclusive content.</p>
+
+    @if (User.IsLoggedIn())
+    {
+
+        <p class="mt-3">Welcome back, <strong>@TempData["Username"]</strong>! 🎉</p>
+        <button type="button" class="btn btn-success w-25 mb-3"
+            onclick="window.location.href='@Url.Action("Index", "Book")'">
+            Browse eBooks
+        </button>
+    }
+    else
+    {
+        <button type="button" class="btn login-btn w-25 mb-3 btn-primary"
+            onclick="window.location.href='@Url.Action("Index", "Register")'">
+            Sign Up
+        </button>
+        <p>
+            Already have an account?
+            <a href="@Url.Action("Index", "Login")" class="text-light text-decoration-underline">
+                Log in here
+            </a>.
+        </p>
+    }
+</section>
+
+@section Scripts {
+    <script>
+        //for the image swap
+        let index = 0;
+        const slides = document.querySelectorAll('.slide');
+        if (slides.length > 0) {
+            slides[0].style.display = 'block';
+
+            setInterval(() => {
+                slides[index].style.display = 'none';
+                index = (index + 1) % slides.length;
+                slides[index].style.display = 'block';
+            },
+                2000);
+        }
+
+        $(document).ready(function () {
+            // carousel navigation uses delegated events so partials loaded later are handled
+            const scrollAmount = 300; // distance to move each time
+
+            $(document).on('click', '.right-btn', function () {
+                const $carousel = $(this).closest('.book-carousel');
+                const $track = $carousel.find('.carousel-track');
+                $track.animate({ scrollLeft: `+=${scrollAmount}` }, 400);
+            });
+
+            $(document).on('click', '.left-btn', function () {
+                const $carousel = $(this).closest('.book-carousel');
+                const $track = $carousel.find('.carousel-track');
+                $track.animate({ scrollLeft: `-=${scrollAmount}` }, 400);
+            });
+
+            // Load the three expensive sections asynchronously so the initial page is fast
+            // Trending
+            $.get('@Url.Action("GetTrending", "Home")')
+                .done(function (html) {
+                    // Only insert HTML if the response is not empty/whitespace
+                    if ($.trim(html).length > 0) $('#trending-container').html(html);
+                    else $('#trending-container').empty();
+                })
+                .fail(function () { $('#trending-container').empty(); });
+
+            // Recommended (personalized)
+            $.get('@Url.Action("GetRecommend", "Home")')
+                .done(function (html) {
+                    if ($.trim(html).length > 0) $('#recommend-container').html(html);
+                    else $('#recommend-container').empty();
+                })
+                .fail(function () { $('#recommend-container').empty(); });
+
+            // Similar
+            $.get('@Url.Action("GetSimiliar", "Home")')
+                .done(function (html) {
+                    if ($.trim(html).length > 0) $('#similar-container').html(html);
+                    else $('#similar-container').empty();
+                })
+                .fail(function () { $('#similar-container').empty(); });
+        });
+
+    </script>
+}

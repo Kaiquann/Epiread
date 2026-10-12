@@ -1,0 +1,248 @@
+﻿@model RegisterVm;
+@inject ICfCaptchaHelper CfCaptchaHelper
+@{
+    ViewBag.Title = "Register";
+}
+
+<section>
+    <div class="container-fluid login-bg d-flex align-items-center justify-content-center min-vh-100">
+        <div class="login-card row w-100 align-items-stretch shadow-lg overflow-hidden m-4" style="border-radius: 24px; max-width: 900px; min-height: 520px;">
+            <!-- Left: Welcome/Brand -->
+            <div class="col-md-6 d-none d-md-flex flex-column justify-content-center align-items-center login-left px-4 py-5">
+                <div class="mb-4">
+                    <img src="/images/logo_transparent.webp" alt="Logo" loading="lazy" style="background: #292c36; border-radius: 50%; height: 96px; width: 96px;"/>
+                </div>
+                <h1 class="fw-bold mb-3" style="color: #fff; font-size: 2.2rem;">Join EpiRead!</h1>
+                <p class="mb-0" style="color: #b0b0b0; font-size: 1.08rem; max-width: 320px;">Create your free account and start your reading journey with us.</p>
+            </div>
+            <!-- Right: Register Form -->
+            <div class="col-md-6 bg-dark d-flex flex-column justify-content-center align-items-center px-4 py-5">
+                <div class="w-100" style="max-width: 340px;">
+                    <h2 class="fw-bold mb-4 text-center" style="color: #fff;">Sign Up</h2>
+                    <form asp-action="Index" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        <div class="row">
+                            <div class="col-12 col-md-6 mb-4 mb-md-0">
+                                <label asp-for="FirstName" class="form-label login-label"></label>
+                                <input asp-for="FirstName" class="form-control login-input" data-trim/>
+                                <span asp-validation-for="FirstName" class="text-danger"></span>
+                            </div>
+                            <div class="col-12 col-md-6 mb-4 mb-md-0">
+                                <label asp-for="LastName" class="form-label login-label"></label>
+                                <input asp-for="LastName" class="form-control login-input" data-trim/>
+                                <span asp-validation-for="LastName" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label asp-for="Username" class="form-label login-label"></label>
+                            <input asp-for="Username" class="form-control login-input" data-trim/>
+                            <span asp-validation-for="Username" class="text-danger"></span>
+                        </div>
+                        <div class="mb-4">
+                            <label asp-for="Email" class="form-label login-label"></label>
+                            <input asp-for="Email" class="form-control login-input" data-trim/>
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                        <div class="mb-4 position-relative input-with-icon">
+                            <label asp-for="Password" class="form-label login-label"></label>
+                            <div class="position-relative">
+                                <input asp-for="Password" type="password" class="form-control login-input pe-5" id="Password" data-trim autocomplete="new-password" />
+                                <button type="button" class="toggle-password btn icon-btn" data-target="#Password" aria-label="Show password" title="Show password" tabindex="0">
+                                    <i class="fa fa-eye"></i>
+                                </button>
+                            </div>
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-4 position-relative input-with-icon">
+                            <label asp-for="ConfirmPassword" class="form-label login-label"></label>
+                            <div class="position-relative">
+                                <input asp-for="ConfirmPassword" type="password" class="form-control login-input pe-5" id="ConfirmPassword" data-trim autocomplete="new-password" />
+                                <button type="button" class="toggle-password btn icon-btn" data-target="#ConfirmPassword" aria-label="Show confirm password" title="Show confirm password" tabindex="0">
+                                    <i class="fa fa-eye"></i>
+                                </button>
+                            </div>
+                            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                        </div>
+
+                        <button type="submit" class="btn btn-success login-btn w-100 mb-2" data-confirm>Register</button>
+                        <button type="button" class="btn btn-outline-light login-btn w-100 mb-3" onclick="window.location.href = '@Url.Action("Index", "Login")'">Login</button>
+                        @CfCaptchaHelper.GetCaptchaHtml()
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    body {
+        background: #23262F !important;
+        margin-bottom: 20px;
+        padding: 0;
+    }
+
+    .login-bg {
+        background: linear-gradient(120deg, #23262F 0%, #383D48 100%);
+        min-height: 100vh;
+        min-height: 100dvh;
+        overflow: hidden;
+        position: relative;
+        width: 100vw;
+    }
+
+    .login-bg::before {
+        background: radial-gradient(circle at 20% 30%, #6c63ff33 0%, transparent 60%),
+                    radial-gradient(circle at 80% 70%, #4be37a22 0%, transparent 70%),
+                    radial-gradient(circle at 60% 10%, #6c63ff22 0%, transparent 70%);
+        bottom: 0;
+        content: '';
+        left: 0;
+        position: absolute;
+        right: 0;
+        top: 0;
+        z-index: 0;
+    }
+
+    .login-card {
+        background: transparent;
+        border-radius: 24px;
+        box-shadow: 0 4px 32px 0 rgba(44, 48, 60, 0.18);
+        overflow: hidden;
+        position: relative;
+        z-index: 1;
+    }
+
+    .login-left {
+        align-items: flex-start;
+        background: linear-gradient(135deg, #6c63ff 0%, #23262F 100%);
+        border-bottom-left-radius: 24px;
+        border-top-left-radius: 24px;
+        color: #fff;
+        justify-content: center;
+        min-height: 520px;
+        overflow: hidden;
+        position: relative;
+        text-align: left;
+        z-index: 2;
+    }
+
+    .login-label {
+        color: #b0b0b0;
+        font-size: 1rem;
+        font-weight: 500;
+    }
+
+    .login-input {
+        background: transparent;
+        border: 2px solid #6c63ff;
+        border-radius: 8px;
+        box-shadow: none;
+        color: #fff;
+        font-size: 1.08rem;
+        outline: none;
+        padding: 0.7rem 1rem;
+        transition: border 0.2s;
+    }
+
+    .login-input:focus {
+        background: transparent;
+        border: 2px solid #4be37a;
+        box-shadow: none;
+        color: #fff;
+    }
+
+    .login-btn {
+        border-radius: 24px;
+        box-shadow: none;
+        font-size: 1.08rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        padding: 0.7rem 0;
+    }
+
+    .btn-success.login-btn {
+        background: #4be37a;
+        border: none;
+        color: #23262F;
+    }
+
+    .btn-success.login-btn:hover, .btn-success.login-btn:focus {
+        background: #38c96a;
+        color: #fff;
+    }
+
+    .btn-outline-light.login-btn {
+        background: transparent;
+        border: 2px solid #6c63ff;
+        color: #6c63ff;
+    }
+
+    .btn-outline-light.login-btn:hover, .btn-outline-light.login-btn:focus {
+        background: #6c63ff;
+        color: #fff;
+    }
+
+    <!--password toggle-->
+    .toggle-password {
+        position: absolute;
+        top: 50%;
+        right: 14px;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #6c63ff;
+        font-size: 1.1rem;
+        z-index: 3;
+    }
+
+    .toggle-password:hover {
+        color: #4be37a;
+    }
+
+    /* icon button inside input */
+    .icon-btn {
+        position: absolute;
+        top: 50%;
+        right: 10px;
+        transform: translateY(-50%);
+        background: transparent;
+        border: none;
+        color: #6c63ff;
+        padding: 6px 8px;
+        font-size: 1.05rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 4;
+    }
+
+    .icon-btn:focus {
+        outline: 2px solid #4be37a;
+        outline-offset: 2px;
+        border-radius: 6px;
+    }
+</style>
+
+<!-- custom script -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+       $(".toggle-password").on("click", function (e) {
+        e.preventDefault();
+
+        const $btn = $(this);
+        const $input = $($btn.data("target"));
+        const isPassword = $input.attr("type") === "password";
+
+        // Toggle input type
+        $input.attr("type", isPassword ? "text" : "password");
+
+        // Toggle icon
+        $btn.find("i").toggleClass("fa-eye fa-eye-slash");
+    });
+</script>
+
+
+
+

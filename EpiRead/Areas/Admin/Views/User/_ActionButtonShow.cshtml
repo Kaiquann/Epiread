@@ -1,0 +1,89 @@
+﻿@model User
+@{
+    bool isCurrentAdmin = User.IsInRole("Admin");
+    bool isTargetAdminOrSuper = Model.Role == "Admin" || Model.Role == "SuperAdmin";
+    bool canUpdateTarget = !(isCurrentAdmin && isTargetAdminOrSuper);
+}
+
+@if (Model.Status == nameof(UserStatusType.Active))
+{
+    @if (canUpdateTarget)
+    {
+        @* Open block-reason modal so admin can enter reason before submitting *@
+        <button type="button"
+                class="btn btn-warning"
+                data-bs-toggle="modal"
+                data-bs-target="#blockModal-@Model.Id"
+                aria-label="Block user">
+            <i class="fas fa-ban" aria-hidden="true"></i> Block
+        </button>
+    }
+
+    @if (canUpdateTarget)
+    {
+        <form data-ajax="true"
+              data-ajax-update="#ajax-update-content"
+              action="/Admin/User/Deactivate?ids=@Model.Id"
+              method="post">
+            <button data-confirm="Are you sure to deactivate this user?"
+                    class="btn btn-danger">
+                <i class="fas fa-user-slash" aria-hidden="true"></i> Deactivate
+            </button>
+        </form>
+    }
+}
+
+@if (Model.Status == nameof(UserStatusType.Blocked))
+{
+    @if (canUpdateTarget)
+    {
+        <form data-ajax="true"
+              data-ajax-update="#ajax-update-content"
+              action="/Admin/User/Unblock?ids=@Model.Id"
+              method="post">
+            <button data-confirm="Are you sure to unblock this user?"
+                    class="btn btn-warning">
+                <i class="fas fa-unlock" aria-hidden="true"></i> Unblock
+            </button>
+        </form>
+    }
+
+    @if (canUpdateTarget)
+    {
+        <form data-ajax="true"
+              data-ajax-update="#ajax-update-content"
+              action="/Admin/User/Deactivate?ids=@Model.Id"
+              method="post">
+            <button data-confirm="Are you sure to deactivate this user?"
+                    class="btn btn-danger">
+                <i class="fas fa-user-slash" aria-hidden="true"></i> Deactivate
+            </button>
+        </form>
+    }
+}
+
+@if (Model.Status == nameof(UserStatusType.Deactivated))
+{
+    @if (canUpdateTarget)
+    {
+        <form data-ajax="true"
+              data-ajax-update="#ajax-update-content"
+              action="/Admin/User/Reactivate?ids=@Model.Id"
+              method="post">
+            <button data-confirm="Are you sure to reactivate this user?"
+                    class="btn btn-warning">
+                <i class="fas fa-undo" aria-hidden="true"></i> Reactivate
+            </button>
+        </form>
+
+        <form data-ajax="true"
+              data-ajax-update="#ajax-update-content"
+              action="/Admin/User/PermanentlyDelete?ids=@Model.Id"
+              method="post">
+            <button data-confirm="Are you sure to permanently delete this user?"
+                    class="btn btn-danger">
+                <i class="fas fa-times" aria-hidden="true"></i> Permanently Delete
+            </button>
+        </form>
+    }
+}

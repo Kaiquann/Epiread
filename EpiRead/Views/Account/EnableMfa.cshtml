@@ -1,0 +1,118 @@
+﻿@model EnableMfaVm;
+@{
+    ViewBag.Title = "Enable MFA";
+}
+
+<style>
+    body, .profile-bg { background: #23262F !important; }
+
+    .enable-mfa-form {
+        background: transparent;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 0;
+    }
+
+    .enable-mfa-form h1 {
+        color: #fff;
+        font-weight: 700;
+        text-align: left;
+    }
+
+    .field-label {
+        color: #b0b0b0;
+        font-size: 1rem;
+        font-weight: 500;
+        letter-spacing: 0.01em;
+        margin-bottom: 0.3rem;
+    }
+
+    .field-value {
+        color: #e0e0e0;
+        font-size: 1.08rem;
+        font-weight: 500;
+        word-break: break-all;
+    }
+
+    .field-input {
+        background: transparent;
+        border: none;
+        border-bottom: 2px solid #444a57;
+        border-radius: 0;
+        box-shadow: none;
+        color: #fff;
+        font-size: 1.1rem;
+        outline: none;
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .field-input:focus {
+        background: transparent;
+        border-bottom: 2px solid #4be37a;
+        box-shadow: none;
+        color: #fff;
+    }
+
+    .enable-mfa-btn {
+        background: #1ed760;
+        border: none;
+        border-radius: 24px;
+        color: #23262F;
+        font-size: 1.08rem;
+        letter-spacing: 0.04em;
+        min-width: 210px;
+        transition: background 0.2s, color 0.2s;
+    }
+
+    .enable-mfa-btn:hover, .enable-mfa-btn:focus {
+        background: #1db954;
+        color: #fff;
+    }
+
+    .cancel-link {
+        border-radius: 24px;
+        color: #b0b0b0;
+        font-size: 1.08rem;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .cancel-link:hover, .cancel-link:focus {
+        color: #fff;
+        text-decoration: underline;
+    }
+</style>
+
+<section>
+    <div class="container my-5 profile-bg" style="max-width: 540px; min-height: 70vh;">
+        <form asp-area="" asp-controller="Account" asp-action="EnableMfa" method="post" class="enable-mfa-form">
+            <h1 class="mb-4 fw-bold" style="font-size: 2.1rem; letter-spacing: -1px;">@ViewBag.Title</h1>
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+            <div class="mb-4">
+                <label class="form-label field-label">Email</label>
+                <div class="field-value">@Model.Email</div>
+                <input type="hidden" asp-for="Email"/>
+            </div>
+            <div class="mb-4">
+                <label class="form-label field-label">Scan QR Code</label>
+                <div class="d-flex justify-content-center align-items-center">
+                    <img src="@Model.QrCodeUrl" class="img-thumbnail bg-dark border-0" style="max-width: 180px;" alt="@Model.ManualEntryCode" loading="lazy"/>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="form-label field-label">Manual Entry Code</label>
+                <div class="field-value">@Model.ManualEntryCode</div>
+            </div>
+            <div class="mb-5">
+                <label asp-for="Code" class="form-label field-label"></label>
+                <input asp-for="Code" class="form-control field-input" autocomplete="one-time-code"/>
+                <span asp-validation-for="Code" class="text-danger"></span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-4 gap-2">
+                <a asp-area="" asp-controller="Account" asp-action="Profile" class="btn btn-link cancel-link px-0 fw-semibold">CANCEL</a>
+                <button type="submit" class="btn btn-success enable-mfa-btn px-4 py-2 fw-semibold">ENABLE MFA</button>
+            </div>
+        </form>
+    </div>
+</section>

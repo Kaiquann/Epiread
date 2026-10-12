@@ -1,0 +1,79 @@
+﻿@model RecoveryMfaVm;
+@inject ICfCaptchaHelper CfCaptchaHelper
+@{
+    ViewBag.Title = "Recovery MFA";
+}
+
+<section class="recovery-mfa-section d-flex align-items-center justify-content-center" style="background: #383D48; min-height: 100vh;">
+    <div class="card bg-dark border-0 rounded-4 shadow-lg p-4" style="max-width: 420px; width: 100%;">
+        <h2 class="text-center mb-4 text-light">@ViewBag.Title</h2>
+        <form asp-action="Index" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+            <div class="mb-4">
+                <label asp-for="Email" class="form-label text-light"></label>
+                <input asp-for="Email" class="form-control bg-dark text-light border-0 border-bottom border-2 rounded-0 shadow-none" style="border-color: #6c63ff;" placeholder="Enter your email address"/>
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class="mb-4">
+                @CfCaptchaHelper.GetCaptchaHtml()
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-4">
+                <a asp-controller="Login" asp-action="Index" class="btn btn-outline-light px-4 py-2 fw-semibold">
+                    <i class="fas fa-arrow-left me-2" aria-hidden="true"></i> Back
+                </a>
+                <button type="submit" class="btn btn-primary px-4 py-2 fw-semibold" data-confirm>
+                    <i class="fas fa-check" aria-hidden="true"></i> Submit
+                </button>
+            </div>
+        </form>
+    </div>
+</section>
+
+<style>
+    .recovery-mfa-section { background: #383D48; }
+
+    .card.bg-dark {
+        background: #23262F !important;
+        border: none !important;
+        border-radius: 18px !important;
+        box-shadow: 0 2px 16px rgba(108, 99, 255, 0.10) !important;
+    }
+
+    .form-control.bg-dark {
+        background: #23262F !important;
+        border: none !important;
+        border-bottom: 2px solid #6c63ff !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        color: #fff !important;
+        font-size: 1.08rem;
+    }
+
+    .form-control.bg-dark:focus {
+        background: #23262F !important;
+        border-bottom: 2.5px solid #4be37a !important;
+        box-shadow: none !important;
+        color: #fff !important;
+    }
+
+    .btn-primary {
+        background: #6c63ff !important;
+        border: none !important;
+    }
+
+    .btn-primary:hover, .btn-primary:focus {
+        background: #4be37a !important;
+        color: #23262F !important;
+    }
+
+    .btn-outline-light {
+        background: transparent !important;
+        border-color: #b0b0b0 !important;
+        color: #b0b0b0 !important;
+    }
+
+    .btn-outline-light:hover, .btn-outline-light:focus {
+        background: #b0b0b0 !important;
+        color: #23262F !important;
+    }
+</style>

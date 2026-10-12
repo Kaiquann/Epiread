@@ -1,0 +1,317 @@
+@model BookUploadZipVm
+
+<partial name="_SweetAlert"/>
+
+<!-- Partial view for uploading a ZIP file to import books using chunk upload -->
+<form id="uploadZipForm" method="post" enctype="multipart/form-data">
+    <div class="mb-3">
+        <label for="ZipFile" class="form-label">ZIP File</label>
+        <input type="file" class="form-control" id="ZipFile" name="ZipFile" accept=".zip" required aria-describedby="zipHelp"/>
+        <div id="zipHelp" class="form-text">
+            Upload a ZIP file containing Books.csv, BookCategoryMaps.csv, and BookDocuments.csv. Only .zip files are supported.
+            <br/>
+            <small class="text-muted">Large files are supported with chunk upload (5MB per chunk).</small>
+        </div>
+        <span asp-validation-for="ZipFile" class="text-danger"></span>
+    </div>
+
+    <!-- Progress bar for chunk upload -->
+    <div id="uploadProgressContainer" class="mb-3" style="display: none;">
+        <label class="form-label">Upload Progress</label>
+        <div class="progress" style="height: 25px;">
+            <div id="uploadProgressBar" class="progress-bar progress-bar-striped progress-bar-animated"
+                 role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                0%
+            </div>
+        </div>
+        <div id="uploadStatus" class="form-text mt-2">Preparing upload...</div>
+    </div>
+
+    <div class="alert alert-info" role="alert">
+        <h6><i class="fas fa-info-circle"></i> ZIP File Requirements:</h6>
+        <ul class="mb-0">
+            <li><strong>Books.csv</strong> - Contains book information (Title, AuthorName, Description, PublicationYear, LanguageCode, CoverImagePath, CoverImageLink, Status, UserId [optional], UserEmail [optional], CreatedAt, UpdatedAt). UserId/UserEmail are optional and used to restore ownership if the user exists in the target system.</li>
+            <li><strong>BookCategoryMaps.csv</strong> - Contains book-category relationships (BookTitle, BookAuthorName, BookCategoryId, BookCategoryName). The category name is included to allow imports into systems where numeric IDs differ.</li>
+            <li><strong>BookDocuments.csv</strong> - Contains book document information (BookTitle, BookAuthorName, FormatType, DocumentPath, DocumentLink, CreatedAt, UpdatedAt)</li>
+            <li><strong>.epiread_manifest.json</strong> - Integrity verification file (automatically generated during export).</li>
+            <li>The ZIP file must be exported using the latest version of the export feature to include integrity verification.</li>
+            <li>Any manual modifications to the ZIP contents will cause the import to fail.</li>
+        </ul>
+    </div>
+    <div class="d-flex justify-content-end gap-2">
+        <button type="button" id="btnCancelUpload" class="btn btn-secondary" style="display: none;">
+            <i class="fas fa-times" aria-hidden="true"></i> Cancel
+        </button>
+        <button type="submit" id="btnUpload" class="btn btn-primary">
+            <i class="fas fa-upload" aria-hidden="true"></i> Upload ZIP
+        </button>
+    </div>
+</form>
+
+<script>
+    (function() {
+        const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB per chunk (compatible with most proxies)
+        let currentUploadId = null;
+        let isUploading = false;
+
+        const form = document.getElementById('uploadZipForm');
+        const fileInput = document.getElementById('ZipFile');
+        const progressContainer = document.getElementById('uploadProgressContainer');
+        const progressBar = document.getElementById('uploadProgressBar');
+        const uploadStatus = document.getElementById('uploadStatus');
+        const btnUpload = document.getElementById('btnUpload');
+        const btnCancel = document.getElementById('btnCancelUpload');
+
+        form.addEventListener('submit',
+            async function(e) {
+                e.preventDefault();
+
+                const file = fileInput.files[0];
+                if (!file) {
+                    alert('Please select a ZIP file.');
+                    return;
+                }
+
+                // Validate file extension
+                if (!file.name.toLowerCase().endsWith('.zip')) {
+                    alert('Only .zip files are allowed.');
+                    return;
+                }
+
+                // For small files (< 5MB), use traditional upload
+                if (file.size < CHUNK_SIZE) {
+                    await uploadTraditional(file);
+                } else {
+                    // For large files, use chunk upload
+                    await uploadChunked(file);
+                }
+            });
+
+        btnCancel.addEventListener('click',
+            async function() {
+                if (currentUploadId && isUploading) {
+                    isUploading = false;
+                    try {
+                        await fetch('@Url.Action("CancelChunkUpload", "Book", new { area = "Admin" })',
+                            {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                },
+                                body: JSON.stringify({ uploadId: currentUploadId })
+                            });
+                    } catch (err) {
+                        console.error('Cancel error:', err);
+                    }
+                    resetUploadUI();
+                }
+            });
+
+        async function uploadTraditional(file) {
+            showUploadProgress();
+            updateProgress(0, 'Uploading file...');
+
+            const formData = new FormData();
+            formData.append('ZipFile', file);
+
+            try {
+                const response = await fetch('@Url.Action("UploadZipFile", "Book", new { area = "Admin" })',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: formData
+                    });
+
+                const html = await response.text();
+                const container = document.getElementById('importStepContainer');
+                container.innerHTML = html;
+
+                // Execute scripts that were inserted via innerHTML (they don't auto-execute)
+                executeScriptsInElement(container);
+            } catch (err) {
+                alert(`Upload failed: ${err.message}`);
+                resetUploadUI();
+            }
+        }
+
+        async function uploadChunked(file) {
+            showUploadProgress();
+            isUploading = true;
+
+            const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+            updateProgress(0, `Initializing upload... (${formatFileSize(file.size)}, ${totalChunks} chunks)`);
+
+            try {
+                // Step 1: Initialize upload session
+                const initResponse = await fetch('@Url.Action("InitChunkUpload", "Book", new { area = "Admin" })',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({
+                            fileName: file.name,
+                            fileSize: file.size,
+                            totalChunks: totalChunks
+                        })
+                    });
+
+                if (!initResponse.ok) {
+                    throw new Error(`Server error: ${initResponse.status} ${initResponse.statusText}`);
+                }
+
+                const initContentType = initResponse.headers.get('content-type');
+                if (!initContentType || !initContentType.includes('application/json')) {
+                    throw new Error('Server returned an unexpected response. Please try again.');
+                }
+
+                const initResult = await initResponse.json();
+                if (!initResult.success) {
+                    throw new Error(initResult.message || 'Failed to initialize upload.');
+                }
+
+                currentUploadId = initResult.uploadId;
+
+                // Step 2: Upload chunks
+                for (let i = 0; i < totalChunks && isUploading; i++) {
+                    const start = i * CHUNK_SIZE;
+                    const end = Math.min(start + CHUNK_SIZE, file.size);
+                    const chunk = file.slice(start, end);
+
+                    const chunkFormData = new FormData();
+                    chunkFormData.append('UploadId', currentUploadId);
+                    chunkFormData.append('ChunkIndex', i);
+                    chunkFormData.append('ChunkData', chunk, `chunk_${i}`);
+
+                    const chunkResponse = await fetch('@Url.Action("UploadChunk", "Book", new { area = "Admin" })',
+                        {
+                            method: 'POST',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: chunkFormData
+                        });
+
+                    if (!chunkResponse.ok) {
+                        throw new Error(`Server error uploading chunk ${i + 1}: ${chunkResponse.status} ${chunkResponse.statusText}`);
+                    }
+
+                    const chunkContentType = chunkResponse.headers.get('content-type');
+                    if (!chunkContentType || !chunkContentType.includes('application/json')) {
+                        throw new Error(`Server returned an unexpected response for chunk ${i + 1}. Please try again.`);
+                    }
+
+                    const chunkResult = await chunkResponse.json();
+                    if (!chunkResult.success) {
+                        throw new Error(chunkResult.message || `Failed to upload chunk ${i + 1}.`);
+                    }
+
+                    const progress = Math.round(((i + 1) / totalChunks) * 100);
+                    updateProgress(progress, `Uploading chunk ${i + 1} of ${totalChunks}...`);
+                }
+
+                if (!isUploading) {
+                    return; // Upload was cancelled
+                }
+
+                // Step 3: Complete upload and process file
+                updateProgress(100, 'Processing ZIP file...');
+
+                const completeResponse = await fetch('@Url.Action("CompleteChunkUpload", "Book", new { area = "Admin" })',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ uploadId: currentUploadId })
+                    });
+
+                if (!completeResponse.ok) {
+                    throw new Error(`Server error completing upload: ${completeResponse.status} ${completeResponse.statusText}`);
+                }
+
+                const html = await completeResponse.text();
+                const container = document.getElementById('importStepContainer');
+                container.innerHTML = html;
+
+                // Execute scripts that were inserted via innerHTML (they don't auto-execute)
+                executeScriptsInElement(container);
+
+            } catch (err) {
+                alert(`Upload failed: ${err.message}`);
+                if (currentUploadId) {
+                    try {
+                        await fetch('@Url.Action("CancelChunkUpload", "Book", new { area = "Admin" })',
+                            {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                },
+                                body: JSON.stringify({ uploadId: currentUploadId })
+                            });
+                    } catch (cancelErr) {
+                        console.error('Cleanup error:', cancelErr);
+                    }
+                }
+                resetUploadUI();
+            }
+        }
+
+        // Helper function to execute scripts after innerHTML insertion
+        function executeScriptsInElement(element) {
+            const scripts = Array.from(element.querySelectorAll('script'));
+            scripts.forEach(oldScript => {
+                const newScript = document.createElement('script');
+                // Copy attributes
+                Array.from(oldScript.attributes).forEach(attr => {
+                    newScript.setAttribute(attr.name, attr.value);
+                });
+                // Copy inline content
+                newScript.textContent = oldScript.textContent;
+                // Remove old script and append new one to document to trigger execution
+                oldScript.remove();
+                document.body.appendChild(newScript);
+            });
+        }
+
+        function showUploadProgress() {
+            progressContainer.style.display = 'block';
+            btnUpload.disabled = true;
+            btnCancel.style.display = 'inline-block';
+            fileInput.disabled = true;
+        }
+
+        function resetUploadUI() {
+            progressContainer.style.display = 'none';
+            progressBar.style.width = '0%';
+            progressBar.textContent = '0%';
+            progressBar.setAttribute('aria-valuenow', '0');
+            uploadStatus.textContent = 'Preparing upload...';
+            btnUpload.disabled = false;
+            btnCancel.style.display = 'none';
+            fileInput.disabled = false;
+            currentUploadId = null;
+            isUploading = false;
+        }
+
+        function updateProgress(percent, statusText) {
+            progressBar.style.width = percent + '%';
+            progressBar.textContent = percent + '%';
+            progressBar.setAttribute('aria-valuenow', percent);
+            uploadStatus.textContent = statusText;
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+            return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
+        }
+    })();
+</script>

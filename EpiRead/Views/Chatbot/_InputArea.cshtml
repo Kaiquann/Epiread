@@ -1,0 +1,530 @@
+<div class="chatbot-input-wrapper">
+    <div class="chatbot-input-container">
+        <div class="chatbot-input-inner">
+            <!-- Mode Selection Pills (shown when mode selected) -->
+            <div id="modePillsContainer" class="chatbot-mode-pills"></div>
+
+            <!-- Input Box -->
+            <div class="chatbot-input-box">
+                <!-- Mode Selector Button -->
+                <button type="button"
+                        id="modeSelectorBtn"
+                        class="chatbot-mode-btn"
+                        aria-label="Select chat mode"
+                        title="Select chat mode">
+                    <i class="fas fa-sliders-h"></i>
+                </button>
+
+                <!-- Mode Dropdown Menu -->
+                <div id="modeDropdown" class="chatbot-mode-dropdown" role="menu" aria-hidden="true">
+                    <div class="chatbot-mode-dropdown-header">Select Mode</div>
+                    <button type="button" class="chatbot-mode-option" data-mode="Find Book" role="menuitem">
+                        <i class="fas fa-search"></i>
+                        <span>Find Book</span>
+                    </button>
+                    <button type="button" class="chatbot-mode-option" data-mode="Book Summarize" role="menuitem">
+                        <i class="fas fa-file-alt"></i>
+                        <span>Book Summarize</span>
+                    </button>
+                    <button type="button" class="chatbot-mode-option" data-mode="Book Recommendation" role="menuitem">
+                        <i class="fas fa-star"></i>
+                        <span>Book Recommendation</span>
+                    </button>
+                </div>
+
+                <!-- Text Input (auto-resize textarea) -->
+                <textarea id="messageInput" 
+                          class="chatbot-textarea"
+                          placeholder="Message EpiRead..."
+                          rows="1"
+                          aria-label="Message input"></textarea>
+
+                <!-- Send Button -->
+                <button type="button"
+                        id="sendBtn"
+                        class="chatbot-send-btn"
+                        aria-label="Send message"
+                        title="Send message">
+                    <i class="fas fa-arrow-up"></i>
+                </button>
+            </div>
+
+            <!-- Help Text -->
+            <p class="chatbot-help-text">
+                EpiRead can make mistakes. Check important info.
+            </p>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Input Wrapper - sticky inside chat scroll area, aligned with messages */
+    .chatbot-input-wrapper {
+        align-items: center;
+        background: #ffffff;
+        border-top: 1px solid #eee;
+        bottom: 70px; /* sit comfortably above the fixed footer */
+        display: flex;
+        padding: 0.5rem 0; /* breathing room separating from messages */
+        position: sticky;
+        width: 100%;
+    }
+
+    .chatbot-input-container {
+        margin: 0 auto;
+        max-width: 48rem;
+        padding: 0 2rem;
+        width: 100%;
+    }
+
+    .chatbot-input-inner {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    /* Mode Pills */
+
+    .chatbot-mode-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        min-height: 0;
+    }
+
+    .chatbot-mode-pill {
+        align-items: center;
+        background: #10a37f;
+        border: none;
+        border-radius: 16px;
+        color: white;
+        cursor: default;
+        display: inline-flex;
+        font-size: 0.875rem;
+        font-weight: 500;
+        gap: 0.5rem;
+        padding: 0.375rem 0.75rem;
+    }
+
+    .chatbot-mode-pill-close {
+        align-items: center;
+        background: none;
+        border: none;
+        border-radius: 50%;
+        color: white;
+        cursor: pointer;
+        display: flex;
+        height: 16px;
+        justify-content: center;
+        padding: 0;
+        transition: background 0.15s ease;
+        width: 16px;
+    }
+
+    .chatbot-mode-pill-close:hover { background: rgba(255, 255, 255, 0.2); }
+
+    /* Input Box */
+
+    .chatbot-input-box {
+        align-items: center;
+        background: white;
+        border: 1px solid #d1d5db;
+        border-radius: 20px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+        display: flex;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        /* make this the positioned ancestor so the dropdown can be anchored to the input area */
+        position: relative;
+        transition: all 0.2s ease;
+    }
+
+    .chatbot-input-box:focus-within {
+        border-color: #10a37f;
+        box-shadow: 0 2px 8px rgba(16, 163, 127, 0.1), 0 0 0 1px #10a37f;
+    }
+
+    /* Mode Selector Button */
+
+    .chatbot-mode-btn {
+        align-items: center;
+        background: transparent;
+        border: none;
+        border-radius: 8px;
+        color: #6b7280;
+        cursor: pointer;
+        display: flex;
+        flex-shrink: 0;
+        height: 32px;
+        justify-content: center;
+        position: relative;
+        transition: all 0.2s ease;
+        width: 32px;
+    }
+
+    .chatbot-mode-btn:hover {
+        background: #f3f4f6;
+        color: #374151;
+    }
+
+    /* Mode Dropdown */
+
+    .chatbot-mode-dropdown {
+        background: white;
+        border: 1px solid #e5e5e5;
+        border-radius: 12px;
+        bottom: 100%;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05);
+        left: 0;
+        margin-bottom: 0.5rem;
+        min-width: 220px;
+        opacity: 0;
+        overflow: hidden;
+        position: absolute;
+        transform: translateY(8px);
+        transition: all 0.2s ease;
+        visibility: hidden;
+        /* must be above sidebar and most UI chrome; input wrapper uses z-index:2000 so use slightly higher */
+        z-index: 3002;
+    }
+
+    .chatbot-mode-dropdown.show {
+        opacity: 1;
+        transform: translateY(0);
+        visibility: visible;
+    }
+
+    .chatbot-mode-dropdown-header {
+        border-bottom: 1px solid #f3f4f6;
+        color: #6b7280;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        padding: 0.75rem 1rem;
+    }
+
+    .chatbot-mode-option {
+        align-items: center;
+        background: none;
+        border: none;
+        color: #1a1a1a;
+        cursor: pointer;
+        display: flex;
+        font-size: 0.9375rem;
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+        text-align: left;
+        transition: background 0.15s ease;
+        width: 100%;
+    }
+
+    .chatbot-mode-option:hover { background: #f9fafb; }
+
+    .chatbot-mode-option i {
+        color: #10a37f;
+        text-align: center;
+        width: 20px;
+    }
+
+    /* Textarea */
+
+    .chatbot-textarea {
+        background: transparent;
+        border: none;
+        color: #1a1a1a;
+        flex: 1;
+        font-family: inherit;
+        font-size: 1rem;
+        line-height: 1.5;
+        max-height: 200px;
+        min-height: 24px;
+        outline: none;
+        padding: 0;
+        resize: none;
+    }
+
+    .chatbot-textarea::placeholder { color: #9ca3af; }
+
+    /* Send Button */
+
+    .chatbot-send-btn {
+        align-items: center;
+        background: #10a37f;
+        border: none;
+        border-radius: 8px;
+        color: white;
+        cursor: pointer;
+        display: flex;
+        flex-shrink: 0;
+        height: 32px;
+        justify-content: center;
+        transition: all 0.2s ease;
+        width: 32px;
+    }
+
+    .chatbot-send-btn:hover { background: #0d8f6e; }
+
+    .chatbot-send-btn:active { background: #0b7a5d; }
+
+    .chatbot-send-btn:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+        transform: none;
+    }
+
+    /* Help Text */
+
+    .chatbot-help-text {
+        color: #9ca3af;
+        font-size: 0.6875rem;
+        line-height: 1.3;
+        margin: 0;
+        padding: 0 0.5rem;
+        text-align: center;
+    }
+
+    /* Responsive */
+
+    @@media (max-width: 768px) {
+        .chatbot-input-container { padding: 0 1rem; }
+
+        .chatbot-input-box { padding: 0.5rem 0.625rem; }
+
+        .chatbot-mode-btn,
+        .chatbot-send-btn {
+            height: 28px;
+            width: 28px;
+        }
+
+        .chatbot-textarea { font-size: 0.9375rem; }
+    }
+
+</style>
+
+<script>
+    // Ensure input area initialization only happens once per page load
+    if (window.__InputAreaInitialized) {
+        console.log('Input area already initialized, skipping duplicate initialization');
+    } else {
+        window.__InputAreaInitialized = true;
+
+        (function() {
+            // DOM Elements
+            const modeSelectorBtn = document.getElementById('modeSelectorBtn');
+            const modeDropdown = document.getElementById('modeDropdown');
+            const modePillsContainer = document.getElementById('modePillsContainer');
+            const messageInput = document.getElementById('messageInput');
+            const sendBtn = document.getElementById('sendBtn');
+
+            let selectedMode = null;
+            let isSending = false;
+
+            // Get current session ID from URL
+            function getCurrentSessionId() {
+                const urlParts = window.location.pathname.split('/');
+                if (urlParts.length > 3 && urlParts[1] === 'Chatbot' && urlParts[2] === 'Chat' && urlParts[3]) {
+                    return urlParts[3];
+                }
+                return null;
+            }
+
+            let currentSessionId = getCurrentSessionId();
+
+            // Function to update session ID (called when navigating via AJAX)
+            window.updateCurrentSessionId = function(sessionId) {
+                currentSessionId = sessionId;
+            };
+
+            // ==========================================
+            // Mode Selection
+            // ==========================================
+            modeSelectorBtn.addEventListener('click',
+                function(e) {
+                    e.stopPropagation();
+                    modeDropdown.classList.toggle('show');
+                });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click',
+                function(e) {
+                    if (!modeDropdown.contains(e.target) && e.target !== modeSelectorBtn) {
+                        modeDropdown.classList.remove('show');
+                    }
+                });
+
+            // Handle mode selection
+            document.querySelectorAll('.chatbot-mode-option').forEach(btn => {
+                btn.addEventListener('click',
+                    function(e) {
+                        e.stopPropagation();
+                        selectedMode = this.getAttribute('data-mode');
+                        showModePill(selectedMode);
+                        modeDropdown.classList.remove('show');
+                        messageInput.focus();
+                    });
+            });
+
+            // Show mode pill
+            function showModePill(mode) {
+                modePillsContainer.innerHTML = `
+                <div class="chatbot-mode-pill">
+                    <span>${escapeHtml(mode)}</span>
+                    <button type="button" class="chatbot-mode-pill-close" aria-label="Remove mode">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+
+                // Attach close handler
+                const closeBtn = modePillsContainer.querySelector('.chatbot-mode-pill-close');
+                if (closeBtn) {
+                    closeBtn.addEventListener('click',
+                        function() {
+                            selectedMode = null;
+                            modePillsContainer.innerHTML = '';
+                            messageInput.focus();
+                        });
+                }
+            }
+
+            // ==========================================
+            // Auto-resize Textarea
+            // ==========================================
+            messageInput.addEventListener('input',
+                function() {
+                    this.style.height = 'auto';
+                    this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+                });
+
+            // ==========================================
+            // Send Message
+            // ==========================================
+            async function sendMessage() {
+                const message = messageInput.value.trim();
+
+                if (!message || isSending) return;
+
+                const userMessage = message;
+                const timestamp = new Date().toISOString();
+
+                isSending = true;
+                sendBtn.disabled = true;
+                sendBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+                // Clear input immediately for better UX
+                messageInput.value = '';
+                messageInput.style.height = 'auto';
+                const previousMode = selectedMode;
+                selectedMode = null;
+                modePillsContainer.innerHTML = '';
+
+                // Append user message immediately (optimistic UI)
+                if (typeof window.chatAreaAppendMessage === 'function') {
+                    window.chatAreaAppendMessage(userMessage, 'user', timestamp);
+                }
+
+                try {
+                    const response = await fetch('/Chatbot/SendMessage',
+                        {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                sessionId: currentSessionId || null,
+                                message: userMessage,
+                                mode: previousMode || 'General'
+                            }),
+                            signal: AbortSignal.timeout ? AbortSignal.timeout(30000) : undefined // 30 second timeout
+                        });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        const newSessionId = data.sessionId;
+                        const botResponse = data.response;
+
+                        // If new session, update URL and session ID
+                        if (!currentSessionId || currentSessionId === '') {
+                            // Update session ID
+                            currentSessionId = newSessionId;
+
+                            // Update URL without page refresh
+                            window.history.pushState({ sessionId: newSessionId }, '', `/Chatbot/Chat/${newSessionId}`);
+
+                            // Update session ID in this script
+                            if (typeof window.updateCurrentSessionId === 'function') {
+                                window.updateCurrentSessionId(newSessionId);
+                            }
+
+                            // Generate session title from first message (truncate to 50 chars)
+                            const sessionTitle = userMessage.substring(0, 50) + (userMessage.length > 50 ? '...' : '');
+
+                            // Prepend new session to sidebar without reloading (preserves scroll position)
+                            if (typeof window.prependNewSession === 'function') {
+                                window.prependNewSession(newSessionId, sessionTitle);
+                            }
+                        }
+
+                        // Append bot response
+                        if (typeof window.chatAreaAppendMessage === 'function') {
+                            window.chatAreaAppendMessage(botResponse, 'bot', new Date().toISOString());
+                        }
+                    } else {
+                        // If error, we need to remove the optimistically added user message
+                        const errorMsg = data.error || 'Failed to send message';
+                        console.error('Send message error:', errorMsg);
+                        alert(`Error: ${errorMsg}`);
+
+                        // Reload messages to remove the optimistic message
+                        if (typeof window.chatAreaLoadMessages === 'function') {
+                            window.chatAreaLoadMessages();
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error sending message:', error);
+                    // Show user-friendly error message
+                    const errorMsg = error instanceof TypeError ? 'Network timeout or connection error' : 'Network error: Failed to send message';
+                    alert(errorMsg);
+
+                    // Reload messages to remove the optimistic message
+                    if (typeof window.chatAreaLoadMessages === 'function') {
+                        window.chatAreaLoadMessages();
+                    }
+                } finally {
+                    isSending = false;
+                    sendBtn.disabled = false;
+                    sendBtn.innerHTML = '<i class="fas fa-arrow-up"></i>';
+                    messageInput.focus();
+                }
+            }
+
+            // Send on button click
+            sendBtn.addEventListener('click', sendMessage);
+
+            // Send on Enter (but not Shift+Enter for new line)
+            messageInput.addEventListener('keydown',
+                function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                    }
+                });
+
+            // Escape HTML
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            // Focus input on page load
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded',
+                    () => {
+                        messageInput.focus();
+                    },
+                    { once: true });
+            } else {
+                messageInput.focus();
+            }
+        })();
+    }
+</script>

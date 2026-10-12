@@ -1,0 +1,14 @@
+@model DiscussionComment
+
+<form asp-area="Admin" asp-controller="Discussion" asp-action="RemoveComment" method="post" class="d-inline"
+      data-ajax="true" data-ajax-method="POST" data-ajax-mode="replace" data-ajax-update="#postCommentsContainer">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="commentId" value="@Model?.Id"/>
+    <input type="hidden" name="postId" value="@Model?.DiscussionPostId"/>
+    <button data-confirm="Are you sure to delete this comment?"
+            class="btn btn-danger btn-sm me-1"
+            title="Delete comment"
+            aria-label="Delete comment @Model?.Id">
+        <i class="bi bi-trash"></i>
+    </button>
+</form>

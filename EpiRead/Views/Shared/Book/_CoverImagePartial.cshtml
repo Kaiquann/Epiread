@@ -1,0 +1,4 @@
+﻿@model string
+
+<img src="@(string.IsNullOrEmpty(Model) ? "/images/book-cover-not-available.webp" : Model)"
+     alt="Book Cover Image" class="img-thumbnail" loading="lazy" style="height: 200px; width: 200px;"/>

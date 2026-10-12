@@ -1,0 +1,33 @@
+@model EditDiscussionVm
+
+@* Partial for forum details edit (inline editable) *@
+<form id="forumEditForm" asp-area="Admin" asp-controller="Discussion" asp-action="Edit" method="post"
+      data-ajax="true" data-ajax-method="POST" data-ajax-mode="replace" data-ajax-update="#forumDetailsView">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id"/>
+    <div class="mb-4">
+        <input asp-for="Title" class="form-control fw-bold mb-3" style="background: #fff; border: 1px solid #ced4da; color: #212529; font-size: 1.5rem;" aria-label="Forum Name"/>
+        <div class="mb-3">
+            <label class="form-label text-secondary">Description</label>
+            <textarea asp-for="Description" class="form-control" rows="2" style="background: #fff; border: 1px solid #ced4da; color: #212529;"></textarea>
+        </div>
+        <div class="row mb-2">
+            <div class="col-6 col-md-3">
+                <label class="form-label text-secondary">Total Posts</label>
+                <input type="text" class="form-control" value="-" readonly style="background: #fff; border: 1px solid #e6e6e6; color: #212529;"/>
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label text-secondary">Total Comments</label>
+                <input type="text" class="form-control" value="-" readonly style="background: #fff; border: 1px solid #e6e6e6; color: #212529;"/>
+            </div>
+            <div class="col-12 col-md-6 mt-2 mt-md-0">
+                <label class="form-label text-secondary">Created Date</label>
+                <input type="text" class="form-control" value="-" readonly style="background: #fff; border: 1px solid #e6e6e6; color: #212529;"/>
+            </div>
+        </div>
+    </div>
+    <div class="d-flex justify-content-end gap-2">
+        <button id="saveEditForumBtn" data-confirm="Are you sure you want to save the changes?" class="btn btn-success">Save</button>
+        <button id="cancelEditForumBtn" type="button" class="btn btn-secondary">Cancel</button>
+    </div>
+</form>

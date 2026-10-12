@@ -1,0 +1,27 @@
+﻿@model EmailVerificationVm;
+@inject ICfCaptchaHelper CfCaptchaHelper
+@{
+    ViewBag.Title = "Email Verification";
+}
+
+<section>
+    <div class="container my-5">
+        <h2 class="text-center mb-4">@ViewBag.Title</h2>
+        <form asp-action="Verification" asp-controller="Account" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="mb-3">
+                <label asp-for="Token" class="form-label">Verification Token</label>
+                <input asp-for="Token" class="form-control"/>
+                <span asp-validation-for="Token" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <button type="submit" class="btn btn-success w-100 p-2" data-confirm>
+                    <i class="fas fa-check" aria-hidden="true"></i> Verify
+                </button>
+            </div>
+            <div class="mb-3">
+                @CfCaptchaHelper.GetCaptchaHtml()
+            </div>
+        </form>
+    </div>
+</section>

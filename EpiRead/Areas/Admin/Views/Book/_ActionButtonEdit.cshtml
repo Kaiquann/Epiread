@@ -1,0 +1,30 @@
+﻿@model EditBookVm
+
+<!-- Edit Ebook Button -->
+<a asp-area="Admin" asp-controller="Book" asp-action="EditEbook" asp-route-id="@Model.Id" class="btn btn-info">
+    <i class="fas fa-file-edit" aria-hidden="true"></i> Edit Ebook
+</a>
+
+<!-- Available -->
+@if (Model.Status == nameof(BookStatusType.Available))
+{
+    <button data-confirm="Are you sure to move this book to trash?"
+            class="btn btn-danger"
+            form="Trash_@Model.Id">
+        <i class="fas fa-trash" aria-hidden="true"></i> Trash
+    </button>
+}
+
+<!-- Trashed -->
+@if (Model.Status == nameof(BookStatusType.Trashed))
+{
+    <button data-confirm="Are you sure to recover this book?" class="btn btn-warning" form="Recover_@Model.Id">
+        <i class="fas fa-undo" aria-hidden="true"></i> Recover
+    </button>
+
+    <button data-confirm="Are you sure to delete this book?"
+            class="btn btn-danger"
+            form="Delete_@Model.Id">
+        <i class="fas fa-trash-alt" aria-hidden="true"></i> Delete
+    </button>
+}

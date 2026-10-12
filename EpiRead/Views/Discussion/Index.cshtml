@@ -1,0 +1,122 @@
+﻿@model DiscussionVm
+
+<div class="container-fluid py-5" style="background-color: #383D48; min-height: 100vh;">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="row bg-dark rounded-4 shadow-lg p-4 align-items-center mb-5">
+                <div class="col-md-4 text-center mb-4 mb-md-0">
+                    @{ var imgSrc = string.IsNullOrWhiteSpace(Model.Book?.CoverImageLink) ? "/images/book-cover-not-available.webp" : Model.Book.CoverImageLink; }
+                    <img class="img-fluid book-details-cover" src="@imgSrc" alt="@Model.Book.Title Cover" loading="lazy">
+                </div>
+                <div class="col-md-8">
+                    <div class="book-title">@Model.Book.Title</div>
+                    <div class="book-author">by @Model.Book.AuthorName</div>
+                    <div class="book-meta">
+                        Published: @Model.Book.PublicationYear?.Year &nbsp;|&nbsp;
+                        Category: @Model.BookCategory.Name<br>
+                        Language: @Model.Book.LanguageCode &nbsp;|&nbsp;
+                    </div>
+                    <!-- Rating Section -->
+                    <div class="book-rating text-warning fs-5 mb-3">
+                        @for (int star = 1; star <= 5; star++)
+                        {
+                            if (star <= Math.Floor(Model.AverageRating))
+                            {
+                                <i class="fas fa-star"></i>
+                            }
+                            else if (star == Math.Ceiling(Model.AverageRating) && Model.AverageRating % 1 != 0)
+                            {
+                                <i class="fas fa-star-half-alt"></i>
+                            }
+                            else
+                            {
+                                <i class="far fa-star"></i>
+                            }
+                        }
+                        <span class="text-secondary ms-2">(@Model.AverageRating.ToString("0.0")/5)</span>
+                    </div>
+                    <div class="book-description">
+                        @Model.Book.Description
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Back to Book Page Button -->
+    <div class="row justify-content-center mb-3">
+        <div class="col-lg-10 d-flex justify-content-start">
+            <a asp-controller="Book" asp-action="BookDetails" asp-route-id="@Model.Book.Id"
+               class="btn btn-outline-info rounded-pill px-4 py-2 fw-semibold shadow-sm">
+                <i class="fas fa-arrow-left me-2"></i> Back to Book Page
+            </a>
+        </div>
+    </div>
+
+    <!-- Discussion Section -->
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="bg-dark rounded-4 shadow-lg p-4">
+                <h3 class="text-info mb-4">
+                    <i class="fas fa-comments me-2"></i>Book Discussion Post
+                </h3>
+                <div class="" id="discussionPost">
+                    <partial name="_DiscussionPost" model="@Model" />
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    body {
+        background-color: #383D48;
+        margin: 0;
+        padding: 0;
+    }
+
+    .book-details-cover {
+        background: #2F333B;
+        border-radius: 12px;
+        box-shadow: 0 2px 16px rgba(108, 99, 255, 0.10);
+        height: 340px;
+        max-width: 240px;
+        min-width: 180px;
+        object-fit: cover;
+    }
+
+    .book-title {
+        color: #fff;
+        font-size: 2.1rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+
+    .book-author {
+        color: #6c63ff;
+        font-size: 1.1rem;
+        margin-bottom: 1.2rem;
+    }
+
+    .book-meta {
+        color: #b0b0b0;
+        font-size: 1rem;
+        margin-bottom: 1.2rem;
+    }
+
+    .book-description {
+        color: #e0e0e0;
+        font-size: 1.08rem;
+        line-height: 1.7;
+        margin-bottom: 1.5rem;
+    }
+
+    .book-rating {
+        align-items: center;
+        color: #FFD700;
+        display: flex;
+        font-size: 1.1rem;
+        gap: 0.4rem;
+        margin-bottom: 1.2rem;
+    }
+</style>

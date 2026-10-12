@@ -1,0 +1,18 @@
+﻿<form data-ajax="true"
+      data-ajax-update="#table-ajax"
+      id="search-form"
+      class="d-flex mb-3 align-items-center">
+    <div class="input-group">
+        <span class="input-group-text">
+            <i class="fas fa-search" aria-hidden="true"></i>
+        </span>
+        <input type="search" id="search" name="search" value="@ViewBag.Search" class="form-control" placeholder="Search ..." aria-label="Search" style="width: auto;"/>
+        <button type="submit" class="btn btn-outline-primary" style="height: auto;">
+            <i class="fas fa-search" aria-hidden="true"></i> Search
+        </button>
+    </div>
+</form>
+
+<input type="hidden" name="sort" value="@ViewBag.Sort" form="search-form"/>
+<input type="hidden" name="dir" value="@ViewBag.Dir" form="search-form"/>
+<input type="hidden" name="filter" value="@ViewBag.Filter" form="search-form"/>

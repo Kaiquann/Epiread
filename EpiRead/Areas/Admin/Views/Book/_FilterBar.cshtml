@@ -1,0 +1,26 @@
+<div class="d-flex justify-content-start align-items-center mb-3 gap-1">
+    <i class="fas fa-tasks" aria-hidden="true"></i> <b>Filter</b>
+    <select name="filter" class="form-select" style="width: auto;" form="filter-form">
+        <option value="">All Books</option>
+        <optgroup label="By Category">
+            @if (ViewBag.BookCategories is SelectList bookCategories)
+            {
+                foreach (SelectListItem? category in bookCategories)
+                {
+                    dynamic? isSelected = ViewBag.Filter == $"C:{category.Value}";
+                    <option value="C:@(category.Value)" selected="@isSelected">@category.Text</option>
+                }
+            }
+        </optgroup>
+        <optgroup label="By Language">
+            @if (ViewBag.Languages is SelectList languages)
+            {
+                foreach (SelectListItem? language in languages)
+                {
+                    dynamic? isSelected = ViewBag.Filter == $"L:{language.Value}";
+                    <option value="L:@(language.Value)" selected="@isSelected">@language.Text</option>
+                }
+            }
+        </optgroup>
+    </select>
+</div>

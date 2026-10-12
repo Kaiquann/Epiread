@@ -1,0 +1,20 @@
+@model IPagedList<Book>
+@{
+    ViewBag.Title = "Trashed Books";
+}
+
+<section>
+    <div class="container my-5">
+        <h2 class="text-center mb-4">@ViewBag.Title</h2>
+
+        <div class="d-flex justify-content-start align-items-center mb-3 gap-1">
+            <a asp-area="Author" asp-controller="Book" asp-action="Index" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to my books
+            </a>
+        </div>
+
+        <div id="table-ajax">
+            <partial name="_Index" model="Model"/>
+        </div>
+    </div>
+</section>
