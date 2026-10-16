@@ -100,6 +100,7 @@ public class Program
         ConfigurationManager configuration = builder.Configuration;
         RegisterConfigSection<InitialAccountConfig>(builder.Services, configuration, "InitialAccount");
         RegisterConfigSection<SmtpConfig>(builder.Services, configuration, "Smtp");
+        RegisterConfigSection<BrevoConfig>(builder.Services, configuration, "Brevo");
         RegisterConfigSection<CfCaptchaConfig>(builder.Services, configuration, "CfCaptcha");
         RegisterConfigSection<IpInfoConfig>(builder.Services, configuration, "IpInfo");
         RegisterConfigSection<SupabaseStorageConfig>(builder.Services, configuration, "SupabaseStorage");
@@ -140,7 +141,11 @@ public class Program
         builder.Services.AddScoped<IChatbotService, ChatbotService>();
 
         // Transient services
-        builder.Services.AddTransient<IMailerHelper, MailerHelper>();
+        builder.Services.AddHttpClient<IMailerHelper, BrevoMailerHelper>(client =>
+        {
+            client.BaseAddress = new Uri("https://api.brevo.com/v3/");
+            client.Timeout = TimeSpan.FromSeconds(15);
+        });
         builder.Services.AddTransient<ICfCaptchaHelper, CfCaptchaHelper>();
         builder.Services.AddTransient<IIpInfoHelper, IpInfoHelper>();
 

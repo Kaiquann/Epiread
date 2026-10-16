@@ -37,6 +37,8 @@ services:
         sync: false
       - key: Smtp__Name
         value: EpiRead System
+      - key: Brevo__ApiKey
+        sync: false
       - key: CfCaptcha__SiteKey
         sync: false
       - key: CfCaptcha__SecretKey
