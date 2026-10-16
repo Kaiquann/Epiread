@@ -20,6 +20,10 @@ ENV ASPNETCORE_ENVIRONMENT=Production \
 
 COPY --from=build /app/publish .
 
+# The ASP.NET process runs as the non-root .NET container user. EpiRead writes
+# application logs beneath its content root, so grant that user ownership.
+RUN mkdir -p /app/Logs && chown -R $APP_UID:$APP_UID /app
+
 EXPOSE 10000
 USER $APP_UID
 ENTRYPOINT ["dotnet", "EpiRead.dll"]
