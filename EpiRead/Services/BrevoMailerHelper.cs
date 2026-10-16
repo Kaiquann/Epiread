@@ -1,7 +1,6 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Microsoft.Extensions.Options;
 
 namespace EpiRead.Services;
 
@@ -15,12 +14,12 @@ public sealed class BrevoMailerHelper : IMailerHelper
     private readonly HttpClient _httpClient;
     private readonly SmtpConfig _sender;
 
-    public BrevoMailerHelper(HttpClient httpClient, IOptions<BrevoConfig> brevo,
-        IOptions<SmtpConfig> sender)
+    public BrevoMailerHelper(HttpClient httpClient, BrevoConfig brevo,
+        SmtpConfig sender)
     {
         _httpClient = httpClient;
-        _brevo = brevo.Value;
-        _sender = sender.Value;
+        _brevo = brevo;
+        _sender = sender;
     }
 
     public async Task<bool> SendEmail(MailerConfig mail)
