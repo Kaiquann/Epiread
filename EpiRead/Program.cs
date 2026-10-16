@@ -101,7 +101,7 @@ public class Program
         RegisterConfigSection<SmtpConfig>(builder.Services, configuration, "Smtp");
         RegisterConfigSection<CfCaptchaConfig>(builder.Services, configuration, "CfCaptcha");
         RegisterConfigSection<IpInfoConfig>(builder.Services, configuration, "IpInfo");
-        RegisterConfigSection<DropboxConfig>(builder.Services, configuration, "Dropbox");
+        RegisterConfigSection<SupabaseStorageConfig>(builder.Services, configuration, "SupabaseStorage");
         RegisterConfigSection<GeminiConfig>(builder.Services, configuration, "Gemini");
 
         // Step 8: Add application services
@@ -113,9 +113,10 @@ public class Program
         builder.Services.AddScoped<DbInitializer>();
         // Library services
         builder.Services.AddScoped<IEmailService, EmailService>();
-        builder.Services.AddScoped<IDropboxHelper, DropboxHelper>();
+        builder.Services.AddScoped<SupabaseStorageHelper>();
+        builder.Services.AddScoped<IFileStorageHelper>(provider => provider.GetRequiredService<SupabaseStorageHelper>());
         builder.Services.AddScoped<IImageHelper, ImageHelper>();
-        builder.Services.AddScoped<IImageDropboxHelper, ImageDropboxHelper>();
+        builder.Services.AddScoped<IImageStorageHelper>(provider => provider.GetRequiredService<SupabaseStorageHelper>());
         // Dropbox services
         builder.Services.AddScoped<IDropboxService, DropboxService>();
         // User services

@@ -29,3 +29,7 @@ Thumbs.db
 .idea/
 .vscode/
 
+# Temporary local deployment tooling
+.tmp-dotnet-ef/
+DB/EpiRead.Schema.sql
+

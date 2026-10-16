@@ -21,12 +21,12 @@ public class BookService : IBookService
     private static readonly Regex FileNameRegex = new(@"^.+\.(epub|pdf)$", RegexOptions.IgnoreCase);
     private readonly IConfiguration _configuration;
     private readonly DB _db;
-    private readonly IDropboxHelper _dropboxHelper;
+    private readonly IFileStorageHelper _dropboxHelper;
     private readonly IDropboxService _dropboxService;
     private readonly IWebHostEnvironment _environment;
     private readonly IGeminiHelper _geminiHelper;
 
-    public BookService(IWebHostEnvironment environment, IDropboxHelper dropboxHelper, DB db, IGeminiHelper geminiHelper,
+    public BookService(IWebHostEnvironment environment, IFileStorageHelper dropboxHelper, DB db, IGeminiHelper geminiHelper,
         IDropboxService dropboxService, IConfiguration configuration)
     {
         _environment = environment ?? throw new ArgumentNullException(nameof(environment));

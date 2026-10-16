@@ -37,7 +37,7 @@ public class BookController : Controller
     private readonly IBookCategoryService _bookCategoryService;
     private readonly IBookService _bookService;
     private readonly DB _db;
-    private readonly IDropboxHelper _dropboxHelper;
+    private readonly IFileStorageHelper _dropboxHelper;
     private readonly IDropboxService _dropboxService;
 
     /// <summary>
@@ -46,7 +46,7 @@ public class BookController : Controller
     ///     domain services used to manage books, categories and Dropbox file storage.
     /// </summary>
     public BookController(DB db, IBookCategoryService bookCategoryService, IBookService bookService,
-        ILogger<BookController> logger, IDropboxService dropboxService, IDropboxHelper dropboxHelper)
+        ILogger<BookController> logger, IDropboxService dropboxService, IFileStorageHelper dropboxHelper)
     {
         _db = db ?? throw new ArgumentNullException(nameof(db));
         _bookCategoryService = bookCategoryService ?? throw new ArgumentNullException(nameof(bookCategoryService));

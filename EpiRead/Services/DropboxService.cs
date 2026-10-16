@@ -10,10 +10,10 @@
 /// <author>Chong Jun Xiang</author>
 public class DropboxService : IDropboxService
 {
-    private readonly IImageDropboxHelper _imageDropboxHelper;
+    private readonly IImageStorageHelper _imageDropboxHelper;
     private readonly IImageHelper _imageHelper;
 
-    public DropboxService(IImageDropboxHelper imageDropboxHelper, IImageHelper imageHelper)
+    public DropboxService(IImageStorageHelper imageDropboxHelper, IImageHelper imageHelper)
     {
         _imageDropboxHelper = imageDropboxHelper ?? throw new ArgumentNullException(nameof(imageDropboxHelper));
         _imageHelper = imageHelper ?? throw new ArgumentNullException(nameof(imageHelper));
@@ -37,11 +37,11 @@ public class DropboxService : IDropboxService
 
             // Network operation: upload to Dropbox
             LoggerUtilities.Info($"[Start] Uploading image to Dropbox: {dropboxPath}");
-            await _imageDropboxHelper.UploadPhotoToDropboxAsync(file, dropboxPath);
+            await _imageDropboxHelper.UploadAsync(file, dropboxPath);
 
             // Network operation: get preview link
             LoggerUtilities.Info($"[Process] Getting preview link for: {dropboxPath}");
-            string previewLink = await _imageDropboxHelper.GetDropboxImagePreviewLinkAsync(dropboxPath);
+            string previewLink = await _imageDropboxHelper.GetPublicLinkAsync(dropboxPath);
 
             LoggerUtilities.Info($"[End] Uploaded image to: {dropboxPath}");
             return (dropboxPath, previewLink, null);
@@ -62,7 +62,7 @@ public class DropboxService : IDropboxService
         try
         {
             LoggerUtilities.Info($"[Start] Deleting image from Dropbox: {coverImagePath}");
-            await _imageDropboxHelper.DeletePhotoFromDropboxAsync(coverImagePath);
+            await _imageDropboxHelper.DeleteAsync(coverImagePath);
             LoggerUtilities.Info($"[End] Deleted image from Dropbox: {coverImagePath}");
             return true;
         }

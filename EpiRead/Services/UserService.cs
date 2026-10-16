@@ -13,12 +13,12 @@ public class UserService : IUserService
     private readonly DB _db;
     private readonly IDiscussionService _discussionService;
     private readonly IEmailService _emailService;
-    private readonly IImageDropboxHelper _imageDropboxHelper;
+    private readonly IImageStorageHelper _imageDropboxHelper;
     private readonly IImageHelper _imageHelper;
     private readonly IMailerHelper _mailerHelper;
     private readonly IResetPasswordService _resetPasswordService;
 
-    public UserService(DB db, IEmailService emailService, IImageDropboxHelper imageDropboxHelper,
+    public UserService(DB db, IEmailService emailService, IImageStorageHelper imageDropboxHelper,
         IImageHelper imageHelper, IMailerHelper mailerHelper, IResetPasswordService resetPasswordService,
         IDiscussionService discussionService)
     {
@@ -261,10 +261,10 @@ public class UserService : IUserService
 
             // Upload to Dropbox
             LoggerUtilities.Info("[Process] Uploading to " + dropboxPath);
-            await _imageDropboxHelper.UploadPhotoToDropboxAsync(file, dropboxPath);
+            await _imageDropboxHelper.UploadAsync(file, dropboxPath);
 
             // Get preview link
-            string previewLink = await _imageDropboxHelper.GetDropboxImagePreviewLinkAsync(dropboxPath);
+            string previewLink = await _imageDropboxHelper.GetPublicLinkAsync(dropboxPath);
 
             LoggerUtilities.Info("[End] uploaded to " + dropboxPath);
             return (dropboxPath, previewLink, null);
@@ -284,7 +284,7 @@ public class UserService : IUserService
         try
         {
             LoggerUtilities.Info("[Start] deleting " + profileImagePath);
-            await _imageDropboxHelper.DeletePhotoFromDropboxAsync(profileImagePath);
+            await _imageDropboxHelper.DeleteAsync(profileImagePath);
             LoggerUtilities.Info("[End] deleted " + profileImagePath);
             return true;
         }

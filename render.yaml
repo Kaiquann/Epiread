@@ -43,11 +43,17 @@ services:
         sync: false
       - key: IpInfo__Token
         sync: false
-      - key: Dropbox__RefreshToken
+      - key: SupabaseStorage__ServiceUrl
         sync: false
-      - key: Dropbox__ClientId
+      - key: SupabaseStorage__Region
         sync: false
-      - key: Dropbox__ClientSecret
+      - key: SupabaseStorage__AccessKeyId
+        sync: false
+      - key: SupabaseStorage__SecretAccessKey
+        sync: false
+      - key: SupabaseStorage__Bucket
+        value: epiread
+      - key: SupabaseStorage__PublicUrl
         sync: false
       - key: Gemini__ApiKey
         sync: false
