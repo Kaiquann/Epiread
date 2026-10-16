@@ -60,16 +60,27 @@ public class LoginService : ILoginService
             LoginTime = loginHistory.LoginTime,
             Url = url
         };
-        string body = await _emailService.LoginAlert(loginAlertVm);
-        MailerConfig mail = new MailerConfig
+        try
         {
-            To = [user.Email],
-            Subject = EmailSubject.LoginAlertSubject,
-            Body = body
-        };
-        LoggerUtilities.Info($"[Process] Sending login alert email to {MaskEmail(user.Email)}");
-        await _mailerService.SendEmail(mail);
-        LoggerUtilities.Info($"[End] Login alert email sent to {MaskEmail(user.Email)}");
+            string body = await _emailService.LoginAlert(loginAlertVm);
+            MailerConfig mail = new MailerConfig
+            {
+                To = [user.Email],
+                Subject = EmailSubject.LoginAlertSubject,
+                Body = body
+            };
+            LoggerUtilities.Info($"[Process] Sending login alert email to {MaskEmail(user.Email)}");
+            await _mailerService.SendEmail(mail);
+            LoggerUtilities.Info($"[End] Login alert email sent to {MaskEmail(user.Email)}");
+        }
+        catch (Exception ex)
+        {
+            // A notification is not part of authentication itself. Do not deny a
+            // valid login when the external email provider is unavailable or
+            // temporarily misconfigured.
+            LoggerUtilities.Error(ex,
+                $"[End] Login succeeded, but the login alert could not be sent to {MaskEmail(user.Email)}");
+        }
     }
 
     /// <inheritdoc />
