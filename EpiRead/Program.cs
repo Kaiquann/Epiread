@@ -21,8 +21,9 @@ public class Program
         // Step 1: Create the builder
         WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-        // Step 2: Configure appsettings.json
-        builder.Configuration.AddJsonFile("appsettings.json", false, true);
+        // WebApplication.CreateBuilder already loads appsettings.json followed by
+        // environment variables. Do not add the JSON file again here, otherwise
+        // its blank production placeholders override Render's environment values.
 
         // Start application logging (Serilog) as early as possible
         // Place logs into a "Logs" folder under the application's content root.
