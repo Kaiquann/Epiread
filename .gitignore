@@ -12,6 +12,7 @@
 # Local configuration containing credentials
 EpiRead/appsettings.json
 EpiRead/appsettings.Development.json
+!EpiRead/appsettings.json
 DB/SuperAdmin.txt
 run_sql_scripts.bat
 run_sql_scripts.sh
@@ -27,3 +28,4 @@ TestData/Books/*.zip
 Thumbs.db
 .idea/
 .vscode/
+

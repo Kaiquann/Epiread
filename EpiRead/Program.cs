@@ -243,6 +243,9 @@ public class Program
         app.UseEndpoints(endpoints => endpoints.MapControllers());
 
         // Step 11: Configure routing
+        // Render uses this endpoint to verify that the web process is responding.
+        app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
+
         // Area routing
         app.MapControllerRoute(
             "areas",
