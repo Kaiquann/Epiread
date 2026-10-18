@@ -272,16 +272,37 @@
     </div>
     <div class="category-grid">
         @{
-            var books = new[] { Model.NewReleases?.FirstOrDefault(), Model.MostLiked?.FirstOrDefault(), Model.TopRated?.FirstOrDefault() };
-            var bgColors = new[] { "rgb(101 116 150)", "#363b3b", "rgb(141 78 78)" };
-            var btnColors = new[] { "#5d608b", "#4a4a4a", "#a86d6d" };
-            var titles = new[] { "New Release.", "Most people like.", "Top Rated." };
+            var preferredBooks = new Book?[]
+            {
+                Model.NewReleases.FirstOrDefault(),
+                Model.MostLiked.FirstOrDefault(),
+                Model.TopRated.FirstOrDefault(),
+                Model.TrendingBooks.FirstOrDefault()
+            };
+            var fallbackBooks = Model.NewReleases
+                .Concat(Model.MostLiked)
+                .Concat(Model.TopRated)
+                .Concat(Model.TrendingBooks)
+                .GroupBy(book => book.Id)
+                .Select(group => group.First())
+                .ToList();
+            var bgColors = new[] { "rgb(101 116 150)", "#363b3b", "rgb(141 78 78)", "rgb(75 105 92)" };
+            var btnColors = new[] { "#5d608b", "#4a4a4a", "#a86d6d", "#426353" };
+            var titles = new[] { "New Release.", "Reader Favourite.", "Top Rated.", "Trending Now." };
 
             var panels = new List<(Book Book, string Title, string Bg, string Btn)>();
-            for (int i = 0; i < books.Length; i++)
+            var selectedBookIds = new HashSet<int>();
+            for (int i = 0; i < titles.Length; i++)
             {
-                if (books[i] != null)
-                    panels.Add((books[i], titles[i], bgColors[i], btnColors[i]));
+                var book = preferredBooks[i];
+                if (book == null || selectedBookIds.Contains(book.Id))
+                    book = fallbackBooks.FirstOrDefault(candidate => !selectedBookIds.Contains(candidate.Id));
+
+                if (book != null)
+                {
+                    selectedBookIds.Add(book.Id);
+                    panels.Add((book, titles[i], bgColors[i], btnColors[i]));
+                }
             }
         }
 
