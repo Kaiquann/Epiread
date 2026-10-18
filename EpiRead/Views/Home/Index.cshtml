@@ -267,7 +267,11 @@
 <!-- Book Categories Section -->
 <section class="home-section category-section">
     <div class="section-heading">
-        <div><span class="section-kicker">Curated picks</span><h2>Start with something remarkable</h2></div>
+        <div>
+            <span class="section-kicker">Curated picks</span>
+            <h2>Start with something remarkable</h2>
+            <p class="section-intro">Four standout reads, selected from what is new, loved, and trending across EpiRead.</p>
+        </div>
         <a asp-controller="Book" asp-action="Index" class="section-link">View all books <i class="bi bi-arrow-right"></i></a>
     </div>
     <div class="category-grid">
@@ -318,6 +322,7 @@
                 <div class="category-copy">
                     <span class="category-label">Featured</span>
                     <h3>@panel.Title</h3>
+                    <p class="category-book-title">@book.Title</p>
                     <a asp-area="" asp-controller="Book" asp-action="BookDetails" asp-route-id="@book.Id" class="category-link">Discover <i class="bi bi-arrow-up-right"></i></a>
                 </div>
 
@@ -335,49 +340,58 @@
 
 <section class="home-section features">
     <div class="features-title section-heading centered-heading">
-        <div><span class="section-kicker">Made for readers</span><h2>Everything you need to read better</h2></div>
+        <div>
+            <span class="section-kicker">Made for readers</span>
+            <h2>Everything you need to read better</h2>
+            <p class="section-intro">From finding the right book to sharing the final page, your reading life stays connected.</p>
+        </div>
     </div>
-    <div class="row g-4">
-        <div class="col-md-4">
-            <div class="feature-box"><span class="feature-icon"><i class="bi bi-search"></i></span>
+    <div class="feature-grid">
+        <div class="feature-box">
+            <span class="feature-number">01</span>
+            <span class="feature-icon"><i class="bi bi-search"></i></span>
                 <h4>Smart Search</h4>
                 <p>Find books easily with AI-driven semantic search.</p>
-            </div>
         </div>
-        <div class="col-md-4">
-            <div class="feature-box"><span class="feature-icon"><i class="bi bi-magic"></i></span>
+        <div class="feature-box">
+            <span class="feature-number">02</span>
+            <span class="feature-icon"><i class="bi bi-magic"></i></span>
                 <h4>Personalized Recommendations</h4>
                 <p>Get tailored suggestions based on your reading habits.</p>
-            </div>
         </div>
-        <div class="col-md-4">
-            <div class="feature-box"><span class="feature-icon"><i class="bi bi-chat-heart"></i></span>
+        <div class="feature-box">
+            <span class="feature-number">03</span>
+            <span class="feature-icon"><i class="bi bi-chat-heart"></i></span>
                 <h4>Community Interaction</h4>
                 <p>Join forums, share ideas, and connect with other readers.</p>
-            </div>
         </div>
     </div>
 </section>
 
 
 <!-- AJAX placeholders for sections (loaded async to make initial page fast) -->
-<div id="trending-container" class="my-4"> <!-- trending partial will be loaded here -->
-    <div class="text-center text-muted p-3">Loading trending books…</div>
-</div>
+<section class="discovery-shelves" aria-label="Book recommendations">
+    <div id="trending-container"> <!-- trending partial will be loaded here -->
+        <div class="shelf-loading"><span></span>Loading trending books…</div>
+    </div>
 
-<div id="recommend-container"> <!-- recommend partial will be loaded here -->
-    <div class="text-center text-muted p-3">Loading recommendations…</div>
-</div>
+    <div id="recommend-container"> <!-- recommend partial will be loaded here -->
+        <div class="shelf-loading"><span></span>Loading recommendations…</div>
+    </div>
 
-<div id="similar-container"> <!-- similar partial will be loaded here -->
-    <div class="text-center text-muted p-3">Loading similar books…</div>
-</div>
+    <div id="similar-container"> <!-- similar partial will be loaded here -->
+        <div class="shelf-loading"><span></span>Loading similar books…</div>
+    </div>
+</section>
 
 <!-- Newsletter -->
 <section class="newsletter">
-    <span class="section-kicker">Your digital bookshelf</span>
-    <h2>Make space for your next great read.</h2>
-    <p>Join EpiRead for personal recommendations, saved favourites, and a reading experience built around you.</p>
+    <div class="newsletter-mark"><i class="bi bi-book-half"></i></div>
+    <div class="newsletter-copy">
+        <span class="section-kicker">Your digital bookshelf</span>
+        <h2>Make space for your next great read.</h2>
+        <p>Join EpiRead for personal recommendations, saved favourites, and a reading experience built around you.</p>
+    </div>
 
     @if (User.IsLoggedIn())
     {
