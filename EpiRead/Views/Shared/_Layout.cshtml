@@ -41,108 +41,6 @@
     @await RenderSectionAsync("head", false)
 </head>
 <body class="h-100 w-100">
-<style>
-    .container-fluid {
-        padding-left: 0;
-        padding-right: 0;
-    }
-
-    /* Floating Chatbot Button */
-
-    .chatbot-float-btn {
-        align-items: center;
-        background: #0d6efd;
-        border: none;
-        border-radius: 50%;
-        bottom: 32px;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-        color: #fff;
-        cursor: pointer;
-        display: flex;
-        font-size: 2rem;
-        height: 60px;
-        justify-content: center;
-        position: fixed;
-        right: 32px;
-        transition: background 0.2s;
-        width: 60px;
-        z-index: 9999;
-    }
-
-    .chatbot-float-btn:hover {
-        background: #0b5ed7;
-        color: #fff;
-        text-decoration: none;
-    }
-
-    /* Floating Chatbot Message */
-
-    .chatbot-float-message {
-        background: #222;
-        border-radius: 16px;
-        bottom: 100px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        color: #fff;
-        font-size: 1rem;
-        max-width: 260px;
-        opacity: 0;
-        padding: 12px 20px;
-        pointer-events: none;
-        position: fixed;
-        right: 40px;
-        text-align: center;
-        transition: opacity 0.3s;
-        z-index: 10000;
-    }
-
-    .chatbot-float-message.show {
-        opacity: 1;
-        pointer-events: auto;
-    }
-
-    .navbar { background: #111; }
-
-    /* body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #383D48;
-            color: white;
-        } */
-
-    .nav-link.active { color: white; }
-
-    .nav-link:hover { color: red; }
-
-    .dropdown-menu {
-        background-color: white;
-        border: 1px solid #ddd;
-        border-radius: 0px;
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-        display: none;
-        left: auto !important;
-        margin-right: 0;
-        padding: 0.5rem 0;
-        position: absolute;
-        right: 0 !important;
-        z-index: 1000;
-    }
-
-    .dropdown-menu.show { display: block; }
-
-    .dropdownToggle { background-color: #DCDCDC; }
-
-    footer {
-        background: #111;
-        bottom: 0;
-        color: #777;
-        line-height: 30px;
-        padding: 5px;
-        position: fixed;
-        text-align: center;
-        width: 100%;
-    }
-
-/* html { background-color: #383D48; } */
-</style>
 
 <header>
     @{
@@ -163,37 +61,40 @@
     }
 
     <div class="container-fluid">
-        <nav class="navbar navbar-expand-lg navbar-dark py-3">
-            <div class="container-fluid">
-                <a class="navbar-brand ms-5" asp-area="" asp-controller="Home" asp-action="Index" style="color: white">@Common.CompanyName</a>
+        <nav class="navbar navbar-expand-lg navbar-dark app-navbar">
+            <div class="container app-nav-inner">
+                <a class="navbar-brand app-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    <span class="app-brand-mark" aria-hidden="true"><i class="bi bi-book-half"></i></span>
+                    <span>@Common.CompanyName</span>
+                </a>
 
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
                 <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-                    <ul class="navbar-nav">
+                    <ul class="navbar-nav align-items-lg-center">
                         <li class="nav-item">
-                            <a class="nav-link mx-3 my-2 @Html.IsActive("Home", "Index")" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            <a class="nav-link @Html.IsActive("Home", "Index")" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link mx-3 my-2 @Html.IsActive("Home", "AboutUs")" asp-area="" asp-controller="Home" asp-action="AboutUs">About Us</a>
+                            <a class="nav-link @Html.IsActive("Home", "AboutUs")" asp-area="" asp-controller="Home" asp-action="AboutUs">About Us</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link mx-3 my-2 @Html.IsActive("Book", "Index")" asp-area="" asp-controller="Book" asp-action="Index">Book</a>
+                            <a class="nav-link @Html.IsActive("Book", "Index")" asp-area="" asp-controller="Book" asp-action="Index">Explore Books</a>
                         </li>
 
                         @if (User.HasAdminAccess())
                         {
                             <li class="nav-item">
-                                <a class="nav-link mx-3 my-2 @Html.IsActive("User", "Index")" asp-area="Admin" asp-controller="User" asp-action="Index">Admin Dashboard</a>
+                                <a class="nav-link @Html.IsActive("User", "Index")" asp-area="Admin" asp-controller="User" asp-action="Index">Admin Dashboard</a>
                             </li>
                         }
                     </ul>
                 </div>
 
-                <div class="dropdown mx-4">
-                    <button id="dropdownToggle" class="dropdownToggle btn btn-light">
+                <div class="dropdown ms-lg-3">
+                    <button id="dropdownToggle" class="dropdownToggle btn app-menu-button" aria-label="Open account menu">
                         <i class="bi bi-three-dots"></i>
                     </button>
                     <partial name="_LoginPartial"/>
@@ -210,9 +111,10 @@
     </main>
 </div>
 
-<footer class="border-top text-muted" style="z-index: 1000">
-    <div class="container" style="color: white">
-        &copy; @DateTime.Today.Year - @Common.CompanyName
+<footer class="app-footer">
+    <div class="container">
+        <span>&copy; @DateTime.Today.Year @Common.CompanyName</span>
+        <span class="app-footer-tagline">Read more. Discover more.</span>
     </div>
 </footer>
 

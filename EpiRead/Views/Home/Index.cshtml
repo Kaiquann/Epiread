@@ -233,14 +233,24 @@
     }
 </style>
 
-<!-- Top session -->
+<div class="home-page">
+<!-- Top section -->
 <section class="hero">
     <div class="hero-text">
-        <h1>Discover Your Next Favorite Book</h1>
-        <p>Explore AI-powered recommendations, track your progress, and join an amazing reading community.</p>
-        <a asp-area="" asp-controller="Book" asp-action="Index" class="btn">Get Started</a>
+        <span class="hero-eyebrow"><i class="bi bi-stars"></i> Your next chapter starts here</span>
+        <h1>Books that feel<br><span>chosen for you.</span></h1>
+        <p>Explore thoughtful recommendations, keep your reading journey in one place, and connect with a community that loves a good story.</p>
+        <div class="hero-actions">
+            <a asp-area="" asp-controller="Book" asp-action="Index" class="btn hero-primary">Explore the library <i class="bi bi-arrow-right"></i></a>
+            <a asp-area="" asp-controller="Home" asp-action="AboutUs" class="btn hero-secondary">How EpiRead works</a>
+        </div>
+        <div class="hero-proof" aria-label="Platform highlights">
+            <span><i class="bi bi-lightning-charge-fill"></i> Smart discovery</span>
+            <span><i class="bi bi-people-fill"></i> Reader community</span>
+        </div>
     </div>
-    <div id="book-slider" class="slider">
+    <div class="hero-visual">
+      <div id="book-slider" class="slider">
         @foreach (var book in Model.TrendingBooks.Take(4)) //swap image every 2 seconds
         {
             var imgSrc = string.IsNullOrWhiteSpace(book.CoverImageLink) ? "/images/book-cover-not-available.webp" :
@@ -249,12 +259,18 @@
                 <img src="@imgSrc" alt="@book.Title" class="slide" style="display: block;" loading="lazy">
             </a>
         }
+      </div>
+      <div class="hero-visual-note"><i class="bi bi-graph-up-arrow"></i><span><strong>Trending now</strong><small>Reader favourites</small></span></div>
     </div>
 </section>
 
 <!-- Book Categories Section -->
-<section class="py-3 text-center">
-    <div class="row justify-content-between m-3">
+<section class="home-section category-section">
+    <div class="section-heading">
+        <div><span class="section-kicker">Curated picks</span><h2>Start with something remarkable</h2></div>
+        <a asp-controller="Book" asp-action="Index" class="section-link">View all books <i class="bi bi-arrow-right"></i></a>
+    </div>
+    <div class="category-grid">
         @{
             var books = new[] { Model.NewReleases?.FirstOrDefault(), Model.MostLiked?.FirstOrDefault(), Model.TopRated?.FirstOrDefault() };
             var bgColors = new[] { "rgb(101 116 150)", "#363b3b", "rgb(141 78 78)" };
@@ -276,46 +292,45 @@
             var btn = panel.Btn;
             var imgSrc = string.IsNullOrWhiteSpace(book.CoverImageLink) ? "/images/book-cover-not-available.webp" : book.CoverImageLink;
 
-            <div class="bookCategory col-3 mx-3 row" style="background-color: @bg; width: 25%;">
+            <article class="bookCategory" style="--panel-accent: @bg; --button-accent: @btn;">
                 <!-- Text Section -->
-                <div class="col-6 align-self-end my-5">
-                    <h2 class="mx-4">@panel.Title</h2>
-                    <button class="text-white px-4 py-2 rounded border-0" style="background-color: @btn;">
-                        <a asp-area="" asp-controller="Book" asp-action="BookDetails" asp-route-id="@book.Id" class="btn">Read me</a>
-                    </button>
+                <div class="category-copy">
+                    <span class="category-label">Featured</span>
+                    <h3>@panel.Title</h3>
+                    <a asp-area="" asp-controller="Book" asp-action="BookDetails" asp-route-id="@book.Id" class="category-link">Discover <i class="bi bi-arrow-up-right"></i></a>
                 </div>
 
                 <!-- Image Section -->
-                <div class="justify-center col-6">
+                <div class="category-cover">
                     <a asp-area="" asp-controller="Book" asp-action="BookDetails" asp-route-id="@book.Id">
-                        <img src="@imgSrc" alt="@book.Title" class="my-3" style="display: block;" loading="lazy">
+                        <img src="@imgSrc" alt="@book.Title" loading="lazy">
                     </a>
                 </div>
-            </div>
+            </article>
         }
     </div>
 </section>
 
 
-<section class="features mx-4">
-    <div class="features-title text-center m-3">
-        <h2 class="text-align-center m-2">What You Will Get</h2>
+<section class="home-section features">
+    <div class="features-title section-heading centered-heading">
+        <div><span class="section-kicker">Made for readers</span><h2>Everything you need to read better</h2></div>
     </div>
     <div class="row g-4">
         <div class="col-md-4">
-            <div class="feature-box">
+            <div class="feature-box"><span class="feature-icon"><i class="bi bi-search"></i></span>
                 <h4>Smart Search</h4>
                 <p>Find books easily with AI-driven semantic search.</p>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="feature-box">
+            <div class="feature-box"><span class="feature-icon"><i class="bi bi-magic"></i></span>
                 <h4>Personalized Recommendations</h4>
                 <p>Get tailored suggestions based on your reading habits.</p>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="feature-box">
+            <div class="feature-box"><span class="feature-icon"><i class="bi bi-chat-heart"></i></span>
                 <h4>Community Interaction</h4>
                 <p>Join forums, share ideas, and connect with other readers.</p>
             </div>
@@ -338,22 +353,23 @@
 </div>
 
 <!-- Newsletter -->
-<section class="newsletter text-center py-5">
-    <h2>Get Instant Access to the Full eBook Package</h2>
-    <p>Sign up to get updates and exclusive content.</p>
+<section class="newsletter">
+    <span class="section-kicker">Your digital bookshelf</span>
+    <h2>Make space for your next great read.</h2>
+    <p>Join EpiRead for personal recommendations, saved favourites, and a reading experience built around you.</p>
 
     @if (User.IsLoggedIn())
     {
 
         <p class="mt-3">Welcome back, <strong>@TempData["Username"]</strong>! 🎉</p>
-        <button type="button" class="btn btn-success w-25 mb-3"
+        <button type="button" class="btn newsletter-button"
             onclick="window.location.href='@Url.Action("Index", "Book")'">
             Browse eBooks
         </button>
     }
     else
     {
-        <button type="button" class="btn login-btn w-25 mb-3 btn-primary"
+        <button type="button" class="btn login-btn newsletter-button"
             onclick="window.location.href='@Url.Action("Index", "Register")'">
             Sign Up
         </button>
@@ -365,6 +381,7 @@
         </p>
     }
 </section>
+</div>
 
 @section Scripts {
     <script>
