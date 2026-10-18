@@ -42,8 +42,8 @@ public class HomeController : Controller
 
         HomeVm vm = new HomeVm();
 
-        // Trending / Personalized / Similar sections are loaded on-demand by the client.
-        // Leave vm.TrendingBooks / vm.PersonalizedBooks / vm.SimilarBooks empty so the page can load fast
+        // Personalized / Similar sections and the full trending carousel are loaded on-demand.
+        // A small random set is added to TrendingBooks below for the homepage hero.
 
         // New Releases: latest created books
         vm.NewReleases = await _db.Books
@@ -134,6 +134,18 @@ public class HomeController : Controller
         {
             vm.MostLiked = new List<Book>();
         }
+
+        // The hero previously appeared as an empty frame because the full trending list is
+        // loaded asynchronously. Use a shuffled selection of already-loaded available books
+        // until the visitor has enough activity to produce meaningful trending data.
+        vm.TrendingBooks = vm.NewReleases
+            .Concat(vm.PromoBooks)
+            .Concat(vm.TopRated)
+            .Concat(vm.MostLiked)
+            .DistinctBy(b => b.Id)
+            .OrderBy(_ => Random.Shared.Next())
+            .Take(4)
+            .ToList();
 
         LoggerUtilities.Info("[End] Home page data loaded");
         return View(vm);
