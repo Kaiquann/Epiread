@@ -274,7 +274,13 @@ body {
   min-height: 76px;
   padding: .75rem 0;
   position: relative;
+  width: 100%;
   z-index: 1050;
+}
+
+header > .container-fluid {
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .app-brand { align-items: center; display: inline-flex; font-size: 1.25rem; font-weight: 750; gap: .7rem; letter-spacing: -.02em; }
