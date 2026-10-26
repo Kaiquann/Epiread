@@ -103,7 +103,7 @@ public class Program
         RegisterConfigSection<BrevoConfig>(builder.Services, configuration, "Brevo");
         RegisterConfigSection<CfCaptchaConfig>(builder.Services, configuration, "CfCaptcha");
         RegisterConfigSection<IpInfoConfig>(builder.Services, configuration, "IpInfo");
-        RegisterConfigSection<SupabaseStorageConfig>(builder.Services, configuration, "SupabaseStorage");
+        RegisterConfigSection<MegaStorageConfig>(builder.Services, configuration, "MegaStorage");
         RegisterConfigSection<GeminiConfig>(builder.Services, configuration, "Gemini");
 
         // Step 8: Add application services
@@ -115,10 +115,11 @@ public class Program
         builder.Services.AddScoped<DbInitializer>();
         // Library services
         builder.Services.AddScoped<IEmailService, EmailService>();
-        builder.Services.AddScoped<SupabaseStorageHelper>();
-        builder.Services.AddScoped<IFileStorageHelper>(provider => provider.GetRequiredService<SupabaseStorageHelper>());
+        // Reuse one authenticated MEGA session instead of logging in once per image request.
+        builder.Services.AddSingleton<MegaStorageHelper>();
+        builder.Services.AddSingleton<IFileStorageHelper>(provider => provider.GetRequiredService<MegaStorageHelper>());
         builder.Services.AddScoped<IImageHelper, ImageHelper>();
-        builder.Services.AddScoped<IImageStorageHelper>(provider => provider.GetRequiredService<SupabaseStorageHelper>());
+        builder.Services.AddSingleton<IImageStorageHelper>(provider => provider.GetRequiredService<MegaStorageHelper>());
         // Dropbox services
         builder.Services.AddScoped<IDropboxService, DropboxService>();
         // User services

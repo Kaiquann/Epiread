@@ -4,7 +4,7 @@ EpiRead deploys as a Docker web service using the repository's `render.yaml` Blu
 
 ## Before deploying
 
-1. Rotate the database, SMTP, Cloudflare Turnstile, IPInfo, Dropbox, Gemini, and initial administrator credentials if they have ever been shared or committed.
+1. Rotate the database, SMTP, Cloudflare Turnstile, IPInfo, MEGA, Gemini, and initial administrator credentials if they have ever been shared or committed.
 2. Confirm the external SQL Server permits connections from Render. Render does not provide a managed SQL Server database.
 3. Make sure the target database schema already exists. EpiRead seeds application data at startup, but it does not automatically apply Entity Framework migrations.
 
@@ -33,28 +33,22 @@ ASP.NET Core maps configuration environment variables with a double underscore. 
 - `CfCaptcha__SiteKey`
 - `CfCaptcha__SecretKey`
 - `IpInfo__Token`
-- `SupabaseStorage__ServiceUrl`
-- `SupabaseStorage__Region`
-- `SupabaseStorage__AccessKeyId`
-- `SupabaseStorage__SecretAccessKey`
-- `SupabaseStorage__PublicUrl`
+- `MegaStorage__Email`
+- `MegaStorage__Password`
 - `Gemini__ApiKey`
 
 The Blueprint supplies the non-secret settings and configures `/health` as Render's health check endpoint.
 
-## Supabase Storage
+## MEGA Storage
 
-1. Create a Supabase project and open **Storage**.
-2. Create a public bucket named `epiread`. Public access is required because the application saves direct URLs for book files and images.
-3. Open **Storage > Configuration > S3** and enable the S3 protocol.
-4. Generate an S3 access-key pair. Store the secret immediately because Supabase displays it only once.
-5. Copy the S3 endpoint, region, access key ID, and secret access key into the matching Render variables.
-6. Set `SupabaseStorage__PublicUrl` to `https://PROJECT_REF.supabase.co/storage/v1/object/public/epiread`.
-
-Use the direct storage hostname shown by Supabase for `SupabaseStorage__ServiceUrl`; it normally resembles `https://PROJECT_REF.storage.supabase.co/storage/v1/s3`.
+1. Use a dedicated MEGA account for the application rather than a personal account.
+2. Set `MegaStorage__Email` and `MegaStorage__Password` in Render.
+3. Keep `MegaStorage__RootFolder` set to `EpiRead`. The application creates this folder and its subfolders automatically.
+4. Do not commit the account credentials. Files are streamed through `/Storage/Mega`; the MEGA password is never sent to browsers.
+5. Re-upload any files that belonged to a deleted storage provider. Changing providers cannot restore deleted files.
 
 ## Troubleshooting
 
 - A startup failure before the port is detected usually means the SQL Server connection failed, because startup seeding accesses the database before the web server begins accepting requests.
 - If login or form submissions loop, confirm Render is forwarding HTTPS and that no proxy strips `X-Forwarded-Proto`.
-- Files stored only in the container are ephemeral. EpiRead stores durable book assets in Supabase Storage.
+- Files stored only in the container are ephemeral. EpiRead stores durable book assets in MEGA.

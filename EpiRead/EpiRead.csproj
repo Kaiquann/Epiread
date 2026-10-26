@@ -42,7 +42,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Aspose.PDF" Version="25.11.0" />
-		<PackageReference Include="AWSSDK.S3" Version="4.0.104.4" />
+		<PackageReference Include="MegaApiClient" Version="1.10.5" />
 		<PackageReference Include="CsvHelper" Version="33.1.0" />
 		<PackageReference Include="HtmlSanitizer" Version="9.0.889" />
 		<PackageReference Include="LoveDoLove.CommonUtilities" Version="2.0.2" />

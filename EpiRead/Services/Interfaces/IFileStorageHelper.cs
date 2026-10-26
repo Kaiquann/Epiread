@@ -6,4 +6,5 @@ public interface IFileStorageHelper
     Task DeleteAsync(string path);
     Task MoveAsync(string oldPath, string newPath);
     Task<string> GetPreviewLinkAsync(string path);
+    Task<Stream> OpenReadAsync(string path);
 }

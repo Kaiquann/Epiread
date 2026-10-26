@@ -45,18 +45,12 @@ services:
         sync: false
       - key: IpInfo__Token
         sync: false
-      - key: SupabaseStorage__ServiceUrl
+      - key: MegaStorage__Email
         sync: false
-      - key: SupabaseStorage__Region
+      - key: MegaStorage__Password
         sync: false
-      - key: SupabaseStorage__AccessKeyId
-        sync: false
-      - key: SupabaseStorage__SecretAccessKey
-        sync: false
-      - key: SupabaseStorage__Bucket
-        value: epiread
-      - key: SupabaseStorage__PublicUrl
-        sync: false
+      - key: MegaStorage__RootFolder
+        value: EpiRead
       - key: Gemini__ApiKey
         sync: false
       - key: Gemini__Model

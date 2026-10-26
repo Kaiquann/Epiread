@@ -847,15 +847,11 @@ public class BookService : IBookService
                 return (localEpubPath, null);
             }
 
-            // Download from DocumentLink if not exists
+            // Download from storage if not cached locally.
             try
             {
-                using HttpClient httpClient = new();
-                HttpResponseMessage response = await httpClient.GetAsync(bookDocument.DocumentLink);
-                response.EnsureSuccessStatusCode();
-
                 await using FileStream fileStream = new(localEpubPath, FileMode.Create, FileAccess.Write);
-                await using Stream remoteStream = await response.Content.ReadAsStreamAsync();
+                await using Stream remoteStream = await _dropboxHelper.OpenReadAsync(bookDocument.DocumentPath);
                 await remoteStream.CopyToAsync(fileStream);
 
                 LoggerUtilities.Info(
@@ -917,15 +913,11 @@ public class BookService : IBookService
                 return (localPdfPath, null);
             }
 
-            // Download from DocumentLink if not exists
+            // Download from storage if not cached locally.
             try
             {
-                using HttpClient httpClient = new();
-                HttpResponseMessage response = await httpClient.GetAsync(bookDocument.DocumentLink);
-                response.EnsureSuccessStatusCode();
-
                 await using FileStream fileStream = new(localPdfPath, FileMode.Create, FileAccess.Write);
-                await using Stream remoteStream = await response.Content.ReadAsStreamAsync();
+                await using Stream remoteStream = await _dropboxHelper.OpenReadAsync(bookDocument.DocumentPath);
                 await remoteStream.CopyToAsync(fileStream);
 
                 LoggerUtilities.Info(

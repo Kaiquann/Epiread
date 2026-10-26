@@ -2981,25 +2981,16 @@ public class BookController : Controller
                 foreach (Book book in books)
                     try
                     {
-                        string? imageLink = book.CoverImageLink;
                         string? imagePath = book.CoverImagePath;
-                        if (string.IsNullOrWhiteSpace(imageLink) || string.IsNullOrWhiteSpace(imagePath))
+                        if (string.IsNullOrWhiteSpace(imagePath))
                             continue;
-
-                        HttpResponseMessage resp = await httpClient.GetAsync(imageLink);
-                        if (!resp.IsSuccessStatusCode)
-                        {
-                            LoggerUtilities.Warning(
-                                $"[Process] Failed to download cover image for bookId={book.Id}; status={resp.StatusCode}");
-                            continue;
-                        }
 
                         string zipEntryName = imagePath.TrimStart('/').Replace('\\', '/');
                         if (addedPaths.Contains(zipEntryName))
                             continue;
                         ZipArchiveEntry imageEntry = zipArchive.CreateEntry(zipEntryName);
                         await using (Stream entryStream = imageEntry.Open())
-                        await using (Stream remoteStream = await resp.Content.ReadAsStreamAsync())
+                        await using (Stream remoteStream = await _dropboxHelper.OpenReadAsync(imagePath))
                         {
                             await remoteStream.CopyToAsync(entryStream);
                         }
@@ -3020,17 +3011,16 @@ public class BookController : Controller
                         if (string.IsNullOrWhiteSpace(bd.DocumentLink) && string.IsNullOrWhiteSpace(bd.DocumentPath))
                             continue;
 
-                        if (!string.IsNullOrWhiteSpace(bd.DocumentLink))
+                        if (!string.IsNullOrWhiteSpace(bd.DocumentPath))
                         {
-                            HttpResponseMessage resp = await httpClient.GetAsync(bd.DocumentLink);
-                            if (resp.IsSuccessStatusCode)
+                            try
                             {
                                 string zipEntryName = bd.DocumentPath.TrimStart('/').Replace('\\', '/');
                                 if (!addedPaths.Contains(zipEntryName))
                                 {
                                     ZipArchiveEntry docEntry = zipArchive.CreateEntry(zipEntryName);
                                     await using (Stream entryStream = docEntry.Open())
-                                    await using (Stream remoteStream = await resp.Content.ReadAsStreamAsync())
+                                    await using (Stream remoteStream = await _dropboxHelper.OpenReadAsync(bd.DocumentPath))
                                     {
                                         await remoteStream.CopyToAsync(entryStream);
                                     }
@@ -3041,9 +3031,10 @@ public class BookController : Controller
                                 // success, go to next document
                                 continue;
                             }
-
-                            LoggerUtilities.Warning(
-                                $"[Process] Failed to download documentId={bd.Id}; status={resp.StatusCode}");
+                            catch (FileNotFoundException)
+                            {
+                                LoggerUtilities.Warning($"[Process] Storage file missing for documentId={bd.Id}");
+                            }
                         }
 
                         // Fallback: if there's no document link we try BookService to fetch a preview (cached) file
