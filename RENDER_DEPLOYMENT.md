@@ -47,6 +47,16 @@ The Blueprint supplies the non-secret settings and configures `/health` as Rende
 4. Do not commit the account credentials. Files are streamed through `/Storage/Mega`; the MEGA password is never sent to browsers.
 5. Re-upload any files that belonged to a deleted storage provider. Changing providers cannot restore deleted files.
 
+### Book cover recovery
+
+Original library covers are bundled in `EpiRead/wwwroot/images/books`, with a title-to-file catalog.
+Public book views use these copies for the retired Supabase project and as a fallback when a current
+storage URL fails. Unknown covers fall back to the existing unavailable-cover image. Current uploads
+continue to use their stored URLs; this recovery does not restore missing book documents or custom uploads.
+Run `./scripts/Build-BookCovers.ps1` to regenerate the bundled covers from `TestData/Books` and
+`TestData/TestBooks`. Commit the generated assets and catalog along with the application changes,
+then redeploy the Render service.
+
 ## Troubleshooting
 
 - A startup failure before the port is detected usually means the SQL Server connection failed, because startup seeding accesses the database before the web server begins accepting requests.

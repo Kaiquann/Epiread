@@ -1,11 +1,11 @@
-﻿@model BookVm
+@model BookVm
 
 <div class="book-sidebar-covers">
     @foreach (var book in Model.RelatedBooks)
     {
         <a asp-controller="Book" asp-action="BookDetails" asp-route-id="@book.Id" class="book-item text-decoration-none">
             @{ var imgSrc = string.IsNullOrWhiteSpace(book.CoverImageLink) ? "/images/book-cover-not-available.webp" : book.CoverImageLink; }
-            <img class="book-sidebar-cover" src="@imgSrc" alt="@book.Title" loading="lazy">
+            <img class="book-sidebar-cover" src="@imgSrc" book-cover="@book.Title" alt="@book.Title" loading="lazy">
             <p class="book-title mb-0 mt-2">@book.Title</p>
         </a>
     }

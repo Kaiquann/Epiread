@@ -117,6 +117,7 @@ public class Program
         builder.Services.AddScoped<IEmailService, EmailService>();
         // Reuse one authenticated MEGA session instead of logging in once per image request.
         builder.Services.AddSingleton<MegaStorageHelper>();
+        builder.Services.AddSingleton<BookCoverCatalog>();
         builder.Services.AddSingleton<IFileStorageHelper>(provider => provider.GetRequiredService<MegaStorageHelper>());
         builder.Services.AddScoped<IImageHelper, ImageHelper>();
         builder.Services.AddSingleton<IImageStorageHelper>(provider => provider.GetRequiredService<MegaStorageHelper>());

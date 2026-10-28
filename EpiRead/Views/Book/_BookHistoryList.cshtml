@@ -1,4 +1,4 @@
-﻿@model BookHistoryVm
+@model BookHistoryVm
 
 @{
     var groupedBooks = Model.BookHistoryList.GroupBy(h => h.BookId).ToList();
@@ -19,7 +19,7 @@
                     aria-expanded="false"
                     aria-controls="collapse_@bookId">
                  @{ var imgSrc = string.IsNullOrWhiteSpace(first.Book.CoverImageLink) ? "/images/book-cover-not-available.webp" : first.Book.CoverImageLink; }
-                 <img src="@imgSrc" alt="Book Cover" loading="lazy"
+                 <img src="@imgSrc" book-cover="@first.Book.Title" alt="Book Cover" loading="lazy"
                      class="rounded-3 shadow-sm me-3"
                      style="height: 70px; width: 50px; object-fit: cover;">
                 <span class="fw-semibold">@first.Book.Title</span>

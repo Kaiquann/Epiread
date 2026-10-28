@@ -1,4 +1,4 @@
-﻿@model List<PreferenceBook>
+@model List<PreferenceBook>
 
 @if (Model == null || !Model.Any())
 {
@@ -14,7 +14,7 @@ else
     {
         <div class="preference-book-card">
             @{ var imgSrc = string.IsNullOrWhiteSpace(book.CoverImageLink) ? "/images/book-cover-not-available.webp" : book.CoverImageLink; }
-            <img src="@imgSrc" alt="@book.Title" loading="lazy" />
+            <img src="@imgSrc" book-cover="@book.Title" alt="@book.Title" loading="lazy" />
 
             <div class="preference-book-info">
                 <div class="preference-book-title">@book.Title</div>

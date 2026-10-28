@@ -12,7 +12,7 @@
                     var imgSrc = string.IsNullOrWhiteSpace(book.CoverImageLink) ? "/images/book-cover-not-available.webp" : book.CoverImageLink;
                     <div class="book-item" data-href="@Url.Action("BookDetails", "Book", new { id = book.Id })" tabindex="0" aria-label="@book.Title by @book.AuthorName">
                         <div class="book-cover-wrap">
-                            <img src="@imgSrc" alt="@book.Title" loading="lazy" class="book-cover">
+                            <img src="@imgSrc" book-cover="@book.Title" alt="@book.Title" loading="lazy" class="book-cover">
                             <div class="book-overlay">
                                 <div class="overlay-meta">
                                     <div class="book-title">@book.Title</div>

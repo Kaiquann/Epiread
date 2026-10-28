@@ -1,4 +1,4 @@
-﻿@model BookVm
+@model BookVm
 
 <style>
     body {
@@ -119,7 +119,7 @@
                        asp-route-id="@book.Id"
                        class="book-card">
                         @{ var imgSrc = string.IsNullOrWhiteSpace(book.CoverImageLink) ? "/images/book-cover-not-available.webp" : book.CoverImageLink; }
-                        <img src="@imgSrc" alt="@book.Title" loading="lazy" />
+                        <img src="@imgSrc" book-cover="@book.Title" alt="@book.Title" loading="lazy" />
                         <h6>@book.Title</h6>
                         <p>@book.AuthorName</p>
                     </a>
@@ -148,7 +148,7 @@
                                    asp-route-id="@book.Id"
                                    class="book-card">
                                     @{ var imgSrc = string.IsNullOrWhiteSpace(book.CoverImageLink) ? "/images/book-cover-not-available.webp" : book.CoverImageLink; }
-                                    <img src="@imgSrc" alt="@book.Title" loading="lazy" />
+                                    <img src="@imgSrc" book-cover="@book.Title" alt="@book.Title" loading="lazy" />
                                     <h6>@book.Title</h6>
                                     <p>@book.AuthorName</p>
                                 </a>
@@ -180,7 +180,7 @@
                                        asp-route-id="@book.Id"
                                        class="book-card">
                                         @{ var imgSrc = string.IsNullOrWhiteSpace(book.CoverImageLink) ? "/images/book-cover-not-available.webp" : book.CoverImageLink; }
-                                        <img src="@imgSrc" alt="@book.Title" loading="lazy" />
+                                        <img src="@imgSrc" book-cover="@book.Title" alt="@book.Title" loading="lazy" />
                                         <h6>@book.Title</h6>
                                         <p>@book.AuthorName</p>
                                     </a>

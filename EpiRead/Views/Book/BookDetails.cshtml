@@ -1,4 +1,4 @@
-﻿@model BookVm
+@model BookVm
 
 <partial name="_SweetAlert" />
 @{
@@ -236,7 +236,7 @@
 
                         <div class="col-md-5 text-center mb-3 mb-md-0">
                             @{ var imgSrc = string.IsNullOrWhiteSpace(Model?.CoverImageLink) ? "/images/book-cover-not-available.webp" : Model.CoverImageLink; }
-                            <img id="mainBookCover" class="book-details-cover" src="@imgSrc" alt="Book Cover" loading="lazy">
+                            <img id="mainBookCover" class="book-details-cover" src="@imgSrc" book-cover="@Model.Title" alt="Book Cover" loading="lazy">
                         </div>
 
                         <div class="col-md-7 ps-md-4 d-flex flex-column justify-content-center">

@@ -1,4 +1,4 @@
-﻿@model HomeVm
+@model HomeVm
 @{
     ViewBag.Title = "Welcome to " + Common.CompanyName;
 }
@@ -256,7 +256,7 @@
             var imgSrc = string.IsNullOrWhiteSpace(book.CoverImageLink) ? "/images/book-cover-not-available.webp" :
             book.CoverImageLink;
             <a asp-area="" asp-controller="Book" asp-action="BookDetails" asp-route-id="@book.Id">
-                <img src="@imgSrc" alt="@book.Title" class="slide" style="display: block;" loading="lazy">
+                <img src="@imgSrc" book-cover="@book.Title" alt="@book.Title" class="slide" style="display: block;" loading="lazy">
             </a>
         }
       </div>
@@ -329,7 +329,7 @@
                 <!-- Image Section -->
                 <div class="category-cover">
                     <a asp-area="" asp-controller="Book" asp-action="BookDetails" asp-route-id="@book.Id">
-                        <img src="@imgSrc" alt="@book.Title" loading="lazy">
+                        <img src="@imgSrc" book-cover="@book.Title" alt="@book.Title" loading="lazy">
                     </a>
                 </div>
             </article>

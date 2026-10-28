@@ -1,4 +1,4 @@
-﻿@model List<Bookmark>
+@model List<Bookmark>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.unobtrusive-ajax/3.2.6/jquery.unobtrusive-ajax.min.js"></script>
 @if (Model != null && Model.Any())
@@ -21,7 +21,7 @@
         <div class="bookmark-section mb-4 p-4 rounded-4 shadow-sm" style="background-color: #2F333B;">
             <div class="d-flex align-items-center mb-4">
                 @{ var imgSrc = string.IsNullOrWhiteSpace(book.CoverImageLink) ? "/images/book-cover-not-available.webp" : book.CoverImageLink; }
-                <img src="@imgSrc" loading="lazy"
+                <img src="@imgSrc" book-cover="@book.Title" loading="lazy"
                          alt="Book Cover"
                      class="rounded-3 shadow-sm me-3"
                      style="height: 85px; width: 60px; object-fit: cover;">
